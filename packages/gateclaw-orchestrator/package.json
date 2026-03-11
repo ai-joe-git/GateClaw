@@ -1,0 +1,15 @@
+{
+  "name": "@gateclaw/orchestrator",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts",
+    "mcp": "bun run src/mcp.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.25.2",
+    "hono": "catalog:",
+    "gray-matter": "^4.0.3"
+  }
+}

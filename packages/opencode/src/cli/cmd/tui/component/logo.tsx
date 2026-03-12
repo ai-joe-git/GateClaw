@@ -3,6 +3,10 @@ import { For, type JSX } from "solid-js"
 import { useTheme, tint } from "@tui/context/theme"
 import { logo, marks } from "@/cli/logo"
 
+function hexToRgba(hex: string): RGBA {
+  return hex as unknown as RGBA
+}
+
 // Shadow markers (rendered chars in parens):
 // _ = full shadow cell (space with bg=shadow)
 // ^ = letter top, shadow bottom (▀ with fg=letter, bg=shadow)
@@ -12,8 +16,8 @@ const SHADOW_MARKER = new RegExp(`[${marks}]`)
 export function Logo() {
   const { theme } = useTheme()
 
-  const renderLine = (line: string, fg: RGBA, bold: boolean): JSX.Element[] => {
-    const shadow = tint(theme.background, fg, 0.25)
+  const renderLine = (line: string, fg: string | RGBA, bold: boolean): JSX.Element[] => {
+    const shadow = tint(theme.background, hexToRgba(fg.toString()), 0.25)
     const attrs = bold ? TextAttributes.BOLD : undefined
     const elements: JSX.Element[] = []
     let i = 0
@@ -71,22 +75,17 @@ export function Logo() {
   }
 
   return (
-  <box>
-    <For each={logo.left}>
-      {(line, index) => (
-        <box flexDirection="row" gap={1}>
-          {/* Left: bleu pâle */}
-          <box flexDirection="row">
-            {renderLine(line, "#80d4ff", false)}
+    <box>
+      <For each={logo.left}>
+        {(line, index) => (
+          <box flexDirection="row" gap={1}>
+            {/* Left: bleu pâle */}
+            <box flexDirection="row">{renderLine(line, "#80d4ff", false)}</box>
+            {/* Right: bleu vif */}
+            <box flexDirection="row">{renderLine(logo.right[index()], "#00bfff", false)}</box>
           </box>
-          {/* Right: bleu vif */}
-          <box flexDirection="row">
-            {renderLine(logo.right[index()], "#00bfff", false)}
-          </box>
-        </box>
-      )}
-    </For>
-  </box>
-)
-
+        )}
+      </For>
+    </box>
+  )
 }

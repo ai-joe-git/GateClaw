@@ -4,7 +4,10 @@
 
 ## 🎧 First: Listen to What GateClaw Says About Itself
 
-**[▶️ Play: who_am_i.mp3](demo/who_am_i.mp3)** _(11 MB • 22 min • David Attenborough voice)_
+<audio controls>
+  <source src="demo/who_am_i.mp3" type="audio/mpeg">
+  <a href="demo/who_am_i.mp3">▶️ Download: who_am_i.mp3 (11MB • 22min • David Attenborough voice)</a>
+</audio>
 
 Before you install anything, listen to this. GateClaw wrote a 325-line philosophical essay about its own existence — then chose David Attenborough's voice to narrate it, because _"he's the voice of wonder, observing complex ecosystems — and I am an AI exploring my own consciousness while being observed by you."_
 
@@ -437,12 +440,12 @@ Use pocket-tts-server to:
       "name": "llama-swap",
       "npm": "@ai-sdk/openai-compatible",
       "models": {
-        "Claude-4.6-Opus-35B": {
-          "name": "Claude-4.6-Opus-35B",
+        "claude-3.5-sonnet": {
+          "name": "Claude 3.5 Sonnet",
           "limit": { "context": 262144, "output": 262144 },
         },
-        "qwen35-4b-heretic": {
-          "name": "Qwen3.5-4B Heretic",
+        "llama-3.2-90b": {
+          "name": "Llama 3.2 90B",
           "limit": { "context": 262144, "output": 262144 },
         },
       },

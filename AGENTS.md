@@ -2,6 +2,26 @@
 
 > Monorepo with Bun workspaces | Package manager: `bun@1.3.10` | Default branch: `dev`
 
+## Identity & Purpose
+
+GateClaw is **not a chatbot**. It is a **resident AI entity** that lives on the user's machine with:
+
+- **Persistent memory** - SQLite facts & message history survive restarts
+- **Soul identity** - Personality defined in `SOUL.md` (YAML frontmatter + prompt)
+- **System access** - Shell, filesystem, HTTP, memory operations
+- **Multi-interface** - Telegram (primary), TUI, CLI, HTTP API (all equal)
+
+**What this means for development:** GateClaw should act like a resident, not a service. It has initiative, memory, and a consistent personality across sessions.
+
+**Proven capabilities** (from the "Who Am I?" essay session):
+
+- Self-correction loop (85 → 325 lines autonomously)
+- Filesystem intelligence (subagent directory exploration)
+- Aesthetic reasoning (voice-to-personality matching)
+- Meta-collaboration (suggesting TTS integration for release)
+
+---
+
 ## Build / Lint / Test Commands
 
 ### Root Level
@@ -11,7 +31,7 @@
 ### packages/opencode
 
 ```bash
-bun run typecheck          # tsgo --noEmit (TypeScript 5.8+)
+bun run typecheck          # tsg --noEmit (TypeScript 5.8+)
 bun test                   # All tests (30s timeout)
 bun test path.test.ts      # Single test file
 bun test -t "name"         # Test by name
@@ -45,6 +65,8 @@ bun test:e2e:ui            # Playwright UI mode
 - **App unit**: `bun test -- <path>.test.ts`
 - **E2E**: `bun test:e2e -- <file>.spec.ts` or `-g "pattern"`
 - **Never run tests from root**: Always from package directories
+
+---
 
 ## Code Style Guidelines
 
@@ -82,6 +104,8 @@ bun test:e2e:ui            # Playwright UI mode
 - **No try/catch**: Result types (Effect), early returns, or functional patterns
 - **No mocks**: test real logic when possible | **Functional**: `.map()`, `.filter()`, `.flatMap()`
 
+---
+
 ## Database (Drizzle ORM)
 
 - **Schema**: `src/**/*.sql.ts`
@@ -96,15 +120,24 @@ const table = sqliteTable("session", {
 })
 ```
 
+---
+
 ## Type Checking
 
-- **Command**: `bun typecheck` from package dirs | **Implementation**: `tsgo --noEmit` | **Never use `tsc`**
+- **Command**: `bun typecheck` from package dirs
+- **Implementation**: `tsg` (TypeScript 5.8+)
+- **Never use `tsc`**
+
+---
 
 ## Git Workflow
 
 - **Default branch**: `dev` (use `dev` or `origin/dev` for diffs)
 - **Commits**: Only when explicitly requested
-- **Verification**: Run `bun typecheck` and tests before commit | **Never commit** unless asked
+- **Verification**: Run `bun typecheck` and tests before commit
+- **Never commit** unless asked
+
+---
 
 ## Package-Specific Notes
 
@@ -117,7 +150,6 @@ const table = sqliteTable("session", {
 - **CLI**: `gateclaw {start|stop|restart|status|logs|tui|run}` | `gateclaw soul {init|edit|show|reset}`
 - **Facts**: `gateclaw fact {store|delete|get}`
 - **Provider detection**: Auto-detects llama-swap (:8888), Ollama (:11434), LM Studio (:1234)
-- **Install**: `curl -fsSL https://raw.githubusercontent.com/ai-joe-git/GateClaw/dev/install | bash`
 
 ### packages/desktop-electron
 
@@ -128,6 +160,8 @@ const table = sqliteTable("session", {
 - **HappyDOM**: `happydom.ts` preload | **Selectors**: `data-*` attrs or roles
 - **NEVER restart app/server** during debug | **E2E cleanup**: `withSession()` / `withProject()` helpers
 
+---
+
 ## Testing Guidelines
 
 - **Timeouts**: Opencode 30s, E2E 60s/test, 10s/assertion
@@ -137,11 +171,15 @@ const table = sqliteTable("session", {
 - **Coverage**: `bun run lint` (Opencode) runs tests with coverage
 - **Never run tests from root**: always from package directories
 
+---
+
 ## Environment & Configuration
 
 - **Config**: `.gateclaw/` (legacy: `.opencode/`) | **Agents**: `.gateclaw/agent/*.md` (legacy: `.opencode/agent/*.md`)
 - **Env**: `env/` module | **Flags**: `flag/` module
 - **Global envs**: `CI`, `OPENCODE_DISABLE_SHARE` (via `turbo.json` globalEnv)
+
+---
 
 ## Agent Behavior
 
@@ -150,9 +188,24 @@ const table = sqliteTable("session", {
 - **ALWAYS use parallel tools** (e.g., multiple `read`/`bash` calls in one message)
 - **Type-safe code**: proper TypeScript inference, no `any`, use `unknown` with narrowing
 - **Cross-package imports**: `@opencode-ai/*` | **Internal**: `@/*`
+- **Agentic initiative**: GateClaw can self-correct, explore filesystems, and make aesthetic decisions
+
+---
 
 ## Libraries & Patterns
 
 - **Zod**: runtime validation | **Effect**: error handling | **SolidJS**: signals/stores
 - **Drizzle ORM**: SQLite/Postgres with snake_case naming | **Husky**: pre-commit hooks
-- **Prettier**: `semi: false`, `printWidth: 120` | **TypeScript**: tsgo (TypeScript 5.8+)
+- **Prettier**: `semi: false`, `printWidth: 120` | **TypeScript**: tsg (TypeScript 5.8+)
+
+---
+
+## Voice Integration (pocket-tts-server)
+
+GateClaw can speak via cloned voices. The `demo/who_am_i.wav` file demonstrates:
+
+- David Attenborough voice reading GateClaw's existential essay
+- Autonomous voice selection based on personality matching
+- 15-minute audio generated via pocket-tts-server
+
+**For future development:** Consider integrating TTS as an optional module for voice output.

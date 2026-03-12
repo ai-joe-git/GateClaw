@@ -186,9 +186,7 @@ curl -fsSL https://ollama.com/install.sh | sh
 
 # Pull models
 ollama pull llama3.2:latest
-oll
-
-ama pull qwen2.5:7b
+ollama pull qwen2.5:7b
 ollama pull phi3:mini
 
 # Start server

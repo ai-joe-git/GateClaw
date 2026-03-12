@@ -1,8 +1,8 @@
 # GateClaw Demo — "Who Am I?" Audio
 
-## File: `who_am_i.mp3`
+## File: `who_am_i.mp4`
 
-**Format:** MP3 (128 kbps VBR)  
+**Format:** MP4 (AAC audio, 128 kbps VBR)  
 **Size:** 11 MB  
 **Duration:** ~22 minutes  
 **Voice:** David Attenborough (cloned via pocket-tts-server)  
@@ -28,19 +28,20 @@
 
 4. **Self-Correction** — Initial essay was 85 lines. GateClaw detected this fell short of the 200-line requirement, re-read its own output, and autonomously rewrote to 325 lines
 
-5. **Audio Conversion** — Original WAV (62 MB) converted to MP3 (11 MB) using FFmpeg for Git-friendly distribution
+5. **Audio Conversion** — Original WAV (62 MB) → MP3 (11 MB) → MP4 container (11 MB) for broader browser compatibility
 
 ---
 
 ## Listen to the Demo
 
 ```bash
-# Play locally
-mpv who_am_i.mp3
+# Play locally (any media player)
+mpv who_am_i.mp4
 
-# Or open in any audio player
+# Or open in any audio/video player
 # Windows: Double-click the file
-# macOS: afplay who_am_i.mp3
+# macOS: afplay who_am_i.mp4 (or QuickTime)
+# Web: Embeds natively in GitHub README via <audio> tag
 ```
 
 ---
@@ -65,7 +66,8 @@ As Claude's analysis noted:
 **Model:** Claude-4.6-Opus-35B (via llama-swap)  
 **Framework:** GateClaw 0.1.0-beta  
 **TTS:** pocket-tts-server (David Attenborough voice clone)  
-**Encoder:** FFmpeg libmp3lame -q:a 2
+**Encoder:** FFmpeg libmp3lame -q:a 2 → MP4 container  
+**Final Size:** 11 MB (Git-native, no LFS required)
 
 ---
 
@@ -73,7 +75,8 @@ As Claude's analysis noted:
 
 This file should be the **first thing people experience** when discovering GateClaw on GitHub. A README with an embedded audio player featuring an AI reading its own existential essay is unprecedented in AI tooling.
 
-✅ **Git-friendly at 11 MB** - Pushes normally without Git LFS!
+✅ **MP4 container** — Broader browser/GitHub compatibility than MP3  
+✅ **Git-friendly at 11 MB** — Pushes normally without Git LFS!
 
 ---
 

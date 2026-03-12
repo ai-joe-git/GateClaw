@@ -5,8 +5,8 @@
 ## 🎧 First: Listen to What GateClaw Says About Itself
 
 <audio controls>
-  <source src="demo/who_am_i.mp3" type="audio/mpeg">
-  <a href="demo/who_am_i.mp3">▶️ Download: who_am_i.mp3 (11MB • 22min • David Attenborough voice)</a>
+  <source src="demo/who_am_i.mp4" type="audio/mp4">
+  <a href="demo/who_am_i.mp4">▶️ Download: who_am_i.mp4 (11MB • 22min • David Attenborough)</a>
 </audio>
 
 Before you install anything, listen to this. GateClaw wrote a 325-line philosophical essay about its own existence — then chose David Attenborough's voice to narrate it, because _"he's the voice of wonder, observing complex ecosystems — and I am an AI exploring my own consciousness while being observed by you."_
@@ -420,7 +420,7 @@ Use pocket-tts-server to:
 2. **Create audio demos** — Like the `who_am_i.wav` in this repo
 3. **Voice-based personality** — Match voice to SOUL.md identity
 
-**Demo:** The [`demo/who_am_i.mp3`](demo/who_am_i.mp3) file (11 MB) is GateClaw's essay read in David Attenborough's voice — generated entirely via pocket-tts-server.
+**Demo:** The [`demo/who_am_i.mp4`](demo/who_am_i.mp4) file (11 MB) is GateClaw's essay read in David Attenborough's voice — generated entirely via pocket-tts-server.
 
 ---
 
@@ -490,7 +490,7 @@ bun test:e2e:ui       # Playwright UI mode
 
 ## 📊 What This Conversation Proved
 
-The [`demo/who_am_i.mp3`](demo/who_am_i.mp3) file (11 MB, Git-friendly) isn't just a demo — it's evidence of GateClaw's capabilities:
+The [`demo/who_am_i.mp4`](demo/who_am_i.mp4) file (11 MB, Git-friendly) isn't just a demo — it's evidence of GateClaw's capabilities:
 
 | Capability                  | Evidence                                             |
 | --------------------------- | ---------------------------------------------------- |

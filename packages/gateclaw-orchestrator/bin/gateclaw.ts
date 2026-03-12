@@ -52,6 +52,7 @@ function printHelp() {
     gateclaw tui        Launch the TUI (starts daemon if needed)
     gateclaw run        Run in foreground (dev mode)
     gateclaw soul       Soul management (init|edit|show|reset)
+    gateclaw telegram   Telegram bot setup (setup|status|test|verify|reset|autoid)
     gateclaw facts      View all memory facts
     gateclaw fact       Fact operations (store|delete|get)
     gateclaw history    View message history [session]
@@ -247,6 +248,57 @@ switch (cmd) {
   gateclaw soul edit   - Edit existing SOUL.md
   gateclaw soul show   - Display current SOUL.md
   gateclaw soul reset  - Reset to default soul`)
+    }
+    break
+  }
+
+  case "telegram": {
+    const subcmd = process.argv[3]
+    switch (subcmd) {
+      case "setup": {
+        const { telegram } = await import("../src/commands/telegram")
+        await telegram.setup()
+        break
+      }
+      case "status": {
+        const { telegram } = await import("../src/commands/telegram")
+        await telegram.status()
+        break
+      }
+      case "test": {
+        const { telegram } = await import("../src/commands/telegram")
+        await telegram.test()
+        break
+      }
+      case "verify": {
+        const { telegram } = await import("../src/commands/telegram")
+        await telegram.verify()
+        break
+      }
+      case "reset": {
+        const { telegram } = await import("../src/commands/telegram")
+        await telegram.reset()
+        break
+      }
+      case "autoid": {
+        const { telegram } = await import("../src/commands/telegram")
+        await telegram.autoid()
+        break
+      }
+      case "info": {
+        const { telegram } = await import("../src/commands/telegram")
+        await telegram.info()
+        break
+      }
+      default:
+        console.log(`🐾 Telegram Commands:
+  gateclaw telegram setup   - Interactive bot setup
+  gateclaw telegram status  - Show current config
+  gateclaw telegram test    - Send test message
+  gateclaw telegram verify  - Verify token and chat ID
+  gateclaw telegram reset   - Clear configuration
+  gateclaw telegram autoid  - Auto-detect chat ID
+  gateclaw telegram info    - Quick status check`)
     }
     break
   }

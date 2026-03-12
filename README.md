@@ -259,7 +259,7 @@ $ gateclaw soul edit      # Opens in $EDITOR
 $ code ~/.config/gateclaw/gateclaw.jsonc
 ```
 
-**Example configs:** See `.opencode/provider-examples/` for 6 provider templates:
+**Example configs:** See `.gateclaw/provider-examples/` (or legacy `.opencode/provider-examples/`) for 6 provider templates:
 
 - `gateclaw.jsonc.llama-swap`
 - `gateclaw.jsonc.ollama`
@@ -488,32 +488,80 @@ $ curl http://localhost:7371/messages/default | jq
 
 ### Telegram (Primary - Chat Native)
 
-**Setup during install:**
+#### Setup via CLI (Recommended)
+
+Use the interactive Telegram CLI to configure your bot:
+
+```bash
+# Start interactive setup
+gateclaw telegram setup
+
+# Flow:
+# 1. Message @BotFather → /newbot → get token
+# 2. Message your new bot (any text)
+# 3. CLI auto-detects your chat ID from bot updates
+# 4. Sends welcome message to verify
+```
+
+**Telegram Commands:**
+
+```bash
+gateclaw telegram setup      # Interactive bot setup 🆕
+gateclaw telegram status     # Show current config
+gateclaw telegram test       # Send test message
+gateclaw telegram verify     # Verify token and chat ID
+gateclaw telegram reset      # Clear configuration
+gateclaw telegram autoid     # Auto-detect chat ID from updates 🆕
+gateclaw telegram info       # Quick status check (for scripting)
+```
+
+**Manual Setup (Alternative):**
 
 1. Message @BotFather on Telegram
 2. `/newbot` → name your bot
 3. Copy API token
-4. Message your new bot
-5. It replies with chat_id
-6. Paste both to installer
+4. Message your new bot to get chat ID
+5. Edit config manually:
+
+```bash
+# Config location: ~/.config/gateclaw/.env (or %APPDATA%/gateclaw/.env on Windows)
+GATECLAW_TELEGRAM_TOKEN="your-bot-token"
+GATECLAW_TELEGRAM_CHAT_ID="your-chat-id"
+```
 
 **Test:**
 
 ```bash
-# Your bot responds within 60 seconds
-$ gateclaw status
-● GateClaw | soul: GateClaw | uptime: 3600s | pid: 12345
+# Check status
+gateclaw telegram status
+# Output: Bot: @YourBotName | Chat ID: 987654321 | Status: ready
+
+# Send test message
+gateclaw telegram test
+# Your bot sends: "🐾 GateClaw test - This is a test message..."
 
 # Message bot on Telegram
 You: "What's my soul name?"
-GateClaw: Your soul name is "GateClaw"
+GateClaw: "Your soul name is 'GateClaw'"
 ```
 
-**Env file:** `~/.config/gateclaw/.env`
+**Auto-Detect Chat ID:**
+
+If you skip entering chat ID during setup, or message your bot later:
 
 ```bash
-GATECLAW_TELEGRAM_TOKEN="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
-GATECLAW_TELEGRAM_CHAT_ID="987654321"
+# Automatically fetch latest chat ID from bot updates
+gateclaw telegram autoid
+# Output: ✓ Found chat ID: 987654321 | ✓ Chat ID saved
+```
+
+**Verify Configuration:**
+
+```bash
+gateclaw telegram verify
+# Validates token with Telegram API
+# Sends verification message to chat ID
+# Output: ✓ Token valid - @YourBotName | ✓ Chat ID valid
 ```
 
 ---
@@ -991,41 +1039,50 @@ Create `~/.config/gateclaw/gateclaw.jsonc`:
 
 ### Telegram Bot Not Responding
 
+**Quick fix with CLI:**
+
+```bash
+# Verify token and chat ID
+gateclaw telegram verify
+
+# Auto-detect chat ID if not set
+gateclaw telegram autoid
+
+# Send test message
+gateclaw telegram test
+
+# If needed, reset and reconfigure
+gateclaw telegram reset
+gateclaw telegram setup
+```
+
 **Check credentials:**
 
 ```bash
-$ cat ~/.config/gateclaw/.env
-GATECLAW_TELEGRAM_TOKEN="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
-GATECLAW_TELEGRAM_CHAT_ID="987654321"
+# Config location: ~/.config/gateclaw/.env (or %APPDATA%/gateclaw/.env on Windows)
+cat ~/.config/gateclaw/.env
+# GATECLAW_TELEGRAM_TOKEN="your-token"
+# GATECLAW_TELEGRAM_CHAT_ID="your-chat-id"
 ```
 
-**Test token:**
+**Test token with CLI:**
 
 ```bash
-$ curl "https://api.telegram.org/bot123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11/getMe"
-{"ok":true,"result":{"id":123456789,"is_bot":true,"first_name":"GateClaw","username":"gateclaw_test_bot"}}
+gateclaw telegram status
+# Output: Bot: @YourBotName | Chat ID: 987654321 | Status: ready
 ```
 
 **Restart daemon:**
 
 ```bash
-$ gateclaw restart
+gateclaw restart
 🛑 Stopped (pid 12345)
 ✅ GateClaw restarted (pid 12346)
 
 # Message bot on Telegram
 You: "/start"
 GateClaw: 🐾 GateClaw online
-soul: GateClaw
-pid: 12346
 ```
-
-**Re-create bot:**
-
-1. @BotFather → `/newbot`
-2. Update `.env` with new token
-3. Message bot to get new chat_id
-4. `gateclaw restart`
 
 ---
 

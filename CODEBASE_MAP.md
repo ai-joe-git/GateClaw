@@ -535,7 +535,7 @@ if (format.type === "json_schema") {
 
 - **Skill Definition:** Markdown files (`SKILL.md`) with frontmatter (`name`, `description`) + content body
 - **Multi-source Loading:**
-  - `.opencode/skill/` directories (config directories)
+  - `.gateclaw/skill/` directories (config directories, legacy: `.opencode/skill/`)
   - External directories: `.claude/skills/`, `.agents/skills/` (project + global)
   - Config-defined paths (`config.skills.paths`)
   - Remote URLs (`config.skills.urls`) via `Discovery.pull()`
@@ -755,7 +755,7 @@ Internal Code → Bus.publish() → GlobalBus.emit("event") → SSE handler → 
 
 ---
 
-### 3. Custom Agents via `.opencode/agent/*.md`
+### 3. Custom Agents via `.gateclaw/agent/*.md` (legacy: `.opencode/agent/*.md`)
 
 **Parsing:** [`src/config/config.ts`](packages/opencode/src/config/config.ts):399-436
 
@@ -763,7 +763,14 @@ Internal Code → Bus.publish() → GlobalBus.emit("event") → SSE handler → 
 async function loadAgent(dir: string) {
   for (const item of await Glob.scan("{agent,agents}/**/*.md", { cwd: dir, absolute: true })) {
     const md = await ConfigMarkdown.parse(item)
-    const file = rel(item, ["/.opencode/agent/", "/.opencode/agents/", "/agent/", "/agents/"])
+    const file = rel(item, [
+      "/.gateclaw/agent/",
+      "/.gateclaw/agents/",
+      "/.opencode/agent/",
+      "/.opencode/agents/",
+      "/agent/",
+      "/agents/",
+    ])
     const agentName = trim(file) // filename without .md
 
     const config = {
@@ -795,7 +802,7 @@ async function loadAgent(dir: string) {
 | `permission`  | `Permission`                   | Permission rules                                      |
 | `disable`     | `boolean`                      | Disable this agent                                    |
 
-**Example `.opencode/agent/code-review.md`:**
+**Example `.gateclaw/agent/code-review.md` (legacy: `.opencode/agent/code-review.md`):**
 
 ```markdown
 ---
@@ -980,7 +987,7 @@ export const WithParts = z.object({
 To add new skills without modifying source:
 
 1. Drop `SKILL.md` files in any of these directories:
-   - `.opencode/skill/` or `.opencode/skills/` (config directories)
+   - `.gateclaw/skill/` or `.gateclaw/skills/` (config directories, legacy: `.opencode/skill/`)
    - `.claude/skills/` (project-level or global in `$HOME`)
    - `.agents/skills/` (project-level or global in `$HOME`)
    - Custom paths via `config.skills.paths` array
@@ -1069,8 +1076,8 @@ type Task = {
 **Extension Points:**
 To add custom agents without modifying source:
 
-1. **Markdown files**: Drop `.md` files in `.opencode/agent/` or `.opencode/agents/` directories
-2. **Config**: Add `agent` section in `.opencode/config` frontmatter
+1. **Markdown files**: Drop `.md` files in `.gateclaw/agent/` or `.gateclaw/agents/` directories (legacy: `.opencode/agent/`)
+2. **Config**: Add `agent` section in `.gateclaw/config` frontmatter (legacy: `.opencode/config`)
 3. **Runtime**: Modify config object passed to Agent state
 
 **Agent Definition Format (Markdown):**

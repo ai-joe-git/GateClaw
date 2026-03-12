@@ -76,4 +76,4 @@ export const getSoulPrompt = () => {
   return `${fields}\n\n${content.trim()}`
 }
 
-export { getSOULPath, getPIDPath, getLogPath }
+export { getSOULPath, getPIDPath, getLogPath, getConfigDir }

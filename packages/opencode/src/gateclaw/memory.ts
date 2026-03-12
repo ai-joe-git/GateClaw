@@ -18,17 +18,17 @@ export function saveFact(key: string, value: string) {
 
 export function getFact(key: string) {
   const db = Database.Client()
-  return db
-    .select()
-    .from(GCFactTable)
-    .where(eq(GCFactTable.key, key))
-    .limit(1)
-    .get()
+  return db.select().from(GCFactTable).where(eq(GCFactTable.key, key)).limit(1).get()
 }
 
 export function getAllFacts() {
   const db = Database.Client()
   return db.select().from(GCFactTable).all()
+}
+
+export function deleteFact(key: string) {
+  const db = Database.Client()
+  return db.delete(GCFactTable).where(eq(GCFactTable.key, key)).run()
 }
 
 export function saveMessage(sessionKey: string, role: string, content: string) {
@@ -38,10 +38,7 @@ export function saveMessage(sessionKey: string, role: string, content: string) {
 
 export function getMessages(sessionKey: string, limit?: number) {
   const db = Database.Client()
-  const query = db
-    .select()
-    .from(GCMessageTable)
-    .where(eq(GCMessageTable.session_key, sessionKey))
+  const query = db.select().from(GCMessageTable).where(eq(GCMessageTable.session_key, sessionKey))
   return limit ? query.limit(limit).all() : query.all()
 }
 

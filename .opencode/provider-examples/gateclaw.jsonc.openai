@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/schema/config.json",
+  "provider": "openai",
+  "api_key": "sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+  "models": {
+    "default": "gpt-4o",
+    "fast": "gpt-4o-mini",
+    "quality": "gpt-4-turbo",
+  },
+  "context_limit": 128000,
+  "temperature": 0.7,
+  "max_tokens": 4096,
+  "stream": true,
+  "_comment": "OpenAI API - cloud-hosted, general purpose, widely compatible"
+}

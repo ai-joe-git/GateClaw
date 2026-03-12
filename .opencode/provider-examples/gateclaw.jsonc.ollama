@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/schema/config.json",
+  "provider": "ollama",
+  "endpoint": "http://localhost:11434",
+  "models": {
+    "default": "llama3.2:latest",
+    "fast": "phi3:mini",
+    "quality": "llama3.2:90b",
+  },
+  "context_limit": 131072,
+  "temperature": 0.7,
+  "max_tokens": 8192,
+  "stream": true,
+  "_comment": "Ollama local LLM - pulls models via `ollama pull <name>`"
+}

@@ -1,5 +1,12 @@
 import { Hono } from "hono"
-import { saveFact, getFact, getAllFacts, saveMessage, getMessages } from "../../opencode/src/gateclaw/memory"
+import {
+  saveFact,
+  getFact,
+  getAllFacts,
+  deleteFact,
+  saveMessage,
+  getMessages,
+} from "../../opencode/src/gateclaw/memory"
 import { getSoulName, getSoulPrompt, getPIDPath, getLogPath } from "./soul"
 import { broadcast, clients } from "./events"
 import { sendMessage } from "./telegram"
@@ -31,6 +38,12 @@ app.get("/health", (c) => {
     uptime_ms: Date.now() - startTime,
     pid: process.pid,
   })
+})
+
+app.post("/shutdown", (c) => {
+  log("Shutdown requested via HTTP")
+  setTimeout(() => process.exit(0), 100)
+  return c.json({ ok: true })
 })
 
 app.post("/fact", async (c) => {
@@ -115,10 +128,13 @@ app.post("/telegram/send", async (c) => {
 })
 
 app.delete("/fact/:key", (c) => {
-  const key = c.req.param("key")
-  deleteFact(key)  // need to export deleteFact from memory.ts too
-  return c.json({ ok: true })
+  try {
+    const key = c.req.param("key")
+    deleteFact(key)
+    return c.json({ ok: true })
+  } catch {
+    return c.json({ error: "not found" }, 404)
+  }
 })
-
 
 export { app }

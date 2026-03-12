@@ -44,7 +44,7 @@ const handle = async (chatId: number, text: string) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "qwen35-35b-a3b-262k-V2-Q4",
+          model: "Claude-4.6-Opus-35B", 
           messages,
         }),
       })

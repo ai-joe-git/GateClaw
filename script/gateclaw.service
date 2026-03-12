@@ -1,0 +1,32 @@
+[Unit]
+Description=GateClaw Daemon - Resident AI
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=/opt/GateClaw
+ExecStart=/usr/bin/bun run src/index.ts
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/gateclaw/.env
+
+# Resource limits
+MemoryMax=512M
+CPUQuota=80%
+
+# Security
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/%i/.config/gateclaw /home/%i/.local/share/gateclaw
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gateclaw
+
+[Install]
+WantedBy=multi-user.target

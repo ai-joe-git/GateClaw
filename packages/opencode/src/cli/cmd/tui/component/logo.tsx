@@ -71,15 +71,22 @@ export function Logo() {
   }
 
   return (
-    <box>
-      <For each={logo.left}>
-        {(line, index) => (
-          <box flexDirection="row" gap={1}>
-            <box flexDirection="row">{renderLine(line, theme.textMuted, false)}</box>
-            <box flexDirection="row">{renderLine(logo.right[index()], theme.text, true)}</box>
+  <box>
+    <For each={logo.left}>
+      {(line, index) => (
+        <box flexDirection="row" gap={1}>
+          {/* Left: bleu pâle */}
+          <box flexDirection="row">
+            {renderLine(line, "#80d4ff", false)}
           </box>
-        )}
-      </For>
-    </box>
-  )
+          {/* Right: bleu vif */}
+          <box flexDirection="row">
+            {renderLine(logo.right[index()], "#00bfff", false)}
+          </box>
+        </box>
+      )}
+    </For>
+  </box>
+)
+
 }

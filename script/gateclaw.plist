@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>ai.gateclaw.daemon</string>
+  
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/bun</string>
+    <string>run</string>
+    <string>src/index.ts</string>
+  </array>
+  
+  <key>WorkingDirectory</key>
+  <string>/opt/GateClaw</string>
+  
+  <key>RunAtLoad</key>
+  <true/>
+  
+  <key>KeepAlive</key>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+    <key>Crashed</key>
+    <true/>
+  </dict>
+  
+  <key>StandardOutPath</key>
+  <string>/Users/%s/Library/Logs/gateclaw/gateclaw.log</string>
+  
+  <key>StandardErrorPath</key>
+  <string>/Users/%s/Library/Logs/gateclaw/gateclaw.err</string>
+  
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>NODE_ENV</key>
+    <string>production</string>
+    <key>GATECLAW_CONFIG_DIR</key>
+    <string>/Users/%s/.config/gateclaw</string>
+  </dict>
+  
+  <key>SoftResourceLimits</key>
+  <dict>
+    <key>NumberOfFiles</key>
+    <integer>1024</integer>
+    <key>MemoryLimit</key>
+    <integer>536870912</integer>
+  </dict>
+</dict>
+</plist>

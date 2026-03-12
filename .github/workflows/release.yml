@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Run typecheck
+        run: bun typecheck
+
+      - name: Run tests
+        run: cd packages/opencode && bun test
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: GateClaw ${{ github.ref_name }}
+          body: |
+            ## GateClaw ${{ github.ref_name }}
+
+            ### What's New
+            - Resident AI daemon with Telegram interface
+            - Persistent memory (SQLite facts + message history)
+            - Soul identity system (SOUL.md personality)
+            - Multi-interface: Telegram, TUI, CLI, HTTP API
+            - Provider auto-detection (llama-swap, Ollama, LM Studio)
+            - Interactive soul setup (`gateclaw soul init`)
+
+            ### Installation
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/ai-joe-git/GateClaw/${{ github.ref_name }}/install | bash
+            ```
+
+            ### Quick Start
+            ```bash
+            gateclaw              # Start daemon + TUI
+            gateclaw soul init    # Interactive personality setup
+            gateclaw status       # Check daemon status
+            gateclaw facts        # View memory facts
+            ```
+
+            ### Provider Setup
+            GateClaw works with any OpenAI-compatible API:
+            - **Local**: llama-swap, Ollama, LM Studio (zero cost, private)
+            - **Cloud**: Anthropic, OpenAI, Google (paid, highest quality)
+
+            ### System Services
+            - Linux: `sudo cp script/gateclaw.service /etc/systemd/system/`
+            - macOS: `cp script/gateclaw.plist ~/Library/LaunchAgents/`
+            - Windows: Double-click `script\gateclaw-service.bat`
+
+            ---
+            **Repository**: https://github.com/ai-joe-git/GateClaw  
+            **Docs**: README.md + INSTALL.md
+          draft: false
+          prerelease: true
+          generate_release_notes: true
+
+      - name: Upload install script
+        uses: softprops/action-gh-release@v2
+        with:
+          files: install
+
+      - name: Upload provider examples
+        uses: softprops/action-gh-release@v2
+        with:
+          files: .opencode/provider-examples/*.jsonc

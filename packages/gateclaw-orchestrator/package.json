@@ -2,6 +2,9 @@
   "name": "@gateclaw/orchestrator",
   "version": "1.0.0",
   "type": "module",
+  "bin": {
+    "gateclaw": "./bin/gateclaw.ts"
+  },
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
@@ -9,7 +12,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.25.2",
-    "hono": "catalog:",
+    "hono": "4.10.7",
     "gray-matter": "^4.0.3"
   }
 }

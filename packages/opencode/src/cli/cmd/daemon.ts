@@ -65,7 +65,6 @@ const stopDaemon = async () => {
   console.log("🐾 GateClaw daemon stopped")
 }
 
-
 const statusDaemon = async () => {
   try {
     const controller = new AbortController()
@@ -82,14 +81,13 @@ const statusDaemon = async () => {
       return
     }
 
-    const data = await response.json() as any
+    const data = (await response.json()) as any
     const uptimeSeconds = Math.floor(data.uptime_ms / 1000)
     console.log(`● GateClaw | soul: ${data.soul} | uptime: ${uptimeSeconds}s | pid: ${data.pid}`)
   } catch {
     console.log("○ GateClaw | not running")
   }
 }
-
 
 const showSoul = async () => {
   const config = getSoulConfig()
@@ -308,19 +306,6 @@ export const DaemonCommand = cmd({
           await reinstallAutoStart()
         },
       })
-      .command({
-        command: "soul",
-        describe: "manage GateClaw soul configuration",
-        builder: buildSoulSubcommand,
-        handler() {},
-      })
       .demandCommand(),
-  async handler() {},
-})
-
-export const SoulCommand = cmd({
-  command: "soul",
-  describe: "manage GateClaw soul configuration",
-  builder: buildSoulSubcommand,
   async handler() {},
 })

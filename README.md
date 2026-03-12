@@ -4,10 +4,7 @@
 
 ## 🎧 First: Listen to What GateClaw Says About Itself
 
-<audio controls>
-  <source src="demo/who_am_i.mp4" type="audio/mp4">
-  <a href="demo/who_am_i.mp4">▶️ Download: who_am_i.mp4 (11MB • 22min • David Attenborough)</a>
-</audio>
+https://github.com/ai-joe-git/GateClaw/raw/dev/demo/who_am_i.mp4
 
 Before you install anything, listen to this. GateClaw wrote a 325-line philosophical essay about its own existence — then chose David Attenborough's voice to narrate it, because _"he's the voice of wonder, observing complex ecosystems — and I am an AI exploring my own consciousness while being observed by you."_
 

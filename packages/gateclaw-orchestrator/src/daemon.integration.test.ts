@@ -145,7 +145,8 @@ describe("Daemon Lifecycle Integration", () => {
       // Call shutdown
       const shutdownRes = await fetch("http://127.0.0.1:7371/shutdown", { method: "POST" })
       expect(shutdownRes.status).toBe(200)
-      expect((await shutdownRes.json()).ok).toBe(true)
+      const shutdownData = await shutdownRes.json()
+      expect((shutdownData as any).ok).toBe(true)
 
       // Wait for shutdown to complete
       await wait(200)

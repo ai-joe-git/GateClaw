@@ -33,3 +33,4 @@ tsconfig.tsbuildinfo
 **/.gateclaw.*
 **/daemon.pid
 **/daily.log
+nul

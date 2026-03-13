@@ -155,12 +155,7 @@ GateClaw works with **any OpenAI-compatible API**:
 
 ### Local Providers (Privacy, Zero Cost) ⭐ Recommended
 
-#### llama-swap (Your Current Setup)
-
-- **Port:** `http://localhost:8888/v1`
-- **Fast model switching** - Swap between 11 models instantly
-- **Local execution** - Runs on your hardware
-- **Your config:** Claude-4.6-Opus-35B, Qwen3.5-4B Heretic, etc.
+#### llama-swap
 
 **Auto-detected by installer:**
 

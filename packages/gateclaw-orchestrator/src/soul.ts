@@ -16,6 +16,12 @@ const getSOULPath = () => path.join(getConfigDir(), "SOUL.md")
 const getPIDPath = () => path.join(getConfigDir(), "daemon.pid")
 const getLogPath = () => path.join(getConfigDir(), "daily.log")
 
+// CLI paths - package root for daemon files
+const PKG_DIR = path.resolve(import.meta.dirname, "..")
+const CLI_PID_FILE = path.join(PKG_DIR, ".gateclaw.pid")
+const CLI_LOG_FILE = path.join(PKG_DIR, ".gateclaw.log")
+const SRC_INDEX = path.join(PKG_DIR, "src", "index.ts")
+
 const defaultSoul = `---
 name: GateClaw
 owner: User
@@ -77,3 +83,4 @@ export const getSoulPrompt = () => {
 }
 
 export { getSOULPath, getPIDPath, getLogPath, getConfigDir }
+export { CLI_PID_FILE, CLI_LOG_FILE, SRC_INDEX }

@@ -2,17 +2,15 @@
 import fs from "node:fs"
 import path from "node:path"
 import { execSync, spawn, spawnSync } from "child_process"
+import { CLI_PID_FILE, CLI_LOG_FILE, SRC_INDEX } from "../src/soul"
 
 const PKG_DIR = path.resolve(import.meta.dir, "..")
-const SRC_INDEX = path.join(PKG_DIR, "src", "index.ts")
-const PID_FILE = path.join(PKG_DIR, ".gateclaw.pid")
-const LOG_FILE = path.join(PKG_DIR, ".gateclaw.log")
 
 const cmd = process.argv[2]
 
 function readPid(): number | null {
   try {
-    return parseInt(fs.readFileSync(PID_FILE, "utf8").trim(), 10)
+    return parseInt(fs.readFileSync(CLI_PID_FILE, "utf8").trim(), 10)
   } catch {
     return null
   }
@@ -44,18 +42,29 @@ function printHelp() {
   Resident AI. Local Control. Zero Bullshit.
 
   Usage:
-    gateclaw start      Start the daemon in background
-    gateclaw stop       Stop the running daemon
-    gateclaw restart    Restart the daemon
-    gateclaw status     Show daemon status
-    gateclaw logs       Tail live logs
-    gateclaw tui        Launch the TUI (starts daemon if needed)
-    gateclaw run        Run in foreground (dev mode)
-    gateclaw soul       Soul management (init|edit|show|reset)
-    gateclaw telegram   Telegram bot setup (setup|status|test|verify|reset|autoid)
-    gateclaw facts      View all memory facts
-    gateclaw fact       Fact operations (store|delete|get)
-    gateclaw history    View message history [session]
+    gateclaw <command> [options]
+
+  Commands:
+    start      Start the daemon in background
+    stop       Stop the running daemon
+    restart    Restart the daemon
+    status     Show daemon status and uptime
+    logs       Tail live logs (Ctrl+C to stop)
+    tui        Launch the TUI (starts daemon if needed)
+    run        Run in foreground (dev mode)
+    soul       Soul management (init|edit|show|reset)
+    telegram   Telegram bot setup (setup|status|test|verify|reset|autoid|info)
+    facts      View all memory facts
+    fact       Fact operations (store|delete|get)
+    history    View message history [session]
+
+  Examples:
+    gateclaw start              # Start daemon
+    gateclaw status             # Check if running
+    gateclaw soul init          # Initialize soul identity
+    gateclaw telegram setup     # Configure Telegram bot
+    gateclaw fact store mykey "my value"
+    gateclaw logs | grep -i error
   `)
 }
 
@@ -69,11 +78,11 @@ switch (cmd) {
     console.log("🐾 Starting GateClaw daemon...")
     const child = spawn("bun", ["run", SRC_INDEX], {
       detached: true,
-      stdio: ["ignore", fs.openSync(LOG_FILE, "a"), fs.openSync(LOG_FILE, "a")],
+      stdio: ["ignore", fs.openSync(CLI_LOG_FILE, "a"), fs.openSync(CLI_LOG_FILE, "a")],
       env: { ...process.env },
     })
     child.unref()
-    fs.writeFileSync(PID_FILE, String(child.pid), "utf8")
+    fs.writeFileSync(CLI_PID_FILE, String(child.pid), "utf8")
     console.log(`✅ GateClaw started (pid ${child.pid})`)
     console.log(`📋 Logs: gateclaw logs`)
     break
@@ -93,7 +102,7 @@ switch (cmd) {
         const shutdownRes = await fetch("http://127.0.0.1:7371/shutdown", { method: "POST" })
         if (shutdownRes.ok) {
           console.log("🛑 GateClaw stopped (via HTTP)")
-          fs.rmSync(PID_FILE, { force: true })
+          fs.rmSync(CLI_PID_FILE, { force: true })
           process.exit(0)
         }
       }
@@ -104,7 +113,7 @@ switch (cmd) {
     // Fall back to PID file method
     if (!pid || !isRunning(pid)) {
       console.log("⚠️  GateClaw is not running")
-      fs.rmSync(PID_FILE, { force: true })
+      fs.rmSync(CLI_PID_FILE, { force: true })
       process.exit(0)
     }
 
@@ -118,7 +127,7 @@ switch (cmd) {
     } else {
       process.kill(pid)
     }
-    fs.rmSync(PID_FILE, { force: true })
+    fs.rmSync(CLI_PID_FILE, { force: true })
     console.log(`🛑 GateClaw stopped (pid ${pid})`)
     break
   }
@@ -137,17 +146,17 @@ switch (cmd) {
           process.kill(pid)
         } catch {}
       }
-      fs.rmSync(PID_FILE, { force: true })
+      fs.rmSync(CLI_PID_FILE, { force: true })
       console.log(`🛑 Stopped (pid ${pid})`)
     }
     await new Promise((r) => setTimeout(r, 500))
     const child = spawn("bun", ["run", SRC_INDEX], {
       detached: true,
-      stdio: ["ignore", fs.openSync(LOG_FILE, "a"), fs.openSync(LOG_FILE, "a")],
+      stdio: ["ignore", fs.openSync(CLI_LOG_FILE, "a"), fs.openSync(CLI_LOG_FILE, "a")],
       env: { ...process.env },
     })
     child.unref()
-    fs.writeFileSync(PID_FILE, String(child.pid), "utf8")
+    fs.writeFileSync(CLI_PID_FILE, String(child.pid), "utf8")
     console.log(`✅ GateClaw restarted (pid ${child.pid})`)
     break
   }
@@ -167,17 +176,17 @@ switch (cmd) {
   }
 
   case "logs": {
-    console.log(`📋 Tailing ${LOG_FILE} (Ctrl+C to stop)\n`)
+    console.log(`📋 Tailing ${CLI_LOG_FILE} (Ctrl+C to stop)\n`)
     try {
-      execSync(`tail -f "${LOG_FILE}"`, { stdio: "inherit", shell: "cmd" })
+      execSync(`tail -f "${CLI_LOG_FILE}"`, { stdio: "inherit", shell: "cmd" })
     } catch {
       let size = 0
       setInterval(() => {
         try {
-          const stat = fs.statSync(LOG_FILE)
+          const stat = fs.statSync(CLI_LOG_FILE)
           if (stat.size > size) {
             const buf = Buffer.alloc(stat.size - size)
-            const fd = fs.openSync(LOG_FILE, "r")
+            const fd = fs.openSync(CLI_LOG_FILE, "r")
             fs.readSync(fd, buf, 0, buf.length, size)
             fs.closeSync(fd)
             process.stdout.write(buf.toString("utf8"))
@@ -198,11 +207,11 @@ switch (cmd) {
       console.log("🐾 Daemon not running, starting it first...")
       const child = spawn("bun", ["run", SRC_INDEX], {
         detached: true,
-        stdio: ["ignore", fs.openSync(LOG_FILE, "a"), fs.openSync(LOG_FILE, "a")],
+        stdio: ["ignore", fs.openSync(CLI_LOG_FILE, "a"), fs.openSync(CLI_LOG_FILE, "a")],
         env: { ...process.env },
       })
       child.unref()
-      fs.writeFileSync(PID_FILE, String(child.pid), "utf8")
+      fs.writeFileSync(CLI_PID_FILE, String(child.pid), "utf8")
       await new Promise((r) => setTimeout(r, 1500))
     }
 

@@ -8,11 +8,17 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --watch run src/index.ts",
-    "mcp": "bun run src/mcp.ts"
+    "mcp": "bun run src/mcp.ts",
+    "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.25.2",
+    "gray-matter": "^4.0.3",
     "hono": "4.10.7",
-    "gray-matter": "^4.0.3"
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@typescript/native-preview": "7.0.0-dev.20260313.1",
+    "typescript": "5.9.3"
   }
 }

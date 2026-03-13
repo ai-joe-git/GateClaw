@@ -10,26 +10,47 @@ import {
 import { getSoulName, getSoulPrompt, getPIDPath, getLogPath } from "./soul"
 import { broadcast, clients } from "./events"
 import { sendMessage } from "./telegram"
+import { logger, formatError } from "./logger"
+import { z } from "zod"
 import fs from "node:fs"
-import path from "node:path"
 
 const app = new Hono()
 const startTime = Date.now()
-
-const log = (msg: string) => {
-  const line = `[${new Date().toISOString()}] ${msg}`
-  console.log(line)
-  try {
-    fs.appendFileSync(getLogPath(), line + "\n")
-  } catch {}
-}
 
 const pidPath = getPIDPath()
 const pid = process.pid.toString()
 fs.writeFileSync(pidPath, pid, "utf8")
 
 const soulName = getSoulName()
-log(`BOOT soul=${soulName} pid=${pid}`)
+logger.info("BOOT", { soul: soulName, pid })
+
+// Validate env at startup
+const telegramToken = process.env.GATECLAW_TELEGRAM_TOKEN
+const telegramChatId = process.env.GATECLAW_TELEGRAM_CHAT_ID
+if (!telegramToken || !telegramChatId) {
+  logger.warn("Telegram not configured", { token: !!telegramToken, chatId: !!telegramChatId })
+}
+
+// Zod schemas for request validation
+const factSchema = z.object({
+  key: z.string().min(1),
+  value: z.string().min(1),
+})
+
+const messageSchema = z.object({
+  session_key: z.string().min(1),
+  role: z.string().min(1),
+  content: z.string().min(1),
+})
+
+const broadcastSchema = z.object({
+  message: z.string().min(1),
+})
+
+const telegramSchema = z.object({
+  chat_id: z.number().int().positive(),
+  text: z.string().min(1),
+})
 
 app.get("/health", (c) => {
   return c.json({
@@ -37,21 +58,29 @@ app.get("/health", (c) => {
     soul: getSoulName(),
     uptime_ms: Date.now() - startTime,
     pid: process.pid,
+    telegram: telegramToken && telegramChatId ? "configured" : "missing",
   })
 })
 
 app.post("/shutdown", (c) => {
-  log("Shutdown requested via HTTP")
+  logger.info("Shutdown requested via HTTP")
   setTimeout(() => process.exit(0), 100)
   return c.json({ ok: true })
 })
 
 app.post("/fact", async (c) => {
-  const body = await c.req.json<{ key: string; value: string }>()
-  saveFact(body.key, body.value)
-  const chatId = Number(process.env.GATECLAW_TELEGRAM_CHAT_ID)
-  if (chatId) sendMessage(chatId, `🐾 *Fact stored*\n\`${body.key}\` = ${body.value}`)
-  return c.json({ ok: true })
+  try {
+    const body = await c.req.json()
+    const parsed = factSchema.parse(body)
+    saveFact(parsed.key, parsed.value)
+    const chatId = Number(process.env.GATECLAW_TELEGRAM_CHAT_ID)
+    if (chatId) sendMessage(chatId, `🐾 *Fact stored*\n\`${parsed.key}\` = ${parsed.value}`)
+    logger.info("Fact stored", { key: parsed.key })
+    return c.json({ ok: true })
+  } catch (err) {
+    logger.error("Failed to save fact", { error: formatError(err) })
+    return c.json({ error: "failed to save fact" }, 500)
+  }
 })
 
 app.get("/facts", (c) => {
@@ -60,22 +89,38 @@ app.get("/facts", (c) => {
 })
 
 app.get("/fact/:key", (c) => {
-  const key = c.req.param("key")
-  const fact = getFact(key)
-  if (!fact) return c.json({ error: "not found" }, 404)
-  return c.json({ key: fact.key, value: fact.value })
+  try {
+    const key = c.req.param("key")
+    const fact = getFact(key)
+    if (!fact) return c.json({ error: "not found" }, 404)
+    return c.json({ key: fact.key, value: fact.value })
+  } catch {
+    return c.json({ error: "invalid key" }, 400)
+  }
 })
 
 app.post("/message", async (c) => {
-  const body = await c.req.json<{ session_key: string; role: string; content: string }>()
-  saveMessage(body.session_key, body.role, body.content)
-  return c.json({ ok: true })
+  try {
+    const body = await c.req.json()
+    const parsed = messageSchema.parse(body)
+    saveMessage(parsed.session_key, parsed.role, parsed.content)
+    logger.info("Message stored", { session: parsed.session_key, role: parsed.role })
+    return c.json({ ok: true })
+  } catch (err) {
+    logger.error("Failed to save message", { error: formatError(err) })
+    return c.json({ error: "failed to save message" }, 500)
+  }
 })
 
 app.get("/messages/:session_key", (c) => {
-  const sessionKey = c.req.param("session_key")
-  const msgs = getMessages(sessionKey, 20)
-  return c.json(msgs)
+  try {
+    const sessionKey = c.req.param("session_key")
+    const msgs = getMessages(sessionKey, 20)
+    return c.json(msgs)
+  } catch (err) {
+    logger.error("Failed to fetch messages", { error: formatError(err) })
+    return c.json({ error: "failed to fetch messages" }, 500)
+  }
 })
 
 app.get("/events", (c) => {
@@ -116,21 +161,36 @@ app.get("/events", (c) => {
 })
 
 app.post("/broadcast", async (c) => {
-  const body = await c.req.json<{ message: string }>()
-  broadcast(body.message)
-  return c.json({ ok: true, clients: clients.size })
+  try {
+    const body = await c.req.json()
+    const parsed = broadcastSchema.parse(body)
+    broadcast(parsed.message)
+    logger.info("Broadcast sent", { clients: clients.size })
+    return c.json({ ok: true, clients: clients.size })
+  } catch (err) {
+    logger.error("Broadcast failed", { error: formatError(err) })
+    return c.json({ error: "broadcast failed" }, 500)
+  }
 })
 
 app.post("/telegram/send", async (c) => {
-  const body = await c.req.json<{ chat_id: number; text: string }>()
-  await sendMessage(body.chat_id, body.text)
-  return c.json({ ok: true })
+  try {
+    const body = await c.req.json()
+    const parsed = telegramSchema.parse(body)
+    await sendMessage(parsed.chat_id, parsed.text)
+    logger.info("Telegram message sent", { chat_id: parsed.chat_id })
+    return c.json({ ok: true })
+  } catch (err) {
+    logger.error("Failed to send telegram message", { error: formatError(err) })
+    return c.json({ error: "failed to send message" }, 500)
+  }
 })
 
 app.delete("/fact/:key", (c) => {
   try {
     const key = c.req.param("key")
     deleteFact(key)
+    logger.info("Fact deleted", { key })
     return c.json({ ok: true })
   } catch {
     return c.json({ error: "not found" }, 404)

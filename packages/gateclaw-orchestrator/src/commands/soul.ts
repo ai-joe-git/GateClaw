@@ -1,14 +1,10 @@
 import fs from "node:fs"
 import path from "node:path"
-import os from "node:os"
 import readline from "node:readline"
-import { getSoulPrompt } from "../soul"
+import { getSoulPrompt, getSOULPath, getSoulConfig, getConfigDir } from "../soul"
 
-const CONFIG_DIR = process.env.APPDATA
-  ? path.join(process.env.APPDATA, "gateclaw")
-  : path.join(os.homedir(), ".config", "gateclaw")
-
-const SOUL_PATH = path.join(CONFIG_DIR, "SOUL.md")
+const SOUL_PATH = getSOULPath()
+const CONFIG_DIR = getConfigDir()
 
 interface SoulConfig {
   name: string
@@ -83,6 +79,8 @@ export async function init() {
     console.log("─".repeat(60))
     console.log(current)
     console.log("─".repeat(60))
+  } else {
+    ensureConfigDir()
   }
 
   const answers = await prompt([
@@ -118,7 +116,6 @@ export async function init() {
     }
   })
 
-  ensureConfigDir()
   const content = buildSoulContent(config)
   fs.writeFileSync(SOUL_PATH, content, "utf8")
 
@@ -138,7 +135,7 @@ export async function edit() {
 
   console.log("✏️  Edit Soul (Ctrl+C to cancel)\n")
 
-  const current = fs.readFileSync(SOUL_PATH, "utf8")
+  const current = getSoulPrompt()
   console.log("Current content:")
   console.log("─".repeat(60))
   console.log(current)
@@ -177,6 +174,7 @@ export async function edit() {
     }
   })
 
+  ensureConfigDir()
   const content = buildSoulContent(config)
   fs.writeFileSync(SOUL_PATH, content, "utf8")
 
@@ -186,8 +184,6 @@ export async function edit() {
   console.log(`   personality: ${config.personality}`)
   console.log(`   language: ${config.language}`)
 }
-
-export { show, reset }
 
 async function show() {
   if (!fs.existsSync(SOUL_PATH)) {
@@ -231,15 +227,17 @@ async function reset() {
     }
   })
 
+  ensureConfigDir()
   const config: SoulConfig = {
     name: "GateClaw",
     owner: "User",
     personality: "direct, technical, slightly sarcastic",
     language: "english",
   }
-
   const content = buildSoulContent(config)
   fs.writeFileSync(SOUL_PATH, content, "utf8")
 
   console.log("\n✅ Soul reset to defaults")
 }
+
+export { show, reset }

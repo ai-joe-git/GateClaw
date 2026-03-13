@@ -297,12 +297,12 @@ const poll = async () => {
       for (const update of json.result) {
         if (update.message?.text && update.message.chat?.id) {
           const chatId = update.message.chat.id
-          const textContent = update.message.text.trim() || ""
+          const textContent = update.message.text?.trim() || ""
           console.log(`Telegram message from ${chatId}: ${textContent.slice(0, 50)}...`)
 
           // Handle slash commands
           if (textContent.startsWith("/")) {
-            const cmd = textContent.slice(1).split(" ")[0].toLowerCase()
+            const cmd = textContent.slice(1).split(" ")[0] || ""
             const args = textContent.split(" ").slice(1).join(" ")
 
             if (cmd === "models") {

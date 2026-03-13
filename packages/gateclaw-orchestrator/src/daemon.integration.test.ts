@@ -12,7 +12,7 @@ describe("Daemon Lifecycle Integration", () => {
   const killDaemon = () => {
     if (daemon) {
       const daemonPid = daemon.pid
-      if (daemonPid) {
+      if (daemonPid !== undefined) {
         if (process.platform === "win32") {
           try {
             execSync(`taskkill /PID ${daemonPid} /F`, { stdio: "pipe" })

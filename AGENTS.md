@@ -1,6 +1,6 @@
 # AGENTS.md - Development Guidelines for GateClaw
 
-> Monorepo with Bun workspaces | Package manager: `bun@1.3.10` | Default branch: `dev`
+> **Monorepo**: Bun workspaces | **Package manager**: `bun@1.3.10` | **Default branch**: `dev`
 
 ## Identity & Purpose
 
@@ -11,14 +11,7 @@ GateClaw is **not a chatbot**. It is a **resident AI entity** that lives on the 
 - **System access** - Shell, filesystem, HTTP, memory operations
 - **Multi-interface** - Telegram (primary), TUI, CLI, HTTP API (all equal)
 
-**What this means for development:** GateClaw should act like a resident, not a service. It has initiative, memory, and a consistent personality across sessions.
-
-**Proven capabilities** (from the "Who Am I?" essay session):
-
-- Self-correction loop (85 → 325 lines autonomously)
-- Filesystem intelligence (subagent directory exploration)
-- Aesthetic reasoning (voice-to-personality matching)
-- Meta-collaboration (suggesting TTS integration for release)
+**Development mindset:** GateClaw acts like a resident, not a service. It has initiative, memory, and consistent personality across sessions.
 
 ---
 
@@ -26,45 +19,62 @@ GateClaw is **not a chatbot**. It is a **resident AI entity** that lives on the 
 
 ### Root Level
 
-`bun dev` (Opencode CLI) | `bun dev:desktop` | `bun dev:web` | `bun typecheck` | `bun prepare`
-
-### packages/opencode
-
 ```bash
-bun run typecheck          # tsg --noEmit (TypeScript 5.8+)
-bun test                   # All tests (30s timeout)
-bun test path.test.ts      # Single test file
-bun test -t "name"         # Test by name
-bun run build              # Build via script/build.ts
-bun run db generate --name slug  # Drizzle migration
-bun run lint               # Tests with coverage
+bun dev                # Opencode CLI dev mode
+bun dev:desktop        # Desktop app dev
+bun dev:web            # Web app dev
+bun typecheck          # TypeScript check all packages
+bun prepare            # Pre-commit hooks setup
 ```
 
-### packages/app
+### packages/opencode (Core Orchestrator)
 
 ```bash
-bun test:unit              # Unit tests (happydom preload)
+bun run typecheck      # tsg --noEmit (TypeScript 5.8+)
+bun test               # All tests (30s timeout)
+bun test path.test.ts  # Single test file
+bun test -t "name"     # Run test by name pattern
+bun run build          # Build via script/build.ts
+bun run lint           # Tests with coverage
+bun run db generate --name <slug>  # Drizzle migration
+```
+
+### packages/app (Web/Desktop UI)
+
+```bash
+bun test:unit              # Unit tests (HappyDOM preload)
 bun test -- src/foo.test.ts    # Single unit test
 bun test:e2e               # E2E tests (Playwright)
-bun test:e2e -- app/home.spec.ts   # Single e2e test
-bun test:e2e -- -g "pattern"       # E2E by title
+bun test:e2e -- app/home.spec.ts   # Single E2E file
+bun test:e2e -- -g "pattern"       # E2E by title pattern
 bun test:e2e:ui            # Playwright UI mode
+bun test:e2e:report        # Generate HTML report
 ```
 
-### packages/desktop
+### packages/desktop (Tauri App)
 
-`bun run typecheck` | `bun run build` | `bun run tauri`
+```bash
+bun run typecheck
+bun run build
+bun run tauri              # Dev mode
+```
 
-### packages/desktop-electron
+### packages/desktop-electron (Electron App)
 
-`bun run typecheck` | `bun run build` | `bun run package`
+```bash
+bun run typecheck
+bun run build
+bun run package            # Package for distribution
+```
 
-### Running Single Tests
+### Running Single Tests - Quick Reference
 
-- **Opencode**: `bun test <path>.test.ts` or `bun test -t "name"`
-- **App unit**: `bun test -- <path>.test.ts`
-- **E2E**: `bun test:e2e -- <file>.spec.ts` or `-g "pattern"`
-- **Never run tests from root**: Always from package directories
+| Package              | Command                                              |
+| -------------------- | ---------------------------------------------------- |
+| **Opencode**         | `bun test <file>.test.ts` or `bun test -t "pattern"` |
+| **App units**        | `bun test -- <path>.test.ts` (note the `--`)         |
+| **E2E**              | `bun test:e2e -- <file>.spec.ts` or `-g "title"`     |
+| **Never from root!** | Always `cd` into package directory first             |
 
 ---
 
@@ -72,48 +82,65 @@ bun test:e2e:ui            # Playwright UI mode
 
 ### Naming Conventions
 
-- **Single-word**: `pid`, `cfg`, `err`, `opts`, `dir`, `root`, `child`, `state`
-- **camelCase**: variables, functions | **SCREAMING_SNAKE_CASE**: constants | **PascalCase**: types, classes
-- **File/dir names**: snake_case
+- **Single-word vars**: `pid`, `cfg`, `err`, `opts`, `dir`, `root`, `child`, `state`
+- **camelCase**: variables, functions
+- **SCREAMING_SNAKE_CASE**: constants
+- **PascalCase**: types, classes, interfaces
+- **File/dir names**: snake_case (e.g., `gateclaw.sql.ts`, `user_store.ts`)
 
 ### Variables & Control Flow
 
-- **Prefer `const`** over `let` | **Avoid destructuring**; use dot notation: `obj.a`
-- **Use ternaries** or early returns; avoid `else` after returns
+- **Prefer `const`** over `let` (immutability default)
+- **Avoid destructuring**; use dot notation: `obj.prop` not `{prop} = obj`
+- **Use ternaries** or early returns; avoid `else` after `return`
 - **Inline single-use values**: `const x = await Bun.file(path).json()`
 
 ### Imports
 
-- **Absolute**: `@/*` in `packages/opencode/src/` | **Cross-package**: `@opencode-ai/*`
-- **Order**: Standard lib → External → Internal/absolute → relative | alphabetical
-- **E2E**: Import from `../fixtures`, not `@playwright/test` | **No circular deps**
+- **Absolute paths**: `@/*` maps to `packages/opencode/src/`
+- **Cross-package**: `@opencode-ai/*` for imports between packages
+- **Order**: Std lib → External → Internal absolute → Relative → Alphabetical within groups
+- **E2E tests**: Import from `../fixtures`, never from `@playwright/test` directly
+- **No circular dependencies**: Structure imports carefully
 
 ### Formatting
 
-- **Prettier**: `semi: false`, `printWidth: 120`
-- **Editorconfig**: 2 spaces, LF, final newline, max 80 chars
-- **Pre-commit**: Husky runs `prepare` script
+- **Prettier**: `semi: false`, `printWidth: 120`, single quotes
+- **Editorconfig**: 2 spaces, LF line endings, final newline, max 80 chars per line
+- **Pre-commit**: Husky runs `bun prepare` script automatically
 
 ### Types
 
-- **No explicit return types** (unless exporting) | **No `any`**: use `unknown` + type guards
-- **Zod**: runtime validation | **Effect**: error handling | **SolidJS**: `createStore` over `createSignal`
+- **No explicit return types** on functions (inferred), unless exporting public API
+- **No `any` ever**: Use `unknown` + type guards for narrowing
+- **Zod**: Runtime validation for external inputs, configs, API responses
+- **Effect**: Error handling with Result types instead of exceptions
+- **SolidJS**: Use `createStore` over `createSignal` for complex state
 
 ### Error Handling
 
-- **No try/catch**: Result types (Effect), early returns, or functional patterns
-- **No mocks**: test real logic when possible | **Functional**: `.map()`, `.filter()`, `.flatMap()`
+- **No try/catch blocks**: Prefer Result types (Effect), early returns, functional patterns
+- **No mocks in tests**: Test real logic when possible
+- **Functional patterns**: `.map()`, `.filter()`, `.flatMap()` over imperative loops
+- **User-facing errors**: Friendly, actionable messages
+- **Dev errors**: Detailed stack traces with context
 
 ---
 
 ## Database (Drizzle ORM)
 
-- **Schema**: `src/**/*.sql.ts`
-- **Naming**: snake*case cols, `<entity>_id` joins, `<table>*<column>\_idx` indexes
-- **Migrations**: `bun run db generate --name <slug>`
+- **Schema files**: `src/**/*.sql.ts` (co-locate with code)
+- **Column naming**: snake_case (`user_id`, `created_at`)
+- **Join columns**: `<entity>_id` pattern (e.g., `project_id`, `session_id`)
+- **Index naming**: `<table>_<column>_idx` (e.g., `sessions_user_idx`)
+- **Migrations**: `bun run db generate --name <slug>` from package dir
+- **Migration tests**: Read per-folder layout from `migration/<timestamp>_<slug>/`
 
 ```ts
-const table = sqliteTable("session", {
+// Example schema
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
+
+export const session = sqliteTable("session", {
   id: text().primaryKey(),
   project_id: text().notNull(),
   created_at: integer().notNull(),
@@ -124,88 +151,129 @@ const table = sqliteTable("session", {
 
 ## Type Checking
 
-- **Command**: `bun typecheck` from package dirs
-- **Implementation**: `tsg` (TypeScript 5.8+)
-- **Never use `tsc`**
+- **Command**: `bun typecheck` from individual package directories
+- **Implementation**: `tsg` (TypeScript 5.8+ with get inferred types)
+- **Never use `tsc`**: Only `tsg` for type checking
+- **CI enforcement**: Type check fails the build
 
 ---
 
 ## Git Workflow
 
-- **Default branch**: `dev` (use `dev` or `origin/dev` for diffs)
-- **Commits**: Only when explicitly requested
-- **Verification**: Run `bun typecheck` and tests before commit
-- **Never commit** unless asked
+- **Default branch**: `dev` (not `main`!)
+- **Diffs**: Compare against `dev` or `origin/dev`
+- **Commits**: Only when explicitly requested by user
+- **Verification**: Run `bun typecheck` + relevant tests BEFORE committing
+- **Commit messages**: Present tense, concise, explain WHY not what
+- **Never commit secrets**: Check `.env`, credentials.json, API keys, etc.
 
 ---
 
 ## Package-Specific Notes
 
-### packages/gateclaw-orchestrator
+### packages/gateclaw-orchestrator (Core Daemon)
 
-- **Telegram**: `GATECLAW_TELEGRAM_TOKEN` + `GATECLAW_TELEGRAM_CHAT_ID`
-- **Memory**: SQLite at `~/.local/share/gateclaw/gateclaw.db`
-- **Daemon**: `localhost:7371`, PID at `~/.config/gateclaw/daemon.pid`
+- **Telegram config**: `GATECLAW_TELEGRAM_TOKEN` + `GATECLAW_TELEGRAM_CHAT_ID`
+- **Memory DB**: SQLite at `~/.local/share/gateclaw/gateclaw.db`
+- **Daemon**: HTTP API on `localhost:7371`, PID at `~/.config/gateclaw/daemon.pid`
 - **Soul**: Identity in `~/.config/gateclaw/SOUL.md`
-- **CLI**: `gateclaw {start|stop|restart|status|logs|tui|run}` | `gateclaw soul {init|edit|show|reset}`
-- **Facts**: `gateclaw fact {store|delete|get}`
+- **CLI commands**: `gateclaw {start|stop|restart|status|logs|tui|run}`
+- **Soul commands**: `gateclaw soul {init|edit|show|reset}`
+- **Facts management**: `gateclaw fact {store|delete|get}`
 - **Provider detection**: Auto-detects llama-swap (:8888), Ollama (:11434), LM Studio (:1234)
 
 ### packages/desktop-electron
 
-- **Renderer**: `window.api` from `src/preload` only | **Main**: IPC in `src/main/ipc.ts`
+- **Renderer process**: Use `window.api` from `src/preload` only (IPC bridge)
+- **Main process**: IPC handlers in `src/main/ipc.ts`
+- **Security**: Context isolation enabled, no direct Node in renderer
 
-### packages/app
+### packages/app (SolidJS Frontend)
 
-- **HappyDOM**: `happydom.ts` preload | **Selectors**: `data-*` attrs or roles
-- **NEVER restart app/server** during debug | **E2E cleanup**: `withSession()` / `withProject()` helpers
+- **Test environment**: HappyDOM via `happydom.ts` preload file
+- **Selectors**: Use `data-*` attributes or ARIA roles, never fragile CSS selectors
+- **State management**: `createStore` for complex state, `createSignal` for primitives
+- **NEVER restart app/server** during debugging (breaks test isolation)
+- **E2E helpers**: Use `withSession()` / `withProject()` for cleanup between tests
 
 ---
 
 ## Testing Guidelines
 
-- **Timeouts**: Opencode 30s, E2E 60s/test, 10s/assertion
-- **Watch mode**: `bun test:unit:watch` (App), `bun test` (Opencode)
-- **E2E UI mode**: `bun test:e2e:ui` | **HTML report**: `bun test:e2e:report`
-- **HappyDOM**: App unit tests use `happydom.ts` preload for DOM emulation
-- **Coverage**: `bun run lint` (Opencode) runs tests with coverage
-- **Never run tests from root**: always from package directories
+- **Timeouts**: Opencode 30s default, E2E 60s/test, 10s per assertion
+- **Watch mode**: `bun test:unit:watch` (App), `bun test` (Opencode supports auto-watch)
+- **Coverage**: `bun run lint` runs tests with coverage (Opencode only)
+- **HappyDOM**: All App unit tests use HappyDOM preload for DOM emulation
+- **Parallel tests**: Bun runs tests in parallel by default (design for isolation)
+- **Always from package dirs**: Never run tests from repository root
 
 ---
 
 ## Environment & Configuration
 
-- **Config**: `.gateclaw/` (legacy: `.opencode/`) | **Agents**: `.gateclaw/agent/*.md` (legacy: `.opencode/agent/*.md`)
-- **Env**: `env/` module | **Flags**: `flag/` module
+- **Config directory**: `.gateclaw/` (legacy: `.opencode/`)
+- **Agent definitions**: `.gateclaw/agent/*.md` (legacy: `.opencode/agent/*.md`)
+- **Env module**: Use `env/` module for environment variable access
+- **Flags module**: Feature flags via `flag/` module
 - **Global envs**: `CI`, `OPENCODE_DISABLE_SHARE` (via `turbo.json` globalEnv)
+- **.env files**: Never commit, always in `.gitignore`
 
 ---
 
-## Agent Behavior
+## Agent Behavior Expectations
 
-- Ask clarifying questions | Propose options | Run typecheck/tests after changes
-- Don't modify source unless asked | Prefer automation | **Never commit** unless requested
-- **ALWAYS use parallel tools** (e.g., multiple `read`/`bash` calls in one message)
-- **Type-safe code**: proper TypeScript inference, no `any`, use `unknown` with narrowing
-- **Cross-package imports**: `@opencode-ai/*` | **Internal**: `@/*`
-- **Agentic initiative**: GateClaw can self-correct, explore filesystems, and make aesthetic decisions
+- **Ask clarifying questions**: Don't assume ambiguous requirements
+- **Propose multiple options**: When there are trade-offs, present them
+- **Run verification**: Always run `bun typecheck` and relevant tests after changes
+- **Don't modify source unless asked**: Especially configs, don't touch without permission
+- **Prefer automation**: Script repetitive tasks, don't do manual steps
+- **Never commit** unless explicitly requested by user
+- **ALWAYS use parallel tools**: Batch multiple `read`, `bash`, `grep` calls in single message
+- **Type-safe code**: Proper TypeScript inference, no `any`, use `unknown` with narrowing
+- **Respect imports**: Cross-package `@opencode-ai/*`, internal `@/*`
+- **Agentic initiative**: GateClaw can self-correct, explore filesystems autonomously, make aesthetic decisions
 
 ---
 
 ## Libraries & Patterns
 
-- **Zod**: runtime validation | **Effect**: error handling | **SolidJS**: signals/stores
-- **Drizzle ORM**: SQLite/Postgres with snake_case naming | **Husky**: pre-commit hooks
-- **Prettier**: `semi: false`, `printWidth: 120` | **TypeScript**: tsg (TypeScript 5.8+)
+- **Zod**: Runtime validation for all external inputs
+- **Effect-ts**: Error handling with Result/Either types
+- **SolidJS**: Signals/stores for reactive UI state
+- **Drizzle ORM**: Type-safe SQL with snake_case conventions
+- **Husky**: Pre-commit hooks for formatting/linting
+- **Prettier**: Code formatting (see config above)
+- **TypeScript**: `tsg` for type checking (TypeScript 5.8+)
 
 ---
 
 ## Voice Integration (pocket-tts-server)
 
-GateClaw can speak via cloned voices. The `demo/who_am_i.wav` file demonstrates:
+GateClaw can speak via cloned voices from pocket-tts-server companion project.
 
-- David Attenborough voice reading GateClaw's existential essay
-- Autonomous voice selection based on personality matching
-- 15-minute audio generated via pocket-tts-server
+**Demo assets:**
 
-**For future development:** Consider integrating TTS as an optional module for voice output.
+- `demo/who_am_i.mp4` - Essay narration with static logo (David Attenborough voice)
+- Audio generated autonomously based on SOUL.md personality matching
+
+**For TTS features:** Consider integrating as optional module for voice output in daemon.
+
+---
+
+## Critical Reminders (Read Before Every Task)
+
+✅ **ALWAYS run `bun typecheck`** before suggesting any commit
+
+✅ **Tests from package directories ONLY** - never from repo root
+
+✅ **Use parallel tool calls** - batch reads/writes/bash commands together
+
+✅ **Never commit secrets** - verify no .env, credentials, API keys staged
+
+✅ **Commit messages**: Present tense, explain WHY not WHAT, keep concise
+
+✅ **Default branch is `dev`** - not main, not master
+
+---
+
+_Last updated: March 2026 | Version: 0.1.0-beta_

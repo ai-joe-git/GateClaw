@@ -393,7 +393,7 @@ $ gateclaw facts                # View all facts
 $ gateclaw history [session]    # View message history
 
 # AI Models
-$ gateclaw models               # List available AI models
+$ gateclaw providers add        # Add new AI provider (interactive)
 
 # Export
 $ gateclaw export <session>     # Export session to MD/JSON

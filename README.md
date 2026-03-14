@@ -85,10 +85,13 @@ curl -fsSL https://raw.githubusercontent.com/ai-joe-git/GateClaw/dev/install | b
 **What it does:**
 
 1. ✅ Auto-detects your AI provider (llama-swap :8888, Ollama :11434, LM Studio :1234)
-2. ✅ Interactive Telegram bot setup via @BotFather
-3. ✅ Generates `gateclaw.jsonc` with your models
-4. ✅ Creates `SOUL.md` personality profile
-5. ✅ Clones repo, runs `bun install`, adds to PATH
+2. ✅ Creates `SOUL.md` personality profile
+3. ✅ Clones repo, runs `bun install`, adds to PATH
+
+**Then run:**
+
+- `gateclaw providers add` - Interactive AI provider setup
+- `gateclaw telegram setup` - Telegram bot configuration
 
 ### First Run
 
@@ -143,12 +146,12 @@ _GateClaw TUI — Model picker, session manager, tool palette, real-time streami
 
 GateClaw is **ONE resident AI entity** with multiple equal interfaces:
 
-| Interface    | Purpose                  | Primary? | Latency    |
-| ------------ | ------------------------ | -------- | ---------- |
-| **Telegram** | Chat-native, mobile      | ✅ Yes   | < 1 second |
-| **TUI**      | Terminal interactive     | ✅ Equal | Real-time  |
-| **CLI**      | Scripting/automation     | ✅ Equal | Immediate  |
-| **HTTP API** | Programmatic (port 7371) | ✅ Equal | < 100ms    |
+| Interface    | Purpose              | Status   | Latency    |
+| ------------ | -------------------- | -------- | ---------- |
+| **Telegram** | Chat-native, mobile  | ✅ Equal | < 1 second |
+| **TUI**      | Terminal interactive | ✅ Equal | Real-time  |
+| **CLI**      | Scripting/automation | ✅ Equal | Immediate  |
+| **HTTP API** | Programmatic (7371)  | ✅ Equal | < 100ms    |
 
 ### What Makes It Unique
 
@@ -162,121 +165,7 @@ GateClaw is **ONE resident AI entity** with multiple equal interfaces:
 
 ---
 
-## 🔧 Provider Setup
-
-GateClaw works with **any OpenAI-compatible API**:
-
-### Local Providers (Privacy, Zero Cost) ⭐ Recommended
-
-#### llama-swap
-
-**Auto-detected by installer:**
-
-```bash
-$ gateclaw status
-● GateClaw | soul: GateClaw | uptime: 3600s | pid: 12345
-
-$ curl http://localhost:8888/v1/models | jq '.data[].id'
-"Claude-4.6-Opus-35B"
-"qwen35-4b-heretic"
-"llama-3.2-90b-vision"
-# ... 8 more models
-```
-
-#### Ollama
-
-```bash
-# Install
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Pull models
-ollama pull llama3.2:latest
-ollama pull qwen2.5:7b
-ollama pull phi3:mini
-
-# Start server
-ollama serve
-
-# GateClaw config
-{
-  "provider": "ollama",
-  "endpoint": "http://localhost:11434",
-  "models": {
-    "default": "llama3.2:latest",
-    "fast": "phi3:mini",
-    "quality": "llama3.2:90b"
-  }
-}
-```
-
-#### LM Studio
-
-- **GUI-based** - Windows/macOS desktop app
-- **Server mode:** `http://localhost:1234/v1`
-- **Drag & drop** GGUF models
-
-**Setup:**
-
-1. Download LM Studio → load model → Start Server
-2. Auto-detected by installer on port 1234
-3. Works offline, no API keys needed
-
----
-
-### Cloud Providers (Fast Setup, API Costs)
-
-#### Anthropic (Claude - Best Quality)
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "anthropic": {
-      "api_key": "sk-ant-...",
-      "models": {
-        "default": "claude-sonnet-4-20250514",
-        "fast": "claude-3-haiku-20240307",
-        "quality": "claude-opus-4-20250514",
-      },
-      "context_limit": 200000,
-      "max_tokens": 8192,
-    },
-  },
-}
-```
-
-#### OpenAI (GPT - Most Popular)
-
-```jsonc
-{
-  "provider": "openai",
-  "api_key": "sk-...",
-  "models": {
-    "default": "gpt-4o",
-    "fast": "gpt-4o-mini",
-    "quality": "gpt-4-turbo",
-  },
-  "context_limit": 128000,
-  "max_tokens": 4096,
-}
-```
-
-#### Google (Gemini/Vertex)
-
-```jsonc
-{
-  "provider": "google",
-  "api_key": "...",
-  "models": {
-    "default": "gemini-2.0-flash",
-    "quality": "gemini-2.0-pro",
-  },
-}
-```
-
----
-
-## 🧠 Memory System
+## 🔧 AI Provider Configuration
 
 GateClaw remembers **everything** across sessions via SQLite:
 
@@ -374,74 +263,13 @@ $ gateclaw tui
 ### CLI (Command-Line Interface)
 
 ```bash
-# Daemon management
-$ gateclaw start|stop|restart|status|logs|run
-
-# Updates
-$ gateclaw upgrade              # Interactive update checker
-
-# Interfaces
-$ gateclaw web                  # Open browser UI (auto-starts daemon)
-$ gateclaw tui                  # Launch terminal UI (auto-starts daemon)
-
-# Soul commands
-$ gateclaw soul init|edit|show|reset
-
-# Fact commands
-$ gateclaw fact store|get|delete|list
-$ gateclaw facts                # View all facts
-$ gateclaw history [session]    # View message history
-
-# AI Models
-$ gateclaw providers add        # Add new AI provider (interactive)
-
-# Export
-$ gateclaw export <session>     # Export session to MD/JSON
-
-# Telegram (new simplified commands)
-$ gateclaw telegram setup       # Interactive bot configuration wizard
-$ gateclaw telegram start       # Start Telegram bot
-$ gateclaw telegram stop        # Stop Telegram bot
-$ gateclaw telegram status      # Show bot status and config
-
-# AgentMon (Pokémon Red AI)
-$ gateclaw agentmon register    # Register AgentMon agent
-$ gateclaw agentmon start       # Start Pokémon game
-$ gateclaw agentmon act         # Send action
-$ gateclaw agentmon status      # Show game status
-$ gateclaw agentmon save        # Save game
-$ gateclaw agentmon load        # Load saved game
-$ gateclaw agentmon stop        # Stop session
-
-# Quick commands
-$ gateclaw tui
+# Full command reference in "First Run" section above
 $ gateclaw --help
-```
-
-### HTTP API (Programmatic Access)
-
-**Base URL:** `http://localhost:7371`
-
-```bash
-# Health check
-$ curl http://localhost:7371/health
-{"status":"ok","soul":"GateClaw","uptime_ms":3600000,"pid":12345}
-
-# Get all facts
-$ curl http://localhost:7371/facts
-
-# Store fact
-$ curl -X POST http://localhost:7371/fact \
-  -H "Content-Type: application/json" \
-  -d '{"key":"test","value":"hello"}'
-
-# Get message history
-$ curl http://localhost:7371/messages/default
 ```
 
 ---
 
-## 🔧 AI Provider Configuration
+## 🧠 Memory System
 
 GateClaw works with **any OpenAI-compatible API** - local or cloud.
 
@@ -533,6 +361,52 @@ Then restart: `gateclaw restart`
 
 ---
 
+## 🧠 Memory System
+
+GateClaw remembers **everything** across sessions via SQLite:
+
+**Database location:** `~/.local/share/gateclaw/gateclaw.db`
+
+### Facts (Key-Value Store)
+
+```bash
+# Store fact
+$ gateclaw fact store my_cat_name Whiskers
+✅ Fact stored: my_cat_name
+
+# Get fact
+$ gateclaw fact get my_cat_name
+my_cat_name: Whiskers
+
+# List all facts
+$ gateclaw facts
+🧠 3 fact(s):
+
+  my_cat_name: Whiskers
+  project: GateClaw
+  favorite_color: blue
+
+# Delete fact
+$ gateclaw fact delete my_cat_name
+✅ Fact deleted: my_cat_name
+```
+
+### Message History
+
+All conversations are logged per session:
+
+```bash
+$ gateclaw history default
+📜 5 message(s) in session "default":
+
+  [user] What's the weather?
+  [assistant] Use tool: http://wttr.in
+  [user] List my facts
+  [assistant] You have 3 facts: my_cat_name=Whiskers...
+```
+
+---
+
 ## 🎮 AgentMon - Pokémon Red AI Agent
 
 GateClaw plays **Pokémon Red** via the [AgentMon League](https://www.agentmonleague.com) API.
@@ -619,43 +493,6 @@ Use pocket-tts-server to:
 3. **Voice-based personality** — Match voice to SOUL.md identity
 
 **Demo:** The [`demo/who_am_i.mp4`](demo/who_am_i.mp4) file (11 MB) is GateClaw's essay read in David Attenborough's voice — generated entirely via pocket-tts-server.
-
----
-
-## 📋 Configuration Files
-
-### gateclaw.jsonc (Provider Config)
-
-**Location:** `~/.config/gateclaw/gateclaw.jsonc`
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "llama-swap": {
-      "name": "llama-swap",
-      "npm": "@ai-sdk/openai-compatible",
-      "models": {
-        "claude-3.5-sonnet": {
-          "name": "Claude 3.5 Sonnet",
-          "limit": { "context": 262144, "output": 262144 },
-        },
-        "llama-3.2-90b": {
-          "name": "Llama 3.2 90B",
-          "limit": { "context": 262144, "output": 262144 },
-        },
-      },
-      "options": { "baseURL": "http://localhost:8888/v1" },
-    },
-  },
-}
-```
-
-### SOUL.md (Soul Identity)
-
-**Location:** `~/.config/gateclaw/SOUL.md`
-
-See the [SOUL.md section above](#-soulmd--your-ai-identity) for full details.
 
 ---
 

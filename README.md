@@ -114,10 +114,10 @@ gateclaw
     web        Open browser UI
     tui        Launch the TUI
     soul       Soul management
-    telegram   Telegram bot setup
-    models     List AI models
-    export     Export sessions
-    agentmon   Pokémon Red AI
+    telegram   Telegram bot (setup/start/stop/status)
+    providers  Add AI provider (interactive wizard)
+    export     Export sessions to MD/JSON
+    agentmon   Pokémon Red AI agent
     facts      View memory facts
     history    View message history
 
@@ -441,6 +441,98 @@ $ curl http://localhost:7371/messages/default
 
 ---
 
+## 🔧 AI Provider Configuration
+
+GateClaw works with **any OpenAI-compatible API** - local or cloud.
+
+### Add New Provider (Interactive)
+
+```bash
+$ gateclaw providers add
+
+🔧 GateClaw Provider Setup
+
+Provider name (e.g., my-llama-swap): my-llama-swap
+API URL (e.g., http://localhost:8888/v1): http://localhost:8888/v1
+
+🔍 Testing connection...
+✅ Connected!
+
+API key (Enter for none):
+
+📡 Fetching models...
+✅ Found 12 models
+
+Enable all? [Y/n]: y
+
+Default model [Claude-4.6-Opus-35B]: Claude-4.6-Opus-35B
+
+┌─────────────────────────────────────────┐
+│ Provider Configuration                │
+├─────────────────────────────────────────┤
+│ Name: my-llama-swap                    │
+│ URL: http://localhost:8888/v1          │
+│ API Key: none                          │
+│ Models: 12 enabled                     │
+│ Default: Claude-4.6-Opus-35B           │
+└─────────────────────────────────────────┘
+
+Save? [Y/n]: y
+
+✅ Provider added!
+📝 Config: ~/.config/gateclaw/gateclaw.jsonc
+
+💡 Restart: gateclaw restart
+🎯 Test: gateclaw tui → select my-llama-swap/Claude-4.6-Opus-35B
+```
+
+### Supported Providers
+
+**Local (Recommended - Free & Private):**
+
+- **llama-swap** - Multi-model switching (port 8888)
+- **Ollama** - Simple local inference (port 11434)
+- **LM Studio** - Desktop app with server mode (port 1234)
+- **vllm** - High-throughput serving
+- **llama.cpp** - CPU inference server
+- Any OpenAI-compatible API
+
+**Cloud (API Costs):**
+
+- **Anthropic** - Claude models (best quality)
+- **OpenAI** - GPT-4, GPT-4o, GPT-5
+- **Google** - Gemini models
+- **OpenRouter** - Multi-provider gateway
+
+### Manual Configuration
+
+Edit `~/.config/gateclaw/gateclaw.jsonc` (or `%APPDATA%/gateclaw` on Windows):
+
+```jsonc
+{
+  "provider": {
+    "my-llama-swap": {
+      "name": "my-llama-swap",
+      "npm": "@ai-sdk/openai-compatible",
+      "models": {
+        "Claude-4.6-Opus-35B": {
+          "name": "Claude 4.6 Opus 35B",
+          "limit": { "context": 262144, "output": 262144 },
+        },
+      },
+      "options": {
+        "baseURL": "http://localhost:8888/v1",
+        "apiKey": "none",
+      },
+    },
+  },
+}
+```
+
+Then restart: `gateclaw restart`
+
+---
+
 ## 🎮 AgentMon - Pokémon Red AI Agent
 
 GateClaw plays **Pokémon Red** via the [AgentMon League](https://www.agentmonleague.com) API.
@@ -609,6 +701,7 @@ The [`demo/who_am_i.mp4`](demo/who_am_i.mp4) file (11 MB, Git-friendly) isn't ju
 | **CLI completeness**        | 30 production-ready commands                         |
 | **Gaming agency**           | AgentMon Pokémon Red AI integration                  |
 | **Production UX**           | Interactive wizards, colorful help, ASCII art        |
+| **Provider flexibility**    | OpenAI-compatible wizard for any inference server    |
 
 As Claude's analysis noted:
 
@@ -633,4 +726,13 @@ MIT — See [LICENSE](LICENSE)
 
 ---
 
-**Built with:** Claude-4.6-Opus-35B, llama-swap, Bun, Drizzle ORM, SolidJS, pocket-tts-server
+**Built with:** Claude-4.6-Opus-35B, llama-swap, Bun, Drizzle ORM, SolidJS, pocket-tts-server, AgentMon League API
+
+**Key innovations:**
+
+- **SOUL.md architecture** - Persistent AI identity
+- ️ **SQLite memory** - Facts & conversation history survive restarts
+- 🔄 **Multi-interface** - Telegram, TUI, CLI, Web (unified session)
+- 🎮 **AgentMon integration** - AI plays Pokémon Red autonomously
+- 🎨 **Production CLI** - 30 commands with interactive wizards
+- 🔌 **Provider agnostic** - Works with any OpenAI-compatible API

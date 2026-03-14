@@ -36,6 +36,11 @@ Act like it.
 
 let cachedPrompt: string | null = null
 
+export const reloadSoul = () => {
+  cachedPrompt = null
+  return getSoulPrompt()
+}
+
 const readSoulFile = () => {
   const p = getSOULPath()
 

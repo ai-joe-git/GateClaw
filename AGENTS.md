@@ -16,7 +16,7 @@ GateClaw is a **resident AI entity** with persistent memory, soul identity (`SOU
 bun dev                # Opencode CLI dev mode
 bun dev:desktop        # Desktop app dev
 bun dev:web            # Web app dev
-bun typecheck          # TypeScript check all packages
+bun typecheck          # TypeScript check all packages (turbo)
 bun prepare            # Pre-commit hooks (husky)
 ```
 
@@ -25,7 +25,7 @@ bun prepare            # Pre-commit hooks (husky)
 | Package              | Command                                                                |
 | -------------------- | ---------------------------------------------------------------------- |
 | **Opencode**         | `bun test <file>.test.ts` or `bun test -t "pattern"`                   |
-| **App units**        | `cd packages/app && bun test -- src/foo.test.ts`                       |
+| **App units**        | `cd packages/app && bun test --preload ./happydom.ts src/foo.test.ts`  |
 | **E2E**              | `cd packages/app && bun test:e2e -- app/home.spec.ts` or `-g "title"`  |
 | **Desktop**          | `cd packages/desktop && bun run typecheck && bun run build`            |
 | **Electron**         | `cd packages/desktop-electron && bun run typecheck && bun run package` |
@@ -33,10 +33,10 @@ bun prepare            # Pre-commit hooks (husky)
 
 ### Package-Specific Commands
 
-- **Opencode**: `bun run typecheck`, `bun test`, `bun run build`, `bun run lint` (coverage), `bun run db generate --name <slug>`
-- **App**: `bun test:unit` (HappyDOM), `bun test:unit:watch`, `bun test:e2e:ui` (Playwright UI mode)
-- **Desktop (Tauri)**: `bun run tauri dev`
-- **Electron**: `bun run package` (distro), `bun run dev`
+- **Opencode** | `bun test <file>.test.ts` or `-t "pattern"` | `bun run typecheck` | `bun run db generate --name <slug>`
+- **App** | `cd packages/app && bun test --preload ./happydom.ts src/foo.test.ts` | `tsgo -b` | `bun test:unit` / `test:e2e`
+- **Desktop (Tauri)**: `bun run typecheck`, `bun run build`, `bun run tauri dev`
+- **Electron**: `bun run package` (distro), `bun run dev`, `bun run preview`
 
 ---
 
@@ -59,8 +59,8 @@ bun prepare            # Pre-commit hooks (husky)
 
 ### Formatting (Prettier + Editorconfig)
 
-- `semi: false`, `printWidth: 120`, single quotes
-- 2 spaces, LF line endings, final newline, max 80 chars/line
+- `semi: false`, `printWidth: 120` (package.json), single quotes
+- 2 spaces, LF line endings, final newline, max 80 chars/line (.editorconfig)
 - Auto-run via Husky on commit (`bun prepare`)
 
 ### Types & Error Handling
@@ -106,22 +106,30 @@ export const session = sqliteTable("session", {
 
 ### GateClaw Orchestrator (Core Daemon)
 
+- **Identity**: ONE resident AI entity - unified session across ALL interfaces
+- **Session**: `gateclaw` (single conversation everywhere - TUI/Telegram/CLI/WhatsApp)
 - **Config**: `GATECLAW_TELEGRAM_TOKEN`, `GATECLAW_TELEGRAM_CHAT_ID`
-- **Memory**: SQLite `~/.local/share/gateclaw/gateclaw.db`
-- **Daemon**: HTTP `localhost:7371`, PID `~/.config/gateclaw/daemon.pid`
+- **Memory**: SQLite `~/AppData/gateclaw/memory.db` - `gc_message` table
+  - All messages stored with `session_key: "gateclaw"` (shared everywhere)
+- **Daemon**: HTTP `localhost:7371`, PID `~/AppData/gateclaw/daemon.pid`
 - **CLI**: `gateclaw {start|stop|restart|status|logs|tui|run}`
 - **Soul**: `gateclaw soul {init|edit|show|reset}`
 - **Facts**: `gateclaw fact {store|delete|get}`
+- **Telegram**: Thin remote transport - inherits ALL TUI features automatically
+  - Loads history: `GET /messages/gateclaw` (last 20 messages for context)
+  - Saves unified: `POST /message` → `session_key: "gateclaw"`
+  - NO duplication - same conversation whether you're on Telegram, TUI, or future WhatsApp
 
-### Desktop-Electron
+### Tauri Desktop (TUI Frontend)
+
+- **Bindings**: Use `packages/desktop/src/bindings.ts` for IPC - never call `invoke` directly
+- **State**: Rust core via `@tauri-apps/api` - bridge patterns in `src-tauri/src/`
+
+### Electron Desktop
 
 - **Renderer**: Use `window.api` from `src/preload` only (IPC bridge)
 - **Main**: IPC handlers in `src/main/ipc.ts`
 - **Security**: Context isolation, no direct Node in renderer
-
-### Desktop (Tauri)
-
-- **Never call `invoke` manually**: Use `packages/desktop/src/bindings.ts`
 
 ### App (SolidJS Frontend)
 

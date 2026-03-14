@@ -183,6 +183,11 @@ export async function edit() {
   console.log(`   owner: ${config.owner}`)
   console.log(`   personality: ${config.personality}`)
   console.log(`   language: ${config.language}`)
+
+  // Notify daemon to reload soul
+  fetch("http://127.0.0.1:7371/reload-soul", { method: "POST" })
+    .then(() => console.log("   daemon: SOUL.md reloaded"))
+    .catch(() => console.log("   daemon: notification skipped (daemon may be offline)"))
 }
 
 async function show() {

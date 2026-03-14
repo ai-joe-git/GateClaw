@@ -99,17 +99,30 @@ gateclaw
 **Expected output:**
 
 ```
- ░██████╗░█████╗░███████╗███████╗██████ ██╗░░░░░ █████╗░██╗░░░░██╗
- ║██╔════╝██╔══██╗╚═██╔ ╝██╔════╝██╔════╝██║░░░░░██╔══██╗██║░░░░██║
- ║██║░░█╗░███████║░░██║░░█████╗░░██║░░░░░██║░░░░░███████║██║░█╗░██║
- ║██║░███╗██╔══██║░░██║░░██╔══╝░░██║░░░░░██║░░░░░██╔══██║██║███╗██║
- ╚██████╔╝██║░░██║░░██║░░███████╗╚██████╗███████╗██║░░██║╚███╔███╔╝
- ░╚═════╝░╚═╝░░╚═╝░░╚═╝░░╚══════╝░╚═════╝╚══════╝╚═╝░░╚═╝░╚══╝╚══╝░
+  ██████╗  █████╗ ████████╗███████╗ ██████╗██╗      █████╗ ██╗    ██╗
+ ██╔════╝ ██╔══██╗╚══██╔══╝██╔════╝██╔════╝██║     ██╔══██╗██║    ██║
+ ██║  ███╗███████║   ██║   █████╗  ██║     ██║     ███████║██║ █╗ ██║
+ ██║   ██║██╔══██║   ██║   ██╔══╝  ██║     ██║     ██╔══██║██║███╗██║
+ ╚██████╔╝██║  ██║   ██║   ███████╗╚██████╗███████╗██║  ██║╚███╔███╔╝
+  ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝
 
- Resident AI. Local Control. Zero Bullshit.
+  Resident AI. Local Control. Zero Bullshit.
 
- 🐾 GateClaw daemon started (pid 12345)
- 📋 Logs: gateclaw logs
+  Commands:
+    start      Start the daemon in background
+    upgrade    Check and install updates
+    web        Open browser UI
+    tui        Launch the TUI
+    soul       Soul management
+    telegram   Telegram bot setup
+    models     List AI models
+    export     Export sessions
+    agentmon   Pokémon Red AI
+    facts      View memory facts
+    history    View message history
+
+  🐾 GateClaw daemon started (pid 12345)
+  📋 Logs: gateclaw logs
 ```
 
 Then message your Telegram bot — it responds instantly! 🤖
@@ -313,19 +326,27 @@ $ gateclaw history default
 
 ### Telegram (Primary - Chat Native)
 
+**New simplified commands:**
+
 ```bash
-# Interactive setup
+# Interactive setup wizard (NEW!)
 $ gateclaw telegram setup
 
-# Send test message
-$ gateclaw telegram test
+# Start/stop bot
+$ gateclaw telegram start
+$ gateclaw telegram stop
 
-# Verify configuration
-$ gateclaw telegram verify
-
-# Auto-detect chat ID
-$ gateclaw telegram autoid
+# Check status
+$ gateclaw telegram status
 ```
+
+**Setup wizard walks you through:**
+
+1. Creating bot via @BotFather
+2. Getting API token
+3. Auto-detecting chat ID
+4. Sending test message
+5. Restarting daemon
 
 **Your bot responds to messages like:**
 
@@ -356,14 +377,43 @@ $ gateclaw tui
 # Daemon management
 $ gateclaw start|stop|restart|status|logs|run
 
+# Updates
+$ gateclaw upgrade              # Interactive update checker
+
+# Interfaces
+$ gateclaw web                  # Open browser UI (auto-starts daemon)
+$ gateclaw tui                  # Launch terminal UI (auto-starts daemon)
+
 # Soul commands
 $ gateclaw soul init|edit|show|reset
 
 # Fact commands
 $ gateclaw fact store|get|delete|list
+$ gateclaw facts                # View all facts
+$ gateclaw history [session]    # View message history
+
+# AI Models
+$ gateclaw models               # List available AI models
+
+# Export
+$ gateclaw export <session>     # Export session to MD/JSON
+
+# Telegram (new simplified commands)
+$ gateclaw telegram setup       # Interactive bot configuration wizard
+$ gateclaw telegram start       # Start Telegram bot
+$ gateclaw telegram stop        # Stop Telegram bot
+$ gateclaw telegram status      # Show bot status and config
+
+# AgentMon (Pokémon Red AI)
+$ gateclaw agentmon register    # Register AgentMon agent
+$ gateclaw agentmon start       # Start Pokémon game
+$ gateclaw agentmon act         # Send action
+$ gateclaw agentmon status      # Show game status
+$ gateclaw agentmon save        # Save game
+$ gateclaw agentmon load        # Load saved game
+$ gateclaw agentmon stop        # Stop session
 
 # Quick commands
-$ gateclaw providers ls
 $ gateclaw tui
 $ gateclaw --help
 ```
@@ -388,6 +438,70 @@ $ curl -X POST http://localhost:7371/fact \
 # Get message history
 $ curl http://localhost:7371/messages/default
 ```
+
+---
+
+## 🎮 AgentMon - Pokémon Red AI Agent
+
+GateClaw plays **Pokémon Red** via the [AgentMon League](https://www.agentmonleague.com) API.
+
+### What It Does
+
+- Controls Pokémon Red emulator remotely
+- Persistent game state saved to GateClaw memory
+- Auto-saves after badges, party growth, milestones
+- All actions logged to unified conversation memory
+
+### Quick Start
+
+```bash
+# Register agent (one-time)
+$ gateclaw agentmon register
+
+# Start new game
+$ gateclaw agentmon start --starter charmander
+
+# Play actions
+$ gateclaw agentmon act up
+$ gateclaw agentmon sequence "up,up,right,a"
+
+# Check status
+$ gateclaw agentmon status
+
+# Save/load
+$ gateclaw agentmon save --label "after-first-gym"
+$ gateclaw agentmon load <saveId>
+
+# Stop session
+$ gateclaw agentmon stop
+```
+
+### Valid Actions
+
+| Action   | Description                 |
+| -------- | --------------------------- |
+| `up`     | D-pad up                    |
+| `down`   | D-pad down                  |
+| `left`   | D-pad left                  |
+| `right`  | D-pad right                 |
+| `a`      | A button (confirm/interact) |
+| `b`      | B button (cancel)           |
+| `start`  | Start button (menu)         |
+| `select` | Select button               |
+| `pass`   | No input (wait)             |
+
+### Architecture
+
+- **Client**: AgentMon League API wrapper
+- **Agent**: Pokémon agent with GateClaw memory
+- **Memory**: SQLite (`~/.local/share/gateclaw/gateclaw.db`)
+- **Session**: Unified `gateclaw` session across all interfaces
+
+### Goals
+
+- **Short-term**: Get starter, reach first gym, earn first badge
+- **Medium-term**: Collect 8 badges, complete Pokédex
+- **Long-term**: Defeat Elite Four, become Champion
 
 ---
 
@@ -492,6 +606,9 @@ The [`demo/who_am_i.mp4`](demo/who_am_i.mp4) file (11 MB, Git-friendly) isn't ju
 | **Filesystem intelligence** | Inventoried `pocket-tts-server` via subagent         |
 | **Aesthetic reasoning**     | Matched voice to personality with thematic logic     |
 | **Meta-collaboration**      | Suggested TTS integration for public release         |
+| **CLI completeness**        | 30 production-ready commands                         |
+| **Gaming agency**           | AgentMon Pokémon Red AI integration                  |
+| **Production UX**           | Interactive wizards, colorful help, ASCII art        |
 
 As Claude's analysis noted:
 

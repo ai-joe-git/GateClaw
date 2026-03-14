@@ -77,7 +77,7 @@ function printHelp() {
   console.log(`  ${green}facts      ${reset}View all memory facts`)
   console.log(`  ${green}fact       ${reset}Fact operations (store|delete|get)`)
   console.log(`  ${green}history    ${reset}View message history [session]`)
-  console.log(`  ${green}providers  ${reset}Add new AI provider (interactive)`)
+  console.log(`  ${green}models     ${reset}List AI models (interactive)`)
   console.log(`  ${green}export     ${reset}Export sessions to JSON/MD (interactive)`)
   console.log(`  ${green}agentmon   ${reset}Pokémon Red AI (register|start|act|status|save|load|stop)`)
   console.log()
@@ -90,7 +90,7 @@ function printHelp() {
   console.log(`  gateclaw soul init          # Initialize soul identity`)
   console.log(`  gateclaw telegram setup     # Interactive bot setup`)
   console.log(`  gateclaw telegram start     # Start Telegram bot`)
-  console.log(`  gateclaw providers add      # Add new provider`)
+  console.log(`  gateclaw models             # List AI models`)
   console.log(`  gateclaw export gateclaw    # Export session`)
   console.log(`  gateclaw fact store mykey "my value"`)
   console.log(`  gateclaw agentmon start     # Start Pokémon game`)
@@ -565,72 +565,63 @@ switch (cmd) {
     const subcmd = process.argv[3]
     if (subcmd === "add") {
       console.log("\n🔧 GateClaw Provider Setup\n")
-      
+
       const readline = await import("node:readline")
       const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-      
+
       const ask = (q: string): Promise<string> => new Promise((resolve) => rl.question(q + " ", resolve))
-      
-      // Step 1: Provider name
+
       const name = await ask("Provider name (e.g., my-llama-swap):")
       if (!name) {
         console.log("❌ No name provided")
         rl.close()
         process.exit(1)
       }
-      
-      // Step 2: API URL
+
       const url = await ask("API URL (e.g., http://localhost:8888/v1):")
       if (!url) {
         console.log("❌ No URL provided")
         rl.close()
         process.exit(1)
       }
-      
-      // Test connection
+
       console.log("\n🔍 Testing connection...")
       try {
         const testRes = await fetch(`${url.replace(/\/+$/, "")}/models`)
         if (!testRes.ok) throw new Error(`HTTP ${testRes.status}`)
-        console.log("✅ Connected successfully!")
+        console.log("✅ Connected!")
       } catch (e: any) {
-        console.log(`❌ Connection failed: ${e.message}`)
+        console.log(`❌ Failed: ${e.message}`)
         rl.close()
         process.exit(1)
       }
-      
-      // Step 3: API key
-      const apiKey = await ask("API key (press Enter for 'none' if local):")
-      
-      // Step 4: Fetch models
+
+      const apiKey = await ask("API key (Enter for none):")
+
       console.log("\n📡 Fetching models...")
       const modelsRes = await fetch(`${url.replace(/\/+$/, "")}/models`)
-      const modelsData = await modelsRes.json() as any
+      const modelsData = (await modelsRes.json()) as any
       const models = modelsData.data || []
-      
-      console.log(`✅ Found ${models.length} models:\n`)
-      models.forEach((m: any, i: number) => {
-        console.log(`  ${i + 1}. ${m.id || m.name}`)
-      })
-      
-      // Step 5: Select models
-      console.log("\nEnable all models? [Y/n]:")
+      console.log(`✅ Found ${models.length} models`)
+
+      console.log("\nEnable all? [Y/n]:")
       const enableAll = await new Promise<string>((resolve) => rl.question("", resolve))
-      
+
       let selectedModels: string[] = []
       if (enableAll.toLowerCase() === "y" || enableAll === "") {
         selectedModels = models.map((m: any) => m.id || m.name)
       } else {
-        console.log("Enter model numbers to enable (comma-separated, e.g., 1,2,3):")
+        console.log("Model numbers (comma-separated, e.g., 1,2,3):")
         const selection = await new Promise<string>((resolve) => rl.question("", resolve))
-        const indices = selection.split(",").map((s) => parseInt(s.trim()) - 1).filter((i) => !isNaN(i))
+        const indices = selection
+          .split(",")
+          .map((s) => parseInt(s.trim()) - 1)
+          .filter((i) => !isNaN(i))
         selectedModels = indices.map((i: number) => models[i].id || models[i].name)
       }
-      
-      // Step 6: Default model
-      const defaultModel = await ask(`\nDefault model [${selectedModels[0]}]:`) || selectedModels[0]
-      
-      // Step 7: Review
+
+      const defaultModel = (await ask(`\nDefault model [${selectedModels[0]}]:`)) || selectedModels[0]
+
       console.log("\n┌─────────────────────────────────────────┐")
       console.log("│ Provider Configuration                │")
       console.log("├─────────────────────────────────────────┤")
@@ -640,106 +631,52 @@ switch (cmd) {
       console.log(`│ Models: ${selectedModels.length} enabled                        │`)
       console.log(`│ Default: ${defaultModel.padEnd(31)}│`)
       console.log("└─────────────────────────────────────────┘")
-      
-      const save = await ask("\nSave this configuration? [Y/n]:")
+
+      const save = await ask("\nSave? [Y/n]:")
       if (save.toLowerCase() === "n") {
-        console.log("❌ Configuration cancelled")
+        console.log("❌ Cancelled")
         rl.close()
         process.exit(0)
       }
-      
-      // Save to gateclaw.jsonc
-      const configDir = process.env.APPDATA 
+
+      const configDir = process.env.APPDATA
         ? require("node:path").join(process.env.APPDATA, "gateclaw")
         : require("node:path").join(require("node:os").homedir(), ".config", "gateclaw")
       const fs = await import("node:fs")
       const path = await import("node:path")
       const configPath = path.join(configDir, "gateclaw.jsonc")
-      
-      // Read existing config
+
       let config: any = { provider: {} }
       if (fs.existsSync(configPath)) {
         const content = fs.readFileSync(configPath, "utf8")
         config = JSON.parse(content.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1"))
       }
-      
-      // Add provider
+
       const modelsConfig: any = {}
       selectedModels.forEach((modelId: string) => {
         const model = models.find((m: any) => (m.id || m.name) === modelId)
         modelsConfig[modelId] = {
           name: model?.name || modelId,
-          limit: {
-            context: model?.limit?.context || 262144,
-            output: model?.limit?.output || 262144
-          }
+          limit: { context: model?.limit?.context || 262144, output: model?.limit?.output || 262144 },
         }
       })
-      
+
       config.provider[name] = {
-        name: name,
+        name,
         npm: "@ai-sdk/openai-compatible",
         models: modelsConfig,
-        options: {
-          baseURL: url.replace(/\/+$/, ""),
-          apiKey: apiKey || "none"
-        }
+        options: { baseURL: url.replace(/\/+$/, ""), apiKey: apiKey || "none" },
       }
-      
-      // Write config
+
       fs.writeFileSync(configPath, JSON.stringify(config, null, 2))
-      
-      console.log("\n✅ Provider added successfully!")
-      console.log(`📝 Config saved to: ${configPath}`)
-      console.log("\n💡 Restart daemon to apply changes:")
-      console.log("   gateclaw restart")
-      console.log("\n🎯 Test your provider:")
-      console.log("   gateclaw tui")
-      console.log(`   # Then select: ${name}/${defaultModel}`)
-      
+
+      console.log("\n✅ Provider added!")
+      console.log(`📝 Config: ${configPath}`)
+      console.log("\n💡 Restart: gateclaw restart")
+      console.log(`🎯 Test: gateclaw tui → select ${name}/${defaultModel}`)
       rl.close()
     } else {
-      console.log(`🔧 Provider Commands:
-  gateclaw providers add   - Interactive provider setup wizard`)
-    }
-    break
-  }
-      const response = (await res.json()) as any
-      const data = response.data || response || []
-
-      console.log(`📊 Available Models (${data.length} total)\n`)
-      console.log("─".repeat(70))
-
-      if (data.length === 0) {
-        console.log("ℹ️  No models configured")
-        console.log("\n💡 Configure models in gateclaw.json or via TUI")
-      } else {
-        const providers = new Map<string, any[]>()
-        data.forEach((m: any) => {
-          if (!providers.has(m.providerID)) {
-            providers.set(m.providerID, [])
-          }
-          providers.get(m.providerID)!.push(m)
-        })
-
-        for (const [providerId, models] of providers) {
-          console.log(`\n🤖 ${providerId}`)
-          console.log("─".repeat(40))
-          models.forEach((m: any, i: number) => {
-            const icon = i === 0 ? "★" : "○"
-            console.log(`  ${icon} ${m.modelID}`)
-          })
-        }
-
-        console.log("\n" + "─".repeat(70))
-        console.log("\n💡 Use in TUI: /model <provider>/<model>")
-        console.log("   Example: /model gateclaw/big-pickle")
-      }
-    } catch (e: any) {
-      console.log("🔴 GateClaw daemon not running")
-      console.log("   Start with: gateclaw start")
-      console.log("\n💡 Models are managed by the daemon")
-      console.log(`\nError: ${e.message}`)
+      console.log(`🔧 Provider Commands:\n  gateclaw providers add   - Interactive setup`)
     }
     break
   }

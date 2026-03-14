@@ -167,109 +167,97 @@ GateClaw is **ONE resident AI entity** with multiple equal interfaces:
 
 ## 🔧 AI Provider Configuration
 
-GateClaw remembers **everything** across sessions via SQLite:
+GateClaw works with **any OpenAI-compatible API** - local or cloud.
 
-**Database location:** `~/.local/share/gateclaw/gateclaw.db`
-
-### Facts (Key-Value Store)
+### Add New Provider (Interactive)
 
 ```bash
-# Store fact
-$ gateclaw fact store my_cat_name Whiskers
-✅ Fact stored: my_cat_name
+$ gateclaw providers add
 
-# Get fact
-$ gateclaw fact get my_cat_name
-my_cat_name: Whiskers
+🔧 GateClaw Provider Setup
 
-# List all facts
-$ gateclaw facts
-🧠 3 fact(s):
+Provider name (e.g., my-llama-swap): my-llama-swap
+API URL (e.g., http://localhost:8888/v1): http://localhost:8888/v1
 
-  my_cat_name: Whiskers
-  project: GateClaw
-  favorite_color: blue
+🔍 Testing connection...
+✅ Connected!
 
-# Delete fact
-$ gateclaw fact delete my_cat_name
-✅ Fact deleted: my_cat_name
+API key (Enter for none):
+
+📡 Fetching models...
+✅ Found 12 models
+
+Enable all? [Y/n]: y
+
+Default model [Claude-4.6-Opus-35B]: Claude-4.6-Opus-35B
+
+┌─────────────────────────────────────────┐
+│ Provider Configuration                │
+├─────────────────────────────────────────┤
+│ Name: my-llama-swap                    │
+│ URL: http://localhost:8888/v1          │
+│ API Key: none                          │
+│ Models: 12 enabled                     │
+│ Default: Claude-4.6-Opus-35B           │
+└─────────────────────────────────────────┘
+
+Save? [Y/n]: y
+
+✅ Provider added!
+📝 Config: ~/.config/gateclaw/gateclaw.jsonc
+
+💡 Restart: gateclaw restart
+🎯 Test: gateclaw tui → select my-llama-swap/Claude-4.6-Opus-35B
 ```
 
-### Message History
+### Supported Providers
 
-All conversations are logged per session:
+**Local (Recommended - Free & Private):**
 
-```bash
-$ gateclaw history default
-📜 5 message(s) in session "default":
+- **llama-swap** - Multi-model switching (port 8888)
+- **Ollama** - Simple local inference (port 11434)
+- **LM Studio** - Desktop app with server mode (port 1234)
+- **vllm** - High-throughput serving
+- **llama.cpp** - CPU inference server
+- Any OpenAI-compatible API
 
-  [user] What's the weather?
-  [assistant] Use tool: http://wttr.in
-  [user] List my facts
-  [assistant] You have 3 facts: my_cat_name=Whiskers...
+**Cloud (API Costs):**
+
+- **Anthropic** - Claude models (best quality)
+- **OpenAI** - GPT-4, GPT-4o, GPT-5
+- **Google** - Gemini models
+- **OpenRouter** - Multi-provider gateway
+
+### Manual Configuration
+
+Edit `~/.config/gateclaw/gateclaw.jsonc` (or `%APPDATA%/gateclaw` on Windows):
+
+```jsonc
+{
+  "provider": {
+    "my-llama-swap": {
+      "name": "my-llama-swap",
+      "npm": "@ai-sdk/openai-compatible",
+      "models": {
+        "Claude-4.6-Opus-35B": {
+          "name": "Claude 4.6 Opus 35B",
+          "limit": { "context": 262144, "output": 262144 },
+        },
+      },
+      "options": {
+        "baseURL": "http://localhost:8888/v1",
+        "apiKey": "none",
+      },
+    },
+  },
+}
 ```
+
+Then restart: `gateclaw restart`
 
 ---
 
-## 🐾 Interfaces
-
-### Telegram (Primary - Chat Native)
-
-**New simplified commands:**
-
-```bash
-# Interactive setup wizard (NEW!)
-$ gateclaw telegram setup
-
-# Start/stop bot
-$ gateclaw telegram start
-$ gateclaw telegram stop
-
-# Check status
-$ gateclaw telegram status
-```
-
-**Setup wizard walks you through:**
-
-1. Creating bot via @BotFather
-2. Getting API token
-3. Auto-detecting chat ID
-4. Sending test message
-5. Restarting daemon
-
-**Your bot responds to messages like:**
-
-- "What's my soul name?"
-- "Store fact: project = GateClaw"
-- "Read config.yml"
-- "Run: git status"
-
-### TUI (Terminal User Interface)
-
-```bash
-$ gateclaw tui
-```
-
-**Keyboard shortcuts:**
-
-| Key      | Action         |
-| -------- | -------------- |
-| `Ctrl+M` | Model picker   |
-| `Ctrl+T` | Tool browser   |
-| `Ctrl+S` | Session switch |
-| `Enter`  | Send prompt    |
-| `Esc`    | Close modal    |
-
-### CLI (Command-Line Interface)
-
-```bash
-# Full command reference in "First Run" section above
-$ gateclaw --help
-```
-
----
-
-## 🧠 Memory System
+## Memory System
 
 GateClaw works with **any OpenAI-compatible API** - local or cloud.
 
@@ -361,53 +349,65 @@ Then restart: `gateclaw restart`
 
 ---
 
-## 🧠 Memory System
+## 🐾 Interfaces
 
-GateClaw remembers **everything** across sessions via SQLite:
+### Telegram (Primary - Chat Native)
 
-**Database location:** `~/.local/share/gateclaw/gateclaw.db`
-
-### Facts (Key-Value Store)
+**New simplified commands:**
 
 ```bash
-# Store fact
-$ gateclaw fact store my_cat_name Whiskers
-✅ Fact stored: my_cat_name
+# Interactive setup wizard (NEW!)
+$ gateclaw telegram setup
 
-# Get fact
-$ gateclaw fact get my_cat_name
-my_cat_name: Whiskers
+# Start/stop bot
+$ gateclaw telegram start
+$ gateclaw telegram stop
 
-# List all facts
-$ gateclaw facts
-🧠 3 fact(s):
-
-  my_cat_name: Whiskers
-  project: GateClaw
-  favorite_color: blue
-
-# Delete fact
-$ gateclaw fact delete my_cat_name
-✅ Fact deleted: my_cat_name
+# Check status
+$ gateclaw telegram status
 ```
 
-### Message History
+**Setup wizard walks you through:**
 
-All conversations are logged per session:
+1. Creating bot via @BotFather
+2. Getting API token
+3. Auto-detecting chat ID
+4. Sending test message
+5. Restarting daemon
+
+**Your bot responds to messages like:**
+
+- "What's my soul name?"
+- "Store fact: project = GateClaw"
+- "Read config.yml"
+- "Run: git status"
+
+### TUI (Terminal User Interface)
 
 ```bash
-$ gateclaw history default
-📜 5 message(s) in session "default":
+$ gateclaw tui
+```
 
-  [user] What's the weather?
-  [assistant] Use tool: http://wttr.in
-  [user] List my facts
-  [assistant] You have 3 facts: my_cat_name=Whiskers...
+**Keyboard shortcuts:**
+
+| Key      | Action         |
+| -------- | -------------- |
+| `Ctrl+M` | Model picker   |
+| `Ctrl+T` | Tool browser   |
+| `Ctrl+S` | Session switch |
+| `Enter`  | Send prompt    |
+| `Esc`    | Close modal    |
+
+### CLI (Command-Line Interface)
+
+```bash
+# Full command reference in "First Run" section above
+$ gateclaw --help
 ```
 
 ---
 
-## 🎮 AgentMon - Pokémon Red AI Agent
+## 🧠 Memory System
 
 GateClaw plays **Pokémon Red** via the [AgentMon League](https://www.agentmonleague.com) API.
 

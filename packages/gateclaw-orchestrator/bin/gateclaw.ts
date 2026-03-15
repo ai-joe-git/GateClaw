@@ -78,6 +78,7 @@ function printHelp() {
   console.log(`  ${green}fact       ${reset}Fact operations (store|delete|get)`)
   console.log(`  ${green}history    ${reset}View message history [session]`)
   console.log(`  ${green}models     ${reset}List AI models (interactive)`)
+  console.log(`  ${green}providers  ${reset}Provider management (add|refresh)`)
   console.log(`  ${green}export     ${reset}Export sessions to JSON/MD (interactive)`)
   console.log(`  ${green}agentmon   ${reset}Pokémon Red AI (register|start|act|status|save|load|stop)`)
   console.log()
@@ -153,10 +154,20 @@ switch (cmd) {
       try {
         execSync(`taskkill /PID ${pid} /F`, { stdio: "pipe" })
       } catch {
-        process.kill(pid, "SIGTERM")
+        // Process already dead, just clean up PID file
+        fs.rmSync(CLI_PID_FILE, { force: true })
+        console.log(`🛑 GateClaw stopped (pid ${pid})`)
+        break
       }
     } else {
-      process.kill(pid)
+      try {
+        process.kill(pid)
+      } catch {
+        // Process already dead, just clean up PID file
+        fs.rmSync(CLI_PID_FILE, { force: true })
+        console.log(`🛑 GateClaw stopped (pid ${pid})`)
+        break
+      }
     }
     fs.rmSync(CLI_PID_FILE, { force: true })
     console.log(`🛑 GateClaw stopped (pid ${pid})`)
@@ -563,6 +574,28 @@ switch (cmd) {
 
   case "providers": {
     const subcmd = process.argv[3]
+
+    if (subcmd === "refresh") {
+      console.log("\n🔄 Refreshing providers from config...\n")
+      try {
+        const res = await fetch("http://127.0.0.1:7371/provider", { signal: AbortSignal.timeout(5000) })
+        if (!res.ok) throw new Error("Daemon not running")
+        const data = (await res.json()) as any
+        const providers = data.data || []
+        console.log(`✅ Found ${providers.length} providers`)
+        providers.forEach((p: any) => {
+          console.log(`   - ${p.id}: ${p.name}`)
+        })
+        console.log("\n💡 TUI will refresh automatically on next navigation")
+        console.log("   Or restart: gateclaw restart")
+      } catch (e: any) {
+        console.log(`❌ Failed: ${e.message}`)
+        console.log("\n💡 Start daemon: gateclaw start")
+        process.exit(1)
+      }
+      break
+    }
+
     if (subcmd === "add") {
       console.log("\n🔧 GateClaw Provider Setup\n")
 
@@ -620,7 +653,7 @@ switch (cmd) {
         selectedModels = indices.map((i: number) => models[i].id || models[i].name)
       }
 
-      const defaultModel = (await ask(`\nDefault model [${selectedModels[0]}]:`)) || selectedModels[0]
+      const defaultModel = (await ask(`\nDefault model [${selectedModels[0] || "default"}]:`)) || selectedModels[0]
 
       console.log("\n┌─────────────────────────────────────────┐")
       console.log("│ Provider Configuration                │")
@@ -629,7 +662,7 @@ switch (cmd) {
       console.log(`│ URL: ${url.padEnd(35)}│`)
       console.log(`│ API Key: ${(apiKey ? "****" : "none").padEnd(33)}│`)
       console.log(`│ Models: ${selectedModels.length} enabled                        │`)
-      console.log(`│ Default: ${defaultModel.padEnd(31)}│`)
+      console.log(`│ Default: ${(defaultModel || selectedModels?.[0] || "default").padEnd(31)}│`)
       console.log("└─────────────────────────────────────────┘")
 
       const save = await ask("\nSave? [Y/n]:")

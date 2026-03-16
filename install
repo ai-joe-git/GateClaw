@@ -9,9 +9,21 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-INSTALL_DIR=$HOME/.local/share/gateclaw/bin
-CONFIG_DIR=$HOME/.config/gateclaw
-mkdir -p "$INSTALL_DIR" "$CONFIG_DIR"
+# OS Detection - set correct paths
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$OSTYPE" == "cygwin" ]]; then
+    # Windows
+    INSTALL_DIR="$APPDATA/gateclaw/bin"
+    CONFIG_DIR="$APPDATA/gateclaw"
+    DATA_DIR="$APPDATA/gateclaw"
+    SHELL_RC="$USERPROFILE/.bashrc"
+else
+    # Linux/Mac
+    INSTALL_DIR="$HOME/.local/share/gateclaw/bin"
+    CONFIG_DIR="$HOME/.config/gateclaw"
+    DATA_DIR="$HOME/.local/share/gateclaw"
+    SHELL_RC="$HOME/.bashrc"
+fi
+mkdir -p "$INSTALL_DIR" "$CONFIG_DIR" "$DATA_DIR"
 
 print_msg() {
     local lvl=$1 msg=$2 col=""
@@ -157,24 +169,39 @@ cd "$cdir"
 print_msg info "bun install..."
 bun install
 
-# Wrapper
-cat > "$INSTALL_DIR/gateclaw" <<'WRAPPER'
+# Wrapper script (platform-aware)
+cat > "$INSTALL_DIR/gateclaw" <<WRAPPER
 #!/usr/bin/env bash
-GATECLAW_HOME=$HOME/.local/share/gateclaw
-if [ -f $HOME/.config/gateclaw/.env ]; then
-    source $HOME/.config/gateclaw/.env
+if [[ "\$OSTYPE" == "msys" || "\$OSTYPE" == "win32" || "\$OSTYPE" == "cygwin" ]]; then
+    GATECLAW_HOME="\$APPDATA/gateclaw"
+    CONFIG_DIR="\$APPDATA/gateclaw"
+else
+    GATECLAW_HOME="\$HOME/.local/share/gateclaw"
+    CONFIG_DIR="\$HOME/.config/gateclaw"
+fi
+if [ -f \$CONFIG_DIR/.env ]; then
+    source \$CONFIG_DIR/.env
 fi
 export GATECLAW_TELEGRAM_TOKEN GATECLAW_TELEGRAM_CHAT_ID 2>/dev/null
-exec bun run $GATECLAW_HOME/packages/gateclaw-orchestrator/src/index.ts "$@"
+exec bun run \$GATECLAW_HOME/packages/gateclaw-orchestrator/src/index.ts "\$@"
 WRAPPER
 chmod +x "$INSTALL_DIR/gateclaw"
 
-# Add to path
-if ! grep -q "gateclaw" $HOME/.bashrc $HOME/.zshrc &>/dev/null; then
-    echo -e "\n# GateClaw" >> $HOME/.bashrc
-    echo "export PATH=\$HOME/.local/share/gateclaw/bin:\$PATH" >> $HOME/.bashrc
-    [ -f $HOME/.zshrc ] && { echo -e "\n# GateClaw" >> $HOME/.zshrc; echo "export PATH=\$HOME/.local/share/gateclaw/bin:\$PATH" >> $HOME/.zshrc; }
-    print_msg info "Added to PATH"
+# Add to PATH (platform-aware)
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "win32" || "$OSTYPE" == "cygwin" ]]; then
+    # Windows - add to PATH via setx (requires admin for system-wide)
+    echo
+    print_msg info "Windows: Add to PATH manually or run as admin:"
+    echo "   [Environment Variables] → Path → New → $INSTALL_DIR"
+    echo "   Or: setx PATH \"%PATH%;$INSTALL_DIR\""
+else
+    # Linux/Mac - add to shell rc
+    if ! grep -q "gateclaw" "$SHELL_RC" "$HOME/.zshrc" &>/dev/null; then
+        echo -e "\n# GateClaw" >> "$SHELL_RC"
+        echo "export PATH=\$HOME/.local/share/gateclaw/bin:\$PATH" >> "$SHELL_RC"
+        [ -f "$HOME/.zshrc" ] && { echo -e "\n# GateClaw" >> "$HOME/.zshrc"; echo "export PATH=\$HOME/.local/share/gateclaw/bin:\$PATH" >> "$HOME/.zshrc"; }
+        print_msg info "Added to PATH"
+    fi
 fi
 
 export PATH="$INSTALL_DIR:$PATH"

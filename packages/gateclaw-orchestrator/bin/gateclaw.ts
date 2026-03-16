@@ -105,6 +105,9 @@ function printHelp() {
   console.log(`  ${green}tui        ${reset}Launch the TUI (starts daemon if needed)`)
   console.log(`  ${green}run        ${reset}Run in foreground (dev mode)`)
   console.log(`  ${green}upgrade    ${reset}Check and install updates (interactive)`)
+  console.log(`  ${green}rollback   ${reset}Revert to previous version (interactive)`)
+  console.log(`  ${green}doctor     ${reset}Full diagnostic check`)
+  console.log(`  ${green}deploy     ${reset}Deploy to SST cloud or local`)
   console.log(`  ${green}soul       ${reset}Soul management (init|edit|show|reset)`)
   console.log(`  ${green}telegram   ${reset}Telegram bot (setup|start|stop|status)`)
   console.log(`  ${green}facts      ${reset}View all memory facts`)
@@ -1055,6 +1058,303 @@ switch (cmd) {
       console.log("   Error:", e.message)
       console.log("\n💡 Manual upgrade: bun install -g gateclaw-orchestrator")
     }
+    break
+  }
+
+  case "rollback": {
+    console.log("\n  ██████╗ ███████╗ █████╗ ██████╗ ██╗   ██╗███████╗")
+    console.log("  ██╔══██╗██╔════╝██╔══██╗██╔══██╗██║   ██║██╔════╝")
+    console.log("  ██████╔╝█████╗  ███████║██║  ██║██║   ██║███████╗")
+    console.log("  ██╔══██╗██╔══╝  ██╔══██║██║  ██║██║   ██║╚════██║")
+    console.log("  ██║  ██║███████╗██║  ██║██████╔╝╚██████╔╝███████║")
+    console.log("  ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚══════╝\n")
+
+    const { execSync } = await import("child_process")
+    const readline = await import("node:readline")
+    const path = await import("node:path")
+    const fs = await import("node:fs")
+    const os = await import("node:os")
+
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+
+    try {
+      // Get current version
+      const pkgPath = path.join(PKG_DIR, "package.json")
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"))
+      const currentVersion = pkg.version || "unknown"
+      console.log(`Current version: ${currentVersion}`)
+
+      // List available versions from npm
+      console.log("\n📦 Available versions:")
+      const npmVersions = execSync("npm view gateclaw-orchestrator versions --json 2>nul", { encoding: "utf8" })
+      const versions = JSON.parse(npmVersions)
+      versions.forEach((v: string, i: number) => {
+        console.log(`   ${i + 1}. ${v}`)
+      })
+
+      const answer = await new Promise<string>((resolve) => {
+        rl.question("\n🔄 Rollback to version (or 'cancel'): ", resolve)
+      })
+
+      if (answer.toLowerCase() === "cancel" || !answer) {
+        console.log("\nℹ️  Rollback cancelled")
+        rl.close()
+        break
+      }
+
+      // Stop daemon first
+      console.log("\n🛑 Stopping daemon...")
+      try {
+        const shutdownRes = await fetch("http://127.0.0.1:7371/shutdown", { method: "POST" })
+        if (shutdownRes.ok) {
+          const data: any = await shutdownRes.json()
+          if (data.ok) {
+            console.log("   Daemon stopped")
+          } else {
+            throw new Error("Shutdown failed")
+          }
+        } else {
+          throw new Error("Shutdown failed")
+        }
+      } catch {
+        console.log("   Daemon may not be running")
+      }
+
+      // Backup current config
+      const configDir =
+        process.platform === "win32"
+          ? path.join(process.env.APPDATA || os.homedir(), "gateclaw")
+          : path.join(os.homedir(), ".config", "gateclaw")
+      const backupDir = path.join(configDir, "backup")
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true })
+      }
+
+      const backupFiles = ["gateclaw.jsonc", ".env", "SOUL.md"]
+      for (const file of backupFiles) {
+        const src = path.join(configDir, file)
+        const dst = path.join(backupDir, `${file}.${Date.now()}`)
+        if (fs.existsSync(src)) {
+          fs.copyFileSync(src, dst)
+          console.log(`   ✅ Backed up: ${file}`)
+        }
+      }
+
+      // Install previous version
+      console.log(`\n⬇️  Installing gateclaw-orchestrator@${answer}...`)
+      execSync(`bun install -g gateclaw-orchestrator@${answer}`, { stdio: "inherit" })
+
+      console.log("\n✅ Rollback complete!")
+      console.log(`   Version: ${answer}`)
+      console.log("\n🔄 Restart daemon: gateclaw restart")
+      console.log("💡 Config backed up in:", backupDir)
+    } catch (e: any) {
+      console.log("\n❌ Rollback failed")
+      console.log("   Error:", e.message)
+      console.log("\n💡 Manual rollback: bun install -g gateclaw-orchestrator@<version>")
+    }
+
+    rl.close()
+    break
+  }
+
+  case "doctor": {
+    console.log("\n  ██████╗ ██████╗ ██████╗ ██╗   ██╗███████╗")
+    console.log("  ██╔══██╗██╔══██╗██╔══██╗██║   ██║██╔════╝")
+    console.log("  ██████╔╝██████╔╝██████╔╝██║   ██║█████╗")
+    console.log("  ██╔══██╗██╔══██╗██╔══██╗██║   ██║██╔══╝")
+    console.log("  ██║  ██║██████╔╝██║  ██║╚██████╔╝███████╗")
+    console.log("  ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝\n")
+
+    const path = await import("node:path")
+    const os = await import("node:os")
+    const fs = await import("node:fs")
+
+    const configDir =
+      process.platform === "win32"
+        ? path.join(process.env.APPDATA || os.homedir(), "gateclaw")
+        : path.join(os.homedir(), ".config", "gateclaw")
+
+    const checks = [
+      {
+        name: "Daemon Status",
+        async fn() {
+          try {
+            const data = await checkStatus()
+            if (data) {
+              const pid = readPid()
+              return { ok: true, msg: `pid ${pid}, uptime ${Math.floor(data.uptime_ms / 1000)}s` }
+            }
+            return { ok: false, error: "not responding" }
+          } catch (e: any) {
+            return { ok: false, error: e.message }
+          }
+        },
+      },
+      {
+        name: "Config Validity",
+        async fn() {
+          const configPath = path.join(configDir, "gateclaw.jsonc")
+          if (fs.existsSync(configPath)) {
+            try {
+              const content = fs.readFileSync(configPath, "utf8")
+              const { parse: parseJSONC } = await import("jsonc-parser")
+              parseJSONC(content)
+              return { ok: true, msg: configPath }
+            } catch (e: any) {
+              return { ok: false, error: `invalid JSON: ${e.message}` }
+            }
+          }
+          return { ok: false, error: "not found" }
+        },
+      },
+      {
+        name: "Provider Connectivity",
+        async fn() {
+          try {
+            const res = await fetch("http://127.0.0.1:7371/provider")
+            if (res.ok) {
+              const data: any = await res.json()
+              const count = data.data?.length || 0
+              return { ok: true, msg: `${count} provider(s)` }
+            }
+            return { ok: false, error: "HTTP endpoint failed" }
+          } catch (e: any) {
+            return { ok: false, error: e.message }
+          }
+        },
+      },
+      {
+        name: "Telegram Bot",
+        async fn() {
+          const envPath = path.join(configDir, ".env")
+          if (fs.existsSync(envPath)) {
+            const content = fs.readFileSync(envPath, "utf8")
+            const hasToken = !!content.match(/GATECLAW_TELEGRAM_TOKEN="([^"]+)"/)
+            const hasChatId = !!content.match(/GATECLAW_TELEGRAM_CHAT_ID="(\d+)"/)
+            if (hasToken && hasChatId) {
+              return { ok: true, msg: "configured" }
+            }
+            return { ok: false, error: "missing token or chat_id" }
+          }
+          return { ok: false, error: ".env not found" }
+        },
+      },
+      {
+        name: "Database",
+        async fn() {
+          const dbPath =
+            process.platform === "win32"
+              ? path.join(process.env.LOCALAPPDATA || os.homedir(), "gateclaw", "gateclaw.db")
+              : path.join(os.homedir(), ".local", "share", "gateclaw", "gateclaw.db")
+          if (fs.existsSync(dbPath)) {
+            const stat = fs.statSync(dbPath)
+            const sizeKB = Math.round(stat.size / 1024)
+            return { ok: true, msg: `${sizeKB} KB` }
+          }
+          return { ok: false, error: "not found" }
+        },
+      },
+      {
+        name: "OpenCode Server",
+        async fn() {
+          try {
+            const res = await fetch("http://localhost:4100/global/health", { signal: AbortSignal.timeout(1000) })
+            if (res.ok) {
+              return { ok: true, msg: "port 4100" }
+            }
+            return { ok: false, error: "not responding" }
+          } catch (e: any) {
+            return { ok: false, error: e.message }
+          }
+        },
+      },
+      {
+        name: "PATH",
+        async fn() {
+          const globalBin =
+            process.platform === "win32"
+              ? path.join(process.env.APPDATA || os.homedir(), "gateclaw", "bin")
+              : path.join(os.homedir(), ".local", "bin")
+          const pathEnv = process.env.PATH || ""
+          if (pathEnv.includes(globalBin)) {
+            return { ok: true, msg: "gateclaw in PATH" }
+          }
+          return { ok: false, error: "not in PATH" }
+        },
+      },
+      {
+        name: "Permissions",
+        async fn() {
+          try {
+            fs.accessSync(configDir, fs.constants.R_OK | fs.constants.W_OK)
+            return { ok: true, msg: "read/write OK" }
+          } catch (e: any) {
+            return { ok: false, error: e.message }
+          }
+        },
+      },
+    ]
+
+    let passed = 0
+    let failed = 0
+
+    for (const check of checks) {
+      const result = await check.fn()
+      if (result.ok) {
+        console.log(`✅ ${check.name}: ${result.msg}`)
+        passed++
+      } else {
+        console.log(`❌ ${check.name}: ${result.error}`)
+        failed++
+      }
+    }
+
+    console.log()
+    console.log(`Results: ${passed} passed, ${failed} failed`)
+
+    if (failed === 0) {
+      console.log("\n🎉 GateClaw is healthy!")
+    } else {
+      console.log("\n💡 Run 'gateclaw start' to fix daemon issues")
+      console.log("   Run 'gateclaw telegram setup' to fix Telegram config")
+    }
+
+    break
+  }
+
+  case "deploy": {
+    console.log("\n  ██████╗ ██╗   ██╗███╗   ██╗███████╗██╗   ██╗")
+    console.log("  ██╔══██╗██║   ██║████╗  ██║██╔════╝██║   ██║")
+    console.log("  ██████╔╝██║   ██║██╔██╗ ██║█████╗  ██║   ██║")
+    console.log("  ██╔══██╗██║   ██║██║╚██╗██║██╔══╝  ██║   ██║")
+    console.log("  ██████╔╝╚██████╔╝██║ ╚████║███████╗╚██████╔╝")
+    console.log("  ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝ ╚═════╝\n")
+
+    const args = process.argv.slice(3)
+    const hasSstFlag = args.includes("--sst")
+    const hasLocalFlag = args.includes("--local") || !hasSstFlag
+
+    if (hasSstFlag) {
+      console.log("🚀 Deploying to SST cloud...")
+      console.log("   Note: SST deployment requires AWS credentials and SST config")
+      console.log("   Running: bun run sst deploy\n")
+
+      try {
+        const { execSync } = await import("child_process")
+        execSync("bun run sst deploy", { stdio: "inherit" })
+        console.log("\n✅ SST deployment complete!")
+      } catch (e: any) {
+        console.log("\n❌ SST deployment failed")
+        console.log("   Error:", e.message)
+        console.log("\n💡 Ensure you have: bun install, AWS credentials, sst.config.ts")
+      }
+    } else {
+      console.log("🏠 Local deployment only (no SST)")
+      console.log("   GateClaw is already running locally")
+      console.log("   No additional deployment needed")
+    }
+
     break
   }
 

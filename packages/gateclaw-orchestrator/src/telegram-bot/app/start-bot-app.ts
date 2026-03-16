@@ -13,16 +13,15 @@ import { logger } from "../utils/logger.js"
 
 async function getBotVersion(): Promise<string> {
   try {
-    const packageJsonPath = path.join(import.meta.dir, "../../package.json");
-    const packageJsonContent = await readFile(packageJsonPath, "utf-8");
-    const packageJson = JSON.parse(packageJsonContent) as { version?: string };
+    const packageJsonPath = path.join(import.meta.dir, "../../package.json")
+    const packageJsonContent = await readFile(packageJsonPath, "utf-8")
+    const packageJson = JSON.parse(packageJsonContent) as { version?: string }
 
-    return packageJson.version ?? "unknown";
+    return packageJson.version ?? "unknown"
   } catch (error) {
-    logger.warn("[App] Failed to read bot version", error);
-    return "unknown";
+    logger.warn("[App] Failed to read bot version", error)
+    return "unknown"
   }
-}
 }
 
 export async function startBotApp(): Promise<void> {

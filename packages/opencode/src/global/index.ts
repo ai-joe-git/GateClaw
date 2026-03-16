@@ -1,5 +1,5 @@
 import fs from "fs/promises"
-import { xdgData, xdgCache, xdgConfig, xdgState } from "xdg-basedir"
+import { xdgData, xdgCache, xdgConfig } from "xdg-basedir"
 import path from "path"
 import os from "os"
 import { Filesystem } from "../util/filesystem"
@@ -9,7 +9,14 @@ const app = "gateclaw"
 const data = path.join(xdgData!, app)
 const cache = path.join(xdgCache!, app)
 const config = path.join(xdgConfig!, app)
-const state = path.join(xdgState!, app)
+
+// Windows: use LOCALAPPDATA\gateclaw (not ai.opencode.desktop\gateclaw - that's original OpenCode!)
+// Linux/macOS: use XDG_STATE_HOME or ~/.local/state
+const state = process.env.LOCALAPPDATA
+  ? path.join(process.env.LOCALAPPDATA, app)
+  : process.env.XDG_STATE_HOME
+    ? path.join(process.env.XDG_STATE_HOME, app)
+    : path.join(os.homedir(), ".local", "state", app)
 
 export namespace Global {
   export const Path = {

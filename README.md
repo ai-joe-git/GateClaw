@@ -76,7 +76,13 @@ $ gateclaw soul reset     # Reset to defaults
 
 ## ⚡ Quick Start (60 seconds)
 
-### One-Line Install
+### 🪟 Windows (PowerShell)
+
+```powershell
+powershell -c "irm https://raw.githubusercontent.com/ai-joe-git/GateClaw/dev/install.ps1|iex"
+```
+
+### 🐧 Linux / macOS (Bash)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ai-joe-git/GateClaw/dev/install | bash
@@ -87,6 +93,7 @@ curl -fsSL https://raw.githubusercontent.com/ai-joe-git/GateClaw/dev/install | b
 1. ✅ Auto-detects your AI provider (llama-swap :8888, Ollama :11434, LM Studio :1234)
 2. ✅ Creates `SOUL.md` personality profile
 3. ✅ Clones repo, runs `bun install`, adds to PATH
+4. ✅ Creates `gateclaw` command
 
 **Then run:**
 

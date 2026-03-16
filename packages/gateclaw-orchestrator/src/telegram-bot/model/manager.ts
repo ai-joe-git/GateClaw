@@ -171,15 +171,20 @@ function normalizeRecentModels(state: OpenCodeModelState): FavoriteModel[] {
 }
 
 function getOpenCodeModelStatePath(): string {
-  const xdgStateHome = process.env.XDG_STATE_HOME
-  const appName = "gateclaw" // Use gateclaw instead of opencode
+  // Windows: LOCALAPPDATA\gateclaw\model.json (matches TUI's Global.Path.state)
+  // Linux/macOS: XDG_STATE_HOME/gateclaw or ~/.local/state/gateclaw
+  const localAppData = process.env.LOCALAPPDATA
+  if (localAppData) {
+    return path.join(localAppData, "gateclaw", "model.json")
+  }
 
+  const xdgStateHome = process.env.XDG_STATE_HOME
   if (xdgStateHome && xdgStateHome.trim().length > 0) {
-    return path.join(xdgStateHome, appName, "model.json")
+    return path.join(xdgStateHome, "gateclaw", "model.json")
   }
 
   const homeDir = process.env.HOME || process.env.USERPROFILE || ""
-  return path.join(homeDir, ".local", "state", appName, "model.json")
+  return path.join(homeDir, ".local", "state", "gateclaw", "model.json")
 }
 
 /**
@@ -198,13 +203,11 @@ export async function getModelSelectionLists(): Promise<ModelSelectionLists> {
 
     const rawFavorites = normalizeFavoriteModels(state)
     const rawRecent = normalizeRecentModels(state)
-    const shouldValidateWithCatalog = rawFavorites.length > 0 || rawRecent.length > 0
-    const validModelKeys = shouldValidateWithCatalog ? await getValidModelKeys() : null
 
-    const validatedFavorites = filterModelsByCatalog(rawFavorites, validModelKeys)
-    const validatedRecent = filterModelsByCatalog(rawRecent, validModelKeys)
-
-    const favorites = envDefaultModel ? dedupeModels([...validatedFavorites, envDefaultModel]) : validatedFavorites
+    // Skip catalog validation - show ALL favorites/recent from model.json (including cloud models)
+    // This allows Telegram to display models from providers not configured in gateclaw.jsonc
+    const favorites = envDefaultModel ? dedupeModels([...rawFavorites, envDefaultModel]) : rawFavorites
+    const recent = dedupeModels(rawRecent)
 
     if (rawFavorites.length === 0 && envDefaultModel) {
       logger.info(`[ModelManager] No favorites in ${stateFilePath}, using config model as favorite`)
@@ -214,25 +217,27 @@ export async function getModelSelectionLists(): Promise<ModelSelectionLists> {
       logger.warn(`[ModelManager] No favorites in ${stateFilePath}`)
     }
 
-    const filteredOutFavorites = rawFavorites.length - validatedFavorites.length
-    const filteredOutRecent = rawRecent.length - validatedRecent.length
-
-    if (filteredOutFavorites > 0 || filteredOutRecent > 0) {
+    // Log cloud models that aren't in gateclaw.jsonc config
+    const validModelKeysForLogging = await getValidModelKeys()
+    const cloudFavorites = rawFavorites.filter(
+      (model) => !validModelKeysForLogging?.has(getModelKey(model.providerID, model.modelID)),
+    )
+    if (cloudFavorites.length > 0) {
       logger.info(
-        `[ModelManager] Filtered unavailable models from OpenCode state: favoritesRemoved=${filteredOutFavorites}, recentRemoved=${filteredOutRecent}`,
+        `[ModelManager] Showing ${cloudFavorites.length} cloud model(s) not configured in gateclaw.jsonc: ${cloudFavorites.map((f) => f.providerID + "/" + f.modelID).join(", ")}`,
       )
     }
 
+    // Remove duplicates: recent models that are also in favorites
     const favoriteKeys = new Set(favorites.map((model) => getModelKey(model.providerID, model.modelID)))
-    const recent = dedupeModels(validatedRecent).filter(
-      (model) => !favoriteKeys.has(getModelKey(model.providerID, model.modelID)),
-    )
+    const filteredRecent = recent.filter((model) => !favoriteKeys.has(getModelKey(model.providerID, model.modelID)))
 
-    logger.debug(
-      `[ModelManager] Loaded model selection lists from ${stateFilePath}: favorites=${favorites.length}, recent=${recent.length}`,
+    logger.info(
+      `[ModelManager] Loaded model selection lists from ${stateFilePath}: favorites=${favorites.length}, recent=${filteredRecent.length}`,
     )
+    logger.info(`[ModelManager] Favorites: ${favorites.map((f) => f.providerID + "/" + f.modelID).join(", ")}`)
 
-    return { favorites, recent }
+    return { favorites, recent: filteredRecent }
   } catch (err) {
     if (envDefaultModel) {
       logger.warn("[ModelManager] Failed to load OpenCode model state, using config model as favorite:", err)

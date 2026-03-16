@@ -162,8 +162,8 @@ switch (cmd) {
     fs.writeFileSync(CLI_PID_FILE, String(child.pid), "utf8")
     console.log(`✅ GateClaw started (pid ${child.pid})`)
 
-    // Wait for daemon to be ready
-    const ready = await checkStatus(15, 500)
+    // Wait for daemon to be ready (Windows needs more time for OpenCode server to spawn)
+    const ready = await checkStatus(30, 500) // 15 seconds total
     if (ready) {
       console.log(`🟢 Daemon is ready`)
       console.log(`🌐 OpenCode server starting on port 4100...`)

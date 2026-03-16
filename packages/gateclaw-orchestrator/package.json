@@ -1,7 +1,27 @@
 {
-  "name": "@gateclaw/orchestrator",
-  "version": "1.0.0",
+  "name": "gateclaw",
+  "version": "0.2.0-beta",
   "type": "module",
+  "description": "Resident AI Entity - Local Control. Zero Bullshit.",
+  "keywords": [
+    "ai",
+    "assistant",
+    "resident",
+    "local",
+    "telegram",
+    "cli"
+  ],
+  "author": "GateClaw Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ai-joe-git/GateClaw.git",
+    "directory": "packages/gateclaw-orchestrator"
+  },
+  "bugs": {
+    "url": "https://github.com/ai-joe-git/GateClaw/issues"
+  },
+  "homepage": "https://github.com/ai-joe-git/GateClaw#readme",
   "bin": {
     "gateclaw": "./bin/gateclaw"
   },

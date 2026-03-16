@@ -13,7 +13,7 @@ import { logger } from "../utils/logger.js"
 
 async function getBotVersion(): Promise<string> {
   try {
-    const packageJsonPath = path.join(import.meta.dir, "../../package.json")
+    const packageJsonPath = path.join(import.meta.dir, "../../../package.json")
     const packageJsonContent = await readFile(packageJsonPath, "utf-8")
     const packageJson = JSON.parse(packageJsonContent) as { version?: string }
 

@@ -21,7 +21,6 @@
       "packages/*",
       "packages/console/*",
       "packages/sdk/js",
-      "packages/slack",
       "packages/gateclaw-orchestrator"
     ],
     "catalog": {

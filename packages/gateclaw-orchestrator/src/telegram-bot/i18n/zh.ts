@@ -1,4 +1,4 @@
-import type { I18nDictionary } from "./en.js";
+import type { I18nDictionary } from "./en.js"
 
 export const zh: I18nDictionary = {
   "cmd.description.status": "服务器和会话状态",
@@ -43,8 +43,7 @@ export const zh: I18nDictionary = {
   "start.welcome":
     "👋 欢迎使用 OpenCode Telegram Bot！\n\n可用命令：\n/projects — 选择项目\n/sessions — 会话列表\n/new — 新建会话\n/status — 状态\n/help — 帮助\n\n请使用底部按钮选择模式、模型和变体。",
   "help.keyboard_hint": "💡 代理模式、模型、变体和上下文操作请使用底部键盘按钮。",
-  "help.text":
-    "📖 **帮助**\n\n/status - 查看服务器状态\n/sessions - 会话列表\n/new - 创建新会话\n/help - 帮助",
+  "help.text": "📖 **帮助**\n\n/status - 查看服务器状态\n/sessions - 会话列表\n/new - 创建新会话\n/help - 帮助",
 
   "bot.thinking": "💭 思考中...",
   "bot.project_not_selected": "🏗 未选择项目。\n\n请先使用 /projects 选择一个项目。",
@@ -89,8 +88,7 @@ export const zh: I18nDictionary = {
   "status.session_hint": "使用 /sessions 选择一个会话，或 /new 创建",
   "status.server_unavailable": "🔴 OpenCode 服务器不可用\n\n使用 /opencode_start 启动服务器。",
 
-  "projects.empty":
-    "📭 未找到项目。\n\n在 OpenCode 中打开一个目录并至少创建一个会话，然后它会出现在这里。",
+  "projects.empty": "📭 未找到项目。\n\n在 OpenCode 中打开一个目录并至少创建一个会话，然后它会出现在这里。",
   "projects.select": "请选择一个项目：",
   "projects.select_with_current": "请选择一个项目：\n\n当前：🏗 {project}",
   "projects.page_indicator": "第 {current}/{total} 页",
@@ -98,8 +96,7 @@ export const zh: I18nDictionary = {
   "projects.next_page": "下一页 ➡️",
   "projects.fetch_error": "🔴 OpenCode 服务器不可用，或加载项目时发生错误。",
   "projects.page_load_error": "无法加载此页面。请重试。",
-  "projects.selected":
-    "✅ 已选择项目：{project}\n\n📋 会话已重置。请在此项目中使用 /sessions 或 /new。",
+  "projects.selected": "✅ 已选择项目：{project}\n\n📋 会话已重置。请在此项目中使用 /sessions 或 /new。",
   "projects.select_error": "🔴 选择项目失败。",
 
   "sessions.project_not_selected": "🏗 未选择项目。\n\n请先使用 /projects 选择一个项目。",
@@ -126,8 +123,7 @@ export const zh: I18nDictionary = {
 
   "stop.no_active_session": "🛑 代理尚未启动\n\n使用 /new 创建会话，或通过 /sessions 选择一个。",
   "stop.in_progress": "🛑 已停止事件流，正在发送中止信号...\n\n等待代理停止。",
-  "stop.warn_unconfirmed":
-    "⚠️ 事件流已停止，但服务器未确认中止。\n\n检查 /status，并在几秒后重试 /abort。",
+  "stop.warn_unconfirmed": "⚠️ 事件流已停止，但服务器未确认中止。\n\n检查 /status，并在几秒后重试 /abort。",
   "stop.warn_maybe_finished": "⚠️ 事件流已停止，但代理可能已完成。",
   "stop.success": "✅ 代理操作已中断。本次运行的后续消息将不再发送。",
   "stop.warn_still_busy": "⚠️ 信号已发送，但代理仍在忙。\n\n事件流已禁用，因此不会发送中间消息。",
@@ -135,8 +131,7 @@ export const zh: I18nDictionary = {
   "stop.warn_local_only": "⚠️ 已在本地停止事件流，但服务器端中止失败。",
   "stop.error": "🔴 停止操作失败。\n\n事件流已停止，请再次尝试 /abort。",
 
-  "opencode_start.already_running_managed":
-    "⚠️ OpenCode 服务器已在运行\n\nPID：{pid}\n运行时间：{seconds} 秒",
+  "opencode_start.already_running_managed": "⚠️ OpenCode 服务器已在运行\n\nPID：{pid}\n运行时间：{seconds} 秒",
   "opencode_start.already_running_external":
     "✅ OpenCode 服务器正作为外部进程运行\n\n版本：{version}\n\n该服务器不是由机器人启动，因此 /opencode-stop 无法停止它。",
   "opencode_start.starting": "🔄 正在启动 OpenCode 服务器...",
@@ -256,10 +251,8 @@ export const zh: I18nDictionary = {
   "pinned.files.more": "  ... 还有 {count} 个",
 
   "tool.todo.overflow": "*(还有 {count} 个任务)*",
-  "tool.file_header.write":
-    "写入文件/路径: {path}\n============================================================\n\n",
-  "tool.file_header.edit":
-    "编辑文件/路径: {path}\n============================================================\n\n",
+  "tool.file_header.write": "写入文件/路径: {path}\n============================================================\n\n",
+  "tool.file_header.edit": "编辑文件/路径: {path}\n============================================================\n\n",
 
   "runtime.wizard.ask_token": "请输入 Telegram 机器人 token（从 @BotFather 获取）。\n> ",
   "runtime.wizard.ask_language":
@@ -270,18 +263,15 @@ export const zh: I18nDictionary = {
   "runtime.wizard.token_invalid": "token 看起来无效（期望格式 <id>:<secret>）。请重试。\n",
   "runtime.wizard.ask_user_id": "请输入你的 Telegram User ID（可从 @userinfobot 获取）。\n> ",
   "runtime.wizard.user_id_invalid": "请输入一个正整数（> 0）。\n",
-  "runtime.wizard.ask_api_url":
-    "请输入 OpenCode API URL（可选）。\n按 Enter 使用默认值：{defaultUrl}\n> ",
+  "runtime.wizard.ask_api_url": "请输入 OpenCode API URL（可选）。\n按 Enter 使用默认值：{defaultUrl}\n> ",
   "runtime.wizard.ask_server_username":
     "请输入 OpenCode 服务器用户名（可选）。\n按 Enter 使用默认值：{defaultUsername}\n> ",
-  "runtime.wizard.ask_server_password":
-    "请输入 OpenCode 服务器密码（可选）。\n按 Enter 保持为空。\n> ",
+  "runtime.wizard.ask_server_password": "请输入 OpenCode 服务器密码（可选）。\n按 Enter 保持为空。\n> ",
   "runtime.wizard.api_url_invalid": "请输入有效 URL（http/https），或按 Enter 使用默认值。\n",
   "runtime.wizard.start": "OpenCode Telegram Bot 设置。\n",
   "runtime.wizard.saved": "配置已保存：\n- {envPath}\n- {settingsPath}\n",
   "runtime.wizard.not_configured_starting": "应用尚未配置。正在启动向导...\n",
-  "runtime.wizard.tty_required":
-    "交互式向导需要 TTY 终端。请在交互式 shell 中运行 `opencode-telegram config`。",
+  "runtime.wizard.tty_required": "交互式向导需要 TTY 终端。请在交互式 shell 中运行 `gateclaw telegram setup`。",
 
   "rename.no_session": "⚠️ 没有活动会话。请先创建或选择一个会话。",
   "rename.prompt": "📝 请输入会话的新标题：\n\n当前：{title}",
@@ -312,11 +302,9 @@ export const zh: I18nDictionary = {
   "cmd.description.rename": "重命名当前会话",
 
   "cli.usage":
-    "用法：\n  opencode-telegram [start] [--mode sources|installed]\n  opencode-telegram status\n  opencode-telegram stop\n  opencode-telegram config\n\n说明：\n  - 不带命令时默认执行 `start`\n  - `--mode` 目前仅支持 `start` 命令",
-  "cli.placeholder.status":
-    "命令 `status` 目前是占位符。真实状态检查将会在 service 层（阶段 5）添加。",
-  "cli.placeholder.stop":
-    "命令 `stop` 目前是占位符。真实的后台进程停止将会在 service 层（阶段 5）添加。",
+    "用法：\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\n说明：\n  - 所有命令需要 daemon 运行 (gateclaw start)\n  - Setup 交互式配置机器人",
+  "cli.placeholder.status": "命令 `status` 目前是占位符。真实状态检查将会在 service 层（阶段 5）添加。",
+  "cli.placeholder.stop": "命令 `stop` 目前是占位符。真实的后台进程停止将会在 service 层（阶段 5）添加。",
   "cli.placeholder.unavailable": "命令不可用。",
   "cli.error.prefix": "CLI 错误：{message}",
   "cli.args.unknown_command": "未知命令：{value}",
@@ -334,8 +322,7 @@ export const zh: I18nDictionary = {
 
   "stt.recognizing": "🎤 正在识别音频...",
   "stt.recognized": "🎤 识别结果：\n{text}",
-  "stt.not_configured":
-    "🎤 语音识别尚未配置。\n\n在 .env 中设置 STT_API_URL 和 STT_API_KEY 以启用。",
+  "stt.not_configured": "🎤 语音识别尚未配置。\n\n在 .env 中设置 STT_API_URL 和 STT_API_KEY 以启用。",
   "stt.error": "🔴 识别音频失败：{error}",
   "stt.empty_result": "🎤 音频消息中未检测到语音。",
-};
+}

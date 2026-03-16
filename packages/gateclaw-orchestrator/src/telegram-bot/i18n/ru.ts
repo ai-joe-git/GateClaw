@@ -1,4 +1,4 @@
-import type { I18nDictionary } from "./en.js";
+import type { I18nDictionary } from "./en.js"
 
 export const ru: I18nDictionary = {
   "cmd.description.status": "Статус сервера и сессии",
@@ -21,8 +21,7 @@ export const ru: I18nDictionary = {
   "error.generic": "🔴 Произошла ошибка.",
 
   "interaction.blocked.expired": "⚠️ Текущая интеракция устарела. Запустите ее снова.",
-  "interaction.blocked.expected_callback":
-    "⚠️ Для этого шага используйте inline-кнопки или нажмите Отмена.",
+  "interaction.blocked.expected_callback": "⚠️ Для этого шага используйте inline-кнопки или нажмите Отмена.",
   "interaction.blocked.expected_text": "⚠️ Для этого шага отправьте текстовое сообщение.",
   "interaction.blocked.expected_command": "⚠️ Для этого шага отправьте команду.",
   "interaction.blocked.command_not_allowed": "⚠️ Эта команда недоступна на текущем шаге.",
@@ -32,10 +31,8 @@ export const ru: I18nDictionary = {
   "inline.blocked.expected_choice": "⚠️ Выберите вариант через inline-кнопки или нажмите Отмена.",
   "inline.blocked.command_not_allowed": "⚠️ Эта команда недоступна, пока активно inline-меню.",
 
-  "question.blocked.expected_answer":
-    "⚠️ Ответьте на текущий вопрос кнопками, через Свой ответ, или нажмите Отмена.",
-  "question.blocked.command_not_allowed":
-    "⚠️ Эта команда недоступна, пока не завершен текущий опрос.",
+  "question.blocked.expected_answer": "⚠️ Ответьте на текущий вопрос кнопками, через Свой ответ, или нажмите Отмена.",
+  "question.blocked.command_not_allowed": "⚠️ Эта команда недоступна, пока не завершен текущий опрос.",
 
   "inline.button.cancel": "❌ Отмена",
   "inline.inactive_callback": "Это меню уже неактивно",
@@ -46,8 +43,7 @@ export const ru: I18nDictionary = {
 
   "start.welcome":
     "👋 Добро пожаловать в OpenCode Telegram Bot!\n\nИспользуйте команды:\n/projects — выбрать проект\n/sessions — список сессий\n/new — новая сессия\n/status — статус\n/help — справка\n\nРежим, модель и вариант выбираются кнопками внизу.",
-  "help.keyboard_hint":
-    "💡 Режим, модель, вариант и действия с контекстом доступны через нижние кнопки клавиатуры.",
+  "help.keyboard_hint": "💡 Режим, модель, вариант и действия с контекстом доступны через нижние кнопки клавиатуры.",
   "help.text":
     "📖 **Справка**\n\n/status - Проверить статус сервера\n/sessions - Список сессий\n/new - Создать новую сессию\n/help - Справка",
 
@@ -68,8 +64,7 @@ export const ru: I18nDictionary = {
   "bot.unknown_command": "⚠️ Неизвестная команда: {command}. Используйте /help для списка команд.",
   "bot.photo_downloading": "⏳ Скачиваю фото...",
   "bot.photo_too_large": "⚠️ Фото слишком большое (макс. {maxSizeMb}МБ)",
-  "bot.photo_model_no_image":
-    "⚠️ Текущая модель не поддерживает изображения. Отправляю только текст.",
+  "bot.photo_model_no_image": "⚠️ Текущая модель не поддерживает изображения. Отправляю только текст.",
   "bot.photo_download_error": "🔴 Не удалось скачать фото",
   "bot.photo_no_caption": "💡 Совет: Добавьте подпись, чтобы описать, что делать с этим фото.",
   "bot.file_downloading": "⏳ Скачиваю файл...",
@@ -96,8 +91,7 @@ export const ru: I18nDictionary = {
   "status.session_selected": "Текущая сессия: {title}",
   "status.session_not_selected": "Текущая сессия: не выбрана",
   "status.session_hint": "Используйте /sessions для выбора или /new для создания",
-  "status.server_unavailable":
-    "🔴 OpenCode Server недоступен\n\nИспользуйте /opencode_start для запуска сервера.",
+  "status.server_unavailable": "🔴 OpenCode Server недоступен\n\nИспользуйте /opencode_start для запуска сервера.",
 
   "projects.empty":
     "📭 Проектов нет.\n\nОткройте директорию в OpenCode и создайте хотя бы одну сессию, после этого она появится здесь.",
@@ -106,24 +100,20 @@ export const ru: I18nDictionary = {
   "projects.page_indicator": "Страница {current}/{total}",
   "projects.prev_page": "⬅️ Назад",
   "projects.next_page": "Вперёд ➡️",
-  "projects.fetch_error":
-    "🔴 OpenCode Server недоступен или произошла ошибка при получении списка проектов.",
+  "projects.fetch_error": "🔴 OpenCode Server недоступен или произошла ошибка при получении списка проектов.",
   "projects.page_load_error": "Не удалось загрузить эту страницу. Попробуйте снова.",
   "projects.selected":
     "✅ Проект выбран: {project}\n\n📋 Сессия сброшена. Используйте /sessions или /new для работы с этим проектом.",
   "projects.select_error": "🔴 Ошибка при выборе проекта.",
 
-  "sessions.project_not_selected":
-    "🏗 Проект не выбран.\n\nСначала выберите проект командой /projects.",
+  "sessions.project_not_selected": "🏗 Проект не выбран.\n\nСначала выберите проект командой /projects.",
   "sessions.empty": "📭 Сессий нет.\n\nСоздайте новую сессию командой /new.",
   "sessions.select": "Выберите сессию:",
   "sessions.select_page": "Выберите сессию (страница {page}):",
-  "sessions.fetch_error":
-    "🔴 OpenCode Server недоступен или произошла ошибка при получении списка сессий.",
+  "sessions.fetch_error": "🔴 OpenCode Server недоступен или произошла ошибка при получении списка сессий.",
   "sessions.select_project_first": "🔴 Проект не выбран. Используйте /projects.",
   "sessions.page_empty_callback": "На этой странице нет сессий",
-  "sessions.page_load_error_callback":
-    "Не удалось загрузить эту страницу. Пожалуйста, попробуйте снова.",
+  "sessions.page_load_error_callback": "Не удалось загрузить эту страницу. Пожалуйста, попробуйте снова.",
   "sessions.button.prev_page": "⬅️ Назад",
   "sessions.button.next_page": "Вперёд ➡️",
   "sessions.loading_context": "⏳ Загружаю контекст и последние сообщения...",
@@ -140,25 +130,19 @@ export const ru: I18nDictionary = {
 
   "stop.no_active_session":
     "🛑 Агент не был запущен\n\nСначала создайте сессию командой /new или выберите существующую через /sessions.",
-  "stop.in_progress":
-    "🛑 Отключил поток событий и отправляю сигнал прерывания...\n\nОжидание остановки агента.",
+  "stop.in_progress": "🛑 Отключил поток событий и отправляю сигнал прерывания...\n\nОжидание остановки агента.",
   "stop.warn_unconfirmed":
     "⚠️ Поток событий остановлен, но сервер не подтвердил прерывание.\n\nПроверьте /status и повторите /abort через пару секунд.",
-  "stop.warn_maybe_finished":
-    "⚠️ Поток событий остановлен, но агент мог уже завершиться к моменту запроса.",
-  "stop.success":
-    "✅ Действие агента прервано. Новые сообщения от текущего запуска больше не придут.",
+  "stop.warn_maybe_finished": "⚠️ Поток событий остановлен, но агент мог уже завершиться к моменту запроса.",
+  "stop.success": "✅ Действие агента прервано. Новые сообщения от текущего запуска больше не придут.",
   "stop.warn_still_busy":
     "⚠️ Сигнал отправлен, но агент еще busy.\n\nПоток событий уже отключен, поэтому бот не будет присылать промежуточные сообщения.",
   "stop.warn_timeout":
     "⚠️ Таймаут запроса на прерывание.\n\nПоток событий уже отключен, повторите /abort через пару секунд.",
-  "stop.warn_local_only":
-    "⚠️ Поток событий остановлен локально, но при прерывании на сервере произошла ошибка.",
-  "stop.error":
-    "🔴 Ошибка при прерывании действия.\n\nПоток событий остановлен, попробуйте /abort еще раз.",
+  "stop.warn_local_only": "⚠️ Поток событий остановлен локально, но при прерывании на сервере произошла ошибка.",
+  "stop.error": "🔴 Ошибка при прерывании действия.\n\nПоток событий остановлен, попробуйте /abort еще раз.",
 
-  "opencode_start.already_running_managed":
-    "⚠️ OpenCode Server уже запущен\n\nPID: {pid}\nUptime: {seconds} секунд",
+  "opencode_start.already_running_managed": "⚠️ OpenCode Server уже запущен\n\nPID: {pid}\nUptime: {seconds} секунд",
   "opencode_start.already_running_external":
     "✅ OpenCode Server уже запущен внешним процессом\n\nВерсия: {version}\n\nЭтот сервер не был запущен через бота, поэтому команда /opencode-stop не сможет его остановить.",
   "opencode_start.starting": "🔄 Запускаю OpenCode Server...",
@@ -167,16 +151,14 @@ export const ru: I18nDictionary = {
   "opencode_start.started_not_ready":
     "⚠️ OpenCode Server запущен, но не отвечает\n\nPID: {pid}\n\nСервер может запускаться. Попробуйте /status через несколько секунд.",
   "opencode_start.success": "✅ OpenCode Server успешно запущен\n\nPID: {pid}\nВерсия: {version}",
-  "opencode_start.error":
-    "🔴 Произошла ошибка при запуске сервера.\n\nПроверьте логи приложения для подробностей.",
+  "opencode_start.error": "🔴 Произошла ошибка при запуске сервера.\n\nПроверьте логи приложения для подробностей.",
   "opencode_stop.external_running":
     "⚠️ OpenCode Server запущен внешним процессом\n\nЭтот сервер не был запущен через /opencode-start.\nОстановите его вручную или используйте /status для проверки состояния.",
   "opencode_stop.not_running": "⚠️ OpenCode Server не запущен",
   "opencode_stop.stopping": "🛑 Останавливаю OpenCode Server...\n\nPID: {pid}",
   "opencode_stop.stop_error": "🔴 Не удалось остановить OpenCode Server\n\nОшибка: {error}",
   "opencode_stop.success": "✅ OpenCode Server успешно остановлен",
-  "opencode_stop.error":
-    "🔴 Произошла ошибка при остановке сервера.\n\nПроверьте логи приложения для подробностей.",
+  "opencode_stop.error": "🔴 Произошла ошибка при остановке сервера.\n\nПроверьте логи приложения для подробностей.",
 
   "agent.changed_callback": "Режим изменен: {name}",
   "agent.changed_message": "✅ Режим изменен на: {name}",
@@ -196,8 +178,7 @@ export const ru: I18nDictionary = {
   "model.menu.favorites_empty": "— Список пуст.",
   "model.menu.recent_title": "🕘 Недавние",
   "model.menu.recent_empty": "— Список пуст.",
-  "model.menu.favorites_hint":
-    "ℹ️ Добавляйте модели в избранное через OpenCode CLI, чтобы они были вверху списка.",
+  "model.menu.favorites_hint": "ℹ️ Добавляйте модели в избранное через OpenCode CLI, чтобы они были вверху списка.",
   "model.menu.error": "🔴 Не удалось получить список моделей",
 
   "variant.model_not_selected_callback": "Ошибка: модель не выбрана",
@@ -227,8 +208,7 @@ export const ru: I18nDictionary = {
   "permission.reply.reject": "Отклонено",
   "permission.send_reply_error": "❌ Не удалось отправить ответ на запрос разрешения",
   "permission.blocked.expected_reply": "⚠️ Сначала ответьте на запрос разрешения кнопками выше.",
-  "permission.blocked.command_not_allowed":
-    "⚠️ Эта команда недоступна, пока вы не ответите на запрос разрешения.",
+  "permission.blocked.command_not_allowed": "⚠️ Эта команда недоступна, пока вы не ответите на запрос разрешения.",
   "permission.header": "{emoji} Запрос разрешения: {name}\n\n",
   "permission.button.allow": "✅ Разрешить один раз",
   "permission.button.always": "🔓 Разрешить всегда",
@@ -283,20 +263,16 @@ export const ru: I18nDictionary = {
   "pinned.files.more": "  ... и еще {count}",
 
   "tool.todo.overflow": "*(ещё {count} задач)*",
-  "tool.file_header.write":
-    "Write File/Path: {path}\n============================================================\n\n",
-  "tool.file_header.edit":
-    "Edit File/Path: {path}\n============================================================\n\n",
+  "tool.file_header.write": "Write File/Path: {path}\n============================================================\n\n",
+  "tool.file_header.edit": "Edit File/Path: {path}\n============================================================\n\n",
 
   "runtime.wizard.ask_token": "Введите токен Telegram-бота (получить у @BotFather).\n> ",
   "runtime.wizard.ask_language":
     "Выберите язык интерфейса.\nВведите номер языка из списка или код локали.\nНажмите Enter, чтобы оставить язык по умолчанию: {defaultLocale}\n{options}\n> ",
-  "runtime.wizard.language_invalid":
-    "Введите номер языка из списка или поддерживаемый код локали.\n",
+  "runtime.wizard.language_invalid": "Введите номер языка из списка или поддерживаемый код локали.\n",
   "runtime.wizard.language_selected": "Выбран язык: {language}\n",
   "runtime.wizard.token_required": "Токен обязателен. Попробуйте еще раз.\n",
-  "runtime.wizard.token_invalid":
-    "Похоже на невалидный токен (ожидается формат <id>:<secret>). Попробуйте еще раз.\n",
+  "runtime.wizard.token_invalid": "Похоже на невалидный токен (ожидается формат <id>:<secret>). Попробуйте еще раз.\n",
   "runtime.wizard.ask_user_id": "Введите ваш Telegram User ID (можно узнать у @userinfobot).\n> ",
   "runtime.wizard.user_id_invalid": "Введите положительное целое число (> 0).\n",
   "runtime.wizard.ask_api_url":
@@ -309,10 +285,9 @@ export const ru: I18nDictionary = {
     "Введите корректный URL (http/https) или нажмите Enter для значения по умолчанию.\n",
   "runtime.wizard.start": "Настройка OpenCode Telegram Bot.\n",
   "runtime.wizard.saved": "Конфигурация сохранена:\n- {envPath}\n- {settingsPath}\n",
-  "runtime.wizard.not_configured_starting":
-    "Приложение еще не сконфигурировано. Запускаю wizard...\n",
+  "runtime.wizard.not_configured_starting": "Приложение еще не сконфигурировано. Запускаю wizard...\n",
   "runtime.wizard.tty_required":
-    "Интерактивный wizard требует TTY-терминал. Запустите `opencode-telegram config` в интерактивной оболочке.",
+    "Интерактивный wizard требует TTY-терминал. Запустите `gateclaw telegram setup` в интерактивной оболочке.",
 
   "rename.no_session": "⚠️ Нет активной сессии. Сначала создайте или выберите сессию.",
   "rename.prompt": "📝 Введите новое название сессии:\n\nТекущее: {title}",
@@ -322,10 +297,8 @@ export const ru: I18nDictionary = {
   "rename.cancelled": "❌ Переименование отменено.",
   "rename.inactive_callback": "Запрос переименования неактивен",
   "rename.inactive": "⚠️ Запрос переименования неактивен. Выполните /rename снова.",
-  "rename.blocked.expected_name":
-    "⚠️ Введите новое название текстом или нажмите Отмена в сообщении переименования.",
-  "rename.blocked.command_not_allowed":
-    "⚠️ Эта команда недоступна, пока ожидается новое название сессии.",
+  "rename.blocked.expected_name": "⚠️ Введите новое название текстом или нажмите Отмена в сообщении переименования.",
+  "rename.blocked.command_not_allowed": "⚠️ Эта команда недоступна, пока ожидается новое название сессии.",
   "rename.button.cancel": "❌ Отмена",
 
   "commands.select": "Выберите команду OpenCode:",
@@ -340,14 +313,13 @@ export const ru: I18nDictionary = {
   "commands.cancelled_callback": "Отменено",
   "commands.execute_callback": "Запускаю команду...",
   "commands.executing_prefix": "⚡ Выполнение команды:",
-  "commands.arguments_empty":
-    "⚠️ Аргументы не могут быть пустыми. Отправьте текст или нажмите Выполнить.",
+  "commands.arguments_empty": "⚠️ Аргументы не могут быть пустыми. Отправьте текст или нажмите Выполнить.",
   "commands.execute_error": "🔴 Не удалось выполнить команду OpenCode.",
 
   "cmd.description.rename": "Переименовать текущую сессию",
 
   "cli.usage":
-    "Использование:\n  opencode-telegram [start] [--mode sources|installed]\n  opencode-telegram status\n  opencode-telegram stop\n  opencode-telegram config\n\nЗаметки:\n  - Без команды по умолчанию используется `start`\n  - `--mode` сейчас поддерживается только для `start`",
+    "Использование:\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\nЗаметки:\n  - Все команды требуют запущенный daemon (gateclaw start)\n  - Setup интерактивный и настраивает бота",
   "cli.placeholder.status":
     "Команда `status` пока работает как заглушка. Реальная проверка статуса появится на этапе service-слоя (Этап 5).",
   "cli.placeholder.stop":
@@ -360,8 +332,7 @@ export const ru: I18nDictionary = {
   "cli.args.unknown_option": "Неизвестная опция: {value}",
   "cli.args.mode_only_start": "Опция --mode поддерживается только для команды start",
 
-  "legacy.models.fetch_error":
-    "🔴 Не удалось получить список моделей. Проверьте статус сервера /status.",
+  "legacy.models.fetch_error": "🔴 Не удалось получить список моделей. Проверьте статус сервера /status.",
   "legacy.models.empty": "📋 Нет доступных моделей. Настройте провайдеры через OpenCode.",
   "legacy.models.header": "📋 Доступные модели:\n\n",
   "legacy.models.no_provider_models": "  ⚠️ Нет доступных моделей\n",
@@ -374,4 +345,4 @@ export const ru: I18nDictionary = {
     "🎤 Распознавание голоса не настроено.\n\nУстановите STT_API_URL и STT_API_KEY в .env для включения.",
   "stt.error": "🔴 Не удалось распознать аудио: {error}",
   "stt.empty_result": "🎤 В аудиосообщении не обнаружена речь.",
-};
+}

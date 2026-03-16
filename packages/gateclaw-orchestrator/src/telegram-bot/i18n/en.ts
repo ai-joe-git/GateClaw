@@ -19,23 +19,18 @@ export const en = {
   "error.generic": "🔴 Something went wrong.",
 
   "interaction.blocked.expired": "⚠️ This interaction has expired. Please start it again.",
-  "interaction.blocked.expected_callback":
-    "⚠️ Please use the inline buttons for this step or tap Cancel.",
+  "interaction.blocked.expected_callback": "⚠️ Please use the inline buttons for this step or tap Cancel.",
   "interaction.blocked.expected_text": "⚠️ Please send a text message for this step.",
   "interaction.blocked.expected_command": "⚠️ Please send a command for this step.",
-  "interaction.blocked.command_not_allowed":
-    "⚠️ This command is not available in the current step.",
+  "interaction.blocked.command_not_allowed": "⚠️ This command is not available in the current step.",
   "interaction.blocked.finish_current":
     "⚠️ Finish the current interaction first (answer or cancel), then open another menu.",
 
   "inline.blocked.expected_choice": "⚠️ Choose an option using the inline buttons or tap Cancel.",
-  "inline.blocked.command_not_allowed":
-    "⚠️ This command is not available while inline menu is active.",
+  "inline.blocked.command_not_allowed": "⚠️ This command is not available while inline menu is active.",
 
-  "question.blocked.expected_answer":
-    "⚠️ Answer the current question using buttons, Custom answer, or Cancel.",
-  "question.blocked.command_not_allowed":
-    "⚠️ This command is not available until current question flow is completed.",
+  "question.blocked.expected_answer": "⚠️ Answer the current question using buttons, Custom answer, or Cancel.",
+  "question.blocked.command_not_allowed": "⚠️ This command is not available until current question flow is completed.",
 
   "inline.button.cancel": "❌ Cancel",
   "inline.inactive_callback": "This menu is inactive",
@@ -46,20 +41,16 @@ export const en = {
 
   "start.welcome":
     "👋 Welcome to OpenCode Telegram Bot!\n\nUse commands:\n/projects — select project\n/sessions — session list\n/new — new session\n/status — status\n/help — help\n\nUse the bottom buttons to select agent mode, model, and variant.",
-  "help.keyboard_hint":
-    "💡 Use the bottom keyboard buttons for agent mode, model, variant, and context actions.",
+  "help.keyboard_hint": "💡 Use the bottom keyboard buttons for agent mode, model, variant, and context actions.",
   "help.text":
     "📖 **Help**\n\n/status - Check server status\n/sessions - Session list\n/new - Create new session\n/help - Help",
 
   "bot.thinking": "💭 Thinking...",
-  "bot.project_not_selected":
-    "🏗 Project is not selected.\n\nFirst select a project with /projects.",
+  "bot.project_not_selected": "🏗 Project is not selected.\n\nFirst select a project with /projects.",
   "bot.creating_session": "🔄 Creating a new session...",
-  "bot.create_session_error":
-    "🔴 Failed to create session. Try /new or check server status with /status.",
+  "bot.create_session_error": "🔴 Failed to create session. Try /new or check server status with /status.",
   "bot.session_created": "✅ Session created: {title}",
-  "bot.session_busy":
-    "⏳ Agent is already running a task. Wait for completion or use /abort to interrupt current run.",
+  "bot.session_busy": "⏳ Agent is already running a task. Wait for completion or use /abort to interrupt current run.",
   "bot.session_reset_project_mismatch":
     "⚠️ Active session does not match the selected project, so it was reset. Use /sessions to pick one or /new to create a new session.",
   "bot.prompt_send_error": "Failed to send request to OpenCode.",
@@ -96,8 +87,7 @@ export const en = {
   "status.session_selected": "Current session: {title}",
   "status.session_not_selected": "Current session: not selected",
   "status.session_hint": "Use /sessions to select one or /new to create one",
-  "status.server_unavailable":
-    "🔴 OpenCode Server is unavailable\n\nUse /opencode_start to start the server.",
+  "status.server_unavailable": "🔴 OpenCode Server is unavailable\n\nUse /opencode_start to start the server.",
 
   "projects.empty":
     "📭 No projects found.\n\nOpen a directory in OpenCode and create at least one session, then it will appear here.",
@@ -106,20 +96,17 @@ export const en = {
   "projects.page_indicator": "Page {current}/{total}",
   "projects.prev_page": "⬅️ Previous",
   "projects.next_page": "Next ➡️",
-  "projects.fetch_error":
-    "🔴 OpenCode Server is unavailable or an error occurred while loading projects.",
+  "projects.fetch_error": "🔴 OpenCode Server is unavailable or an error occurred while loading projects.",
   "projects.page_load_error": "Cannot load this page. Please try again.",
   "projects.selected":
     "✅ Project selected: {project}\n\n📋 Session was reset. Use /sessions or /new for this project.",
   "projects.select_error": "🔴 Failed to select project.",
 
-  "sessions.project_not_selected":
-    "🏗 Project is not selected.\n\nFirst select a project with /projects.",
+  "sessions.project_not_selected": "🏗 Project is not selected.\n\nFirst select a project with /projects.",
   "sessions.empty": "📭 No sessions found.\n\nCreate a new session with /new.",
   "sessions.select": "Select a session:",
   "sessions.select_page": "Select a session (page {page}):",
-  "sessions.fetch_error":
-    "🔴 OpenCode Server is unavailable or an error occurred while loading sessions.",
+  "sessions.fetch_error": "🔴 OpenCode Server is unavailable or an error occurred while loading sessions.",
   "sessions.select_project_first": "🔴 Project is not selected. Use /projects.",
   "sessions.page_empty_callback": "No sessions on this page",
   "sessions.page_load_error_callback": "Cannot load this page. Please try again.",
@@ -133,24 +120,19 @@ export const en = {
   "sessions.preview.you": "You:",
   "sessions.preview.agent": "Agent:",
 
-  "new.project_not_selected":
-    "🏗 Project is not selected.\n\nFirst select a project with /projects.",
+  "new.project_not_selected": "🏗 Project is not selected.\n\nFirst select a project with /projects.",
   "new.created": "✅ New session created: {title}",
-  "new.create_error":
-    "🔴 OpenCode Server is unavailable or an error occurred while creating session.",
+  "new.create_error": "🔴 OpenCode Server is unavailable or an error occurred while creating session.",
 
-  "stop.no_active_session":
-    "🛑 Agent was not started\n\nCreate a session with /new or select one via /sessions.",
-  "stop.in_progress":
-    "🛑 Event stream stopped, sending abort signal...\n\nWaiting for agent to stop.",
+  "stop.no_active_session": "🛑 Agent was not started\n\nCreate a session with /new or select one via /sessions.",
+  "stop.in_progress": "🛑 Event stream stopped, sending abort signal...\n\nWaiting for agent to stop.",
   "stop.warn_unconfirmed":
     "⚠️ Event stream stopped, but server did not confirm abort.\n\nCheck /status and retry /abort in a few seconds.",
   "stop.warn_maybe_finished": "⚠️ Event stream stopped, but the agent may have already finished.",
   "stop.success": "✅ Agent action interrupted. No more messages from this run will be sent.",
   "stop.warn_still_busy":
     "⚠️ Signal sent, but agent is still busy.\n\nEvent stream is already disabled, so no intermediate messages will be sent.",
-  "stop.warn_timeout":
-    "⚠️ Abort request timeout.\n\nEvent stream is already disabled, retry /abort in a few seconds.",
+  "stop.warn_timeout": "⚠️ Abort request timeout.\n\nEvent stream is already disabled, retry /abort in a few seconds.",
   "stop.warn_local_only": "⚠️ Event stream stopped locally, but server-side abort failed.",
   "stop.error": "🔴 Failed to stop action.\n\nEvent stream is stopped, try /abort again.",
 
@@ -163,18 +145,15 @@ export const en = {
     "🔴 Failed to start OpenCode Server\n\nError: {error}\n\nCheck that OpenCode CLI is installed and available in PATH:\nopencode --version\nnpm install -g @opencode-ai/cli",
   "opencode_start.started_not_ready":
     "⚠️ OpenCode Server started, but is not responding\n\nPID: {pid}\n\nServer may still be starting. Try /status in a few seconds.",
-  "opencode_start.success":
-    "✅ OpenCode Server started successfully\n\nPID: {pid}\nVersion: {version}",
-  "opencode_start.error":
-    "🔴 An error occurred while starting server.\n\nCheck application logs for details.",
+  "opencode_start.success": "✅ OpenCode Server started successfully\n\nPID: {pid}\nVersion: {version}",
+  "opencode_start.error": "🔴 An error occurred while starting server.\n\nCheck application logs for details.",
   "opencode_stop.external_running":
     "⚠️ OpenCode Server is running as an external process\n\nThis server was not started via /opencode-start.\nStop it manually or use /status to check state.",
   "opencode_stop.not_running": "⚠️ OpenCode Server is not running",
   "opencode_stop.stopping": "🛑 Stopping OpenCode Server...\n\nPID: {pid}",
   "opencode_stop.stop_error": "🔴 Failed to stop OpenCode Server\n\nError: {error}",
   "opencode_stop.success": "✅ OpenCode Server stopped successfully",
-  "opencode_stop.error":
-    "🔴 An error occurred while stopping server.\n\nCheck application logs for details.",
+  "opencode_stop.error": "🔴 An error occurred while stopping server.\n\nCheck application logs for details.",
 
   "agent.changed_callback": "Mode changed: {name}",
   "agent.changed_message": "✅ Mode changed to: {name}",
@@ -194,8 +173,7 @@ export const en = {
   "model.menu.favorites_empty": "— Empty.",
   "model.menu.recent_title": "🕘 Recent",
   "model.menu.recent_empty": "— Empty.",
-  "model.menu.favorites_hint":
-    "ℹ️ Add models to favorites in OpenCode CLI to keep them at the top.",
+  "model.menu.favorites_hint": "ℹ️ Add models to favorites in OpenCode CLI to keep them at the top.",
   "model.menu.error": "🔴 Failed to get models list",
 
   "variant.model_not_selected_callback": "Error: model is not selected",
@@ -224,10 +202,8 @@ export const en = {
   "permission.reply.always": "Always allowed",
   "permission.reply.reject": "Rejected",
   "permission.send_reply_error": "❌ Failed to send permission reply",
-  "permission.blocked.expected_reply":
-    "⚠️ Please answer the permission request first using the buttons above.",
-  "permission.blocked.command_not_allowed":
-    "⚠️ This command is not available until you answer the permission request.",
+  "permission.blocked.expected_reply": "⚠️ Please answer the permission request first using the buttons above.",
+  "permission.blocked.command_not_allowed": "⚠️ This command is not available until you answer the permission request.",
   "permission.header": "{emoji} Permission request: {name}\n\n",
   "permission.button.allow": "✅ Allow once",
   "permission.button.always": "🔓 Allow always",
@@ -259,8 +235,7 @@ export const en = {
   "question.button.submit": "✅ Done",
   "question.button.custom": "🔤 Custom answer",
   "question.button.cancel": "❌ Cancel",
-  "question.use_custom_button_first":
-    '⚠️ To send text, tap "Custom answer" for the current question first.',
+  "question.use_custom_button_first": '⚠️ To send text, tap "Custom answer" for the current question first.',
   "question.summary.title": "✅ Poll completed!\n\n",
   "question.summary.question": "Question {index}:\n{question}\n\n",
   "question.summary.answer": "Answer:\n{answer}\n\n",
@@ -282,36 +257,28 @@ export const en = {
   "pinned.files.more": "  ... and {count} more",
 
   "tool.todo.overflow": "*({count} more tasks)*",
-  "tool.file_header.write":
-    "Write File/Path: {path}\n============================================================\n\n",
-  "tool.file_header.edit":
-    "Edit File/Path: {path}\n============================================================\n\n",
+  "tool.file_header.write": "Write File/Path: {path}\n============================================================\n\n",
+  "tool.file_header.edit": "Edit File/Path: {path}\n============================================================\n\n",
 
   "runtime.wizard.ask_token": "Enter Telegram bot token (get it from @BotFather).\n> ",
   "runtime.wizard.ask_language":
     "Select interface language.\nEnter the language number from the list or locale code.\nPress Enter to keep default language: {defaultLocale}\n{options}\n> ",
-  "runtime.wizard.language_invalid":
-    "Enter a language number from the list or a supported locale code.\n",
+  "runtime.wizard.language_invalid": "Enter a language number from the list or a supported locale code.\n",
   "runtime.wizard.language_selected": "Selected language: {language}\n",
   "runtime.wizard.token_required": "Token is required. Please try again.\n",
-  "runtime.wizard.token_invalid":
-    "Token looks invalid (expected format <id>:<secret>). Please try again.\n",
-  "runtime.wizard.ask_user_id":
-    "Enter your Telegram User ID (you can get it from @userinfobot).\n> ",
+  "runtime.wizard.token_invalid": "Token looks invalid (expected format <id>:<secret>). Please try again.\n",
+  "runtime.wizard.ask_user_id": "Enter your Telegram User ID (you can get it from @userinfobot).\n> ",
   "runtime.wizard.user_id_invalid": "Enter a positive integer (> 0).\n",
-  "runtime.wizard.ask_api_url":
-    "Enter OpenCode API URL (optional).\nPress Enter to use default: {defaultUrl}\n> ",
+  "runtime.wizard.ask_api_url": "Enter OpenCode API URL (optional).\nPress Enter to use default: {defaultUrl}\n> ",
   "runtime.wizard.ask_server_username":
     "Enter OpenCode server username (optional).\nPress Enter to use default: {defaultUsername}\n> ",
-  "runtime.wizard.ask_server_password":
-    "Enter OpenCode server password (optional).\nPress Enter to keep it empty.\n> ",
+  "runtime.wizard.ask_server_password": "Enter OpenCode server password (optional).\nPress Enter to keep it empty.\n> ",
   "runtime.wizard.api_url_invalid": "Enter a valid URL (http/https) or press Enter for default.\n",
   "runtime.wizard.start": "OpenCode Telegram Bot setup.\n",
   "runtime.wizard.saved": "Configuration saved:\n- {envPath}\n- {settingsPath}\n",
-  "runtime.wizard.not_configured_starting":
-    "Application is not configured yet. Starting wizard...\n",
+  "runtime.wizard.not_configured_starting": "Application is not configured yet. Starting wizard...\n",
   "runtime.wizard.tty_required":
-    "Interactive wizard requires a TTY terminal. Run `opencode-telegram config` in an interactive shell.",
+    "Interactive wizard requires a TTY terminal. Run `gateclaw telegram setup` in an interactive shell.",
 
   "rename.no_session": "⚠️ No active session. Create or select a session first.",
   "rename.prompt": "📝 Enter new title for session:\n\nCurrent: {title}",
@@ -321,10 +288,8 @@ export const en = {
   "rename.cancelled": "❌ Rename cancelled.",
   "rename.inactive_callback": "Rename request is inactive",
   "rename.inactive": "⚠️ Rename request is not active. Run /rename again.",
-  "rename.blocked.expected_name":
-    "⚠️ Enter a new session name as text or tap Cancel in rename message.",
-  "rename.blocked.command_not_allowed":
-    "⚠️ This command is not available while rename is waiting for a new name.",
+  "rename.blocked.expected_name": "⚠️ Enter a new session name as text or tap Cancel in rename message.",
+  "rename.blocked.command_not_allowed": "⚠️ This command is not available while rename is waiting for a new name.",
   "rename.button.cancel": "❌ Cancel",
 
   "commands.select": "Choose an OpenCode command:",
@@ -345,7 +310,7 @@ export const en = {
   "cmd.description.rename": "Rename current session",
 
   "cli.usage":
-    "Usage:\n  opencode-telegram [start] [--mode sources|installed]\n  opencode-telegram status\n  opencode-telegram stop\n  opencode-telegram config\n\nNotes:\n  - No command defaults to `start`\n  - `--mode` is currently supported for `start` only",
+    "Usage:\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\nNotes:\n  - All commands require daemon running (gateclaw start)\n  - Setup is interactive and configures bot",
   "cli.placeholder.status":
     "Command `status` is currently a placeholder. Real status checks will be added in service layer (Phase 5).",
   "cli.placeholder.stop":
@@ -371,7 +336,7 @@ export const en = {
     "🎤 Voice recognition is not configured.\n\nSet STT_API_URL and STT_API_KEY in .env to enable it.",
   "stt.error": "🔴 Failed to recognize audio: {error}",
   "stt.empty_result": "🎤 No speech detected in the audio message.",
-} as const;
+} as const
 
-export type I18nKey = keyof typeof en;
-export type I18nDictionary = Record<I18nKey, string>;
+export type I18nKey = keyof typeof en
+export type I18nDictionary = Record<I18nKey, string>

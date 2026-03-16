@@ -1,4 +1,4 @@
-import type { I18nDictionary } from "./en.js";
+import type { I18nDictionary } from "./en.js"
 
 export const es: I18nDictionary = {
   "cmd.description.status": "Estado del servidor y de la sesión",
@@ -21,19 +21,15 @@ export const es: I18nDictionary = {
   "error.generic": "🔴 Algo salió mal.",
 
   "interaction.blocked.expired": "⚠️ Esta interacción ha expirado. Por favor, iníciala de nuevo.",
-  "interaction.blocked.expected_callback":
-    "⚠️ Para este paso, usa los botones en línea o toca Cancelar.",
+  "interaction.blocked.expected_callback": "⚠️ Para este paso, usa los botones en línea o toca Cancelar.",
   "interaction.blocked.expected_text": "⚠️ Para este paso, envía un mensaje de texto.",
   "interaction.blocked.expected_command": "⚠️ Para este paso, envía un comando.",
-  "interaction.blocked.command_not_allowed":
-    "⚠️ Este comando no está disponible en el paso actual.",
+  "interaction.blocked.command_not_allowed": "⚠️ Este comando no está disponible en el paso actual.",
   "interaction.blocked.finish_current":
     "⚠️ Termina primero la interacción actual (responde o cancela) y después abre otro menú.",
 
-  "inline.blocked.expected_choice":
-    "⚠️ Elige una opción usando los botones en línea o toca Cancelar.",
-  "inline.blocked.command_not_allowed":
-    "⚠️ Este comando no está disponible mientras el menú en línea está activo.",
+  "inline.blocked.expected_choice": "⚠️ Elige una opción usando los botones en línea o toca Cancelar.",
+  "inline.blocked.command_not_allowed": "⚠️ Este comando no está disponible mientras el menú en línea está activo.",
 
   "question.blocked.expected_answer":
     "⚠️ Responde la pregunta actual usando botones, Respuesta personalizada o Cancelar.",
@@ -49,17 +45,14 @@ export const es: I18nDictionary = {
 
   "start.welcome":
     "👋 ¡Bienvenido a OpenCode Telegram Bot!\n\nUsa los comandos:\n/projects — seleccionar proyecto\n/sessions — lista de sesiones\n/new — sesión nueva\n/status — estado\n/help — ayuda\n\nUsa los botones inferiores para elegir modo, modelo y variante.",
-  "help.keyboard_hint":
-    "💡 Usa los botones inferiores para modo del agente, modelo, variante y acciones de contexto.",
+  "help.keyboard_hint": "💡 Usa los botones inferiores para modo del agente, modelo, variante y acciones de contexto.",
   "help.text":
     "📖 **Ayuda**\n\n/status - Ver estado del servidor\n/sessions - Lista de sesiones\n/new - Crear una sesión nueva\n/help - Ayuda",
 
   "bot.thinking": "💭 Pensando...",
-  "bot.project_not_selected":
-    "🏗 No hay un proyecto seleccionado.\n\nPrimero selecciona un proyecto con /projects.",
+  "bot.project_not_selected": "🏗 No hay un proyecto seleccionado.\n\nPrimero selecciona un proyecto con /projects.",
   "bot.creating_session": "🔄 Creando una sesión nueva...",
-  "bot.create_session_error":
-    "🔴 No se pudo crear la sesión. Prueba /new o revisa el estado del servidor con /status.",
+  "bot.create_session_error": "🔴 No se pudo crear la sesión. Prueba /new o revisa el estado del servidor con /status.",
   "bot.session_created": "✅ Sesión creada: {title}",
   "bot.session_busy":
     "⏳ El agente ya está ejecutando una tarea. Espera a que termine o usa /abort para interrumpir la ejecución actual.",
@@ -69,15 +62,12 @@ export const es: I18nDictionary = {
   "bot.session_error": "🔴 OpenCode devolvió un error: {message}",
   "bot.session_retry":
     "🔁 {message}\n\nEl proveedor devuelve el mismo error en intentos repetidos. Usa /abort para detenerlo.",
-  "bot.unknown_command":
-    "⚠️ Comando desconocido: {command}. Usa /help para ver los comandos disponibles.",
+  "bot.unknown_command": "⚠️ Comando desconocido: {command}. Usa /help para ver los comandos disponibles.",
   "bot.photo_downloading": "⏳ Descargando foto...",
   "bot.photo_too_large": "⚠️ La foto es demasiado grande (max {maxSizeMb}MB)",
-  "bot.photo_model_no_image":
-    "⚠️ El modelo actual no admite entrada de imagen. Enviaré solo texto.",
+  "bot.photo_model_no_image": "⚠️ El modelo actual no admite entrada de imagen. Enviaré solo texto.",
   "bot.photo_download_error": "🔴 No se pudo descargar la foto",
-  "bot.photo_no_caption":
-    "💡 Consejo: agrega un pie de foto para describir que quieres hacer con esta foto.",
+  "bot.photo_no_caption": "💡 Consejo: agrega un pie de foto para describir que quieres hacer con esta foto.",
   "bot.file_downloading": "⏳ Descargando archivo...",
   "bot.file_too_large": "⚠️ El archivo es demasiado grande (max {maxSizeMb}MB)",
   "bot.file_download_error": "🔴 No se pudo descargar el archivo",
@@ -102,8 +92,7 @@ export const es: I18nDictionary = {
   "status.session_selected": "Sesión actual: {title}",
   "status.session_not_selected": "Sesión actual: no seleccionada",
   "status.session_hint": "Usa /sessions para elegir una o /new para crear una",
-  "status.server_unavailable":
-    "🔴 OpenCode Server no está disponible\n\nUsa /opencode_start para iniciar el servidor.",
+  "status.server_unavailable": "🔴 OpenCode Server no está disponible\n\nUsa /opencode_start para iniciar el servidor.",
 
   "projects.empty":
     "📭 No se encontraron proyectos.\n\nAbre un directorio en OpenCode y crea al menos una sesión; entonces aparecerá aquí.",
@@ -112,8 +101,7 @@ export const es: I18nDictionary = {
   "projects.page_indicator": "Página {current}/{total}",
   "projects.prev_page": "⬅️ Anterior",
   "projects.next_page": "Siguiente ➡️",
-  "projects.fetch_error":
-    "🔴 OpenCode Server no está disponible u ocurrió un error al cargar los proyectos.",
+  "projects.fetch_error": "🔴 OpenCode Server no está disponible u ocurrió un error al cargar los proyectos.",
   "projects.page_load_error": "No se puede cargar esta página. Inténtalo de nuevo.",
   "projects.selected":
     "✅ Proyecto seleccionado: {project}\n\n📋 La sesión se reinició. Usa /sessions o /new para este proyecto.",
@@ -124,8 +112,7 @@ export const es: I18nDictionary = {
   "sessions.empty": "📭 No se encontraron sesiones.\n\nCrea una sesión nueva con /new.",
   "sessions.select": "Selecciona una sesión:",
   "sessions.select_page": "Selecciona una sesión (página {page}):",
-  "sessions.fetch_error":
-    "🔴 OpenCode Server no está disponible u ocurrió un error al cargar las sesiones.",
+  "sessions.fetch_error": "🔴 OpenCode Server no está disponible u ocurrió un error al cargar las sesiones.",
   "sessions.select_project_first": "🔴 No hay un proyecto seleccionado. Usa /projects.",
   "sessions.page_empty_callback": "No hay sesiones en esta página",
   "sessions.page_load_error_callback": "No se puede cargar esta página. Inténtalo de nuevo.",
@@ -139,30 +126,23 @@ export const es: I18nDictionary = {
   "sessions.preview.you": "Tú:",
   "sessions.preview.agent": "Agente:",
 
-  "new.project_not_selected":
-    "🏗 No hay un proyecto seleccionado.\n\nPrimero selecciona un proyecto con /projects.",
+  "new.project_not_selected": "🏗 No hay un proyecto seleccionado.\n\nPrimero selecciona un proyecto con /projects.",
   "new.created": "✅ Sesión nueva creada: {title}",
-  "new.create_error":
-    "🔴 OpenCode Server no está disponible u ocurrió un error al crear la sesión.",
+  "new.create_error": "🔴 OpenCode Server no está disponible u ocurrió un error al crear la sesión.",
 
-  "stop.no_active_session":
-    "🛑 El agente no se inició\n\nCrea una sesión con /new o selecciona una con /sessions.",
+  "stop.no_active_session": "🛑 El agente no se inició\n\nCrea una sesión con /new o selecciona una con /sessions.",
   "stop.in_progress":
     "🛑 Flujo de eventos detenido; enviando señal de aborto...\n\nEsperando a que el agente se detenga.",
   "stop.warn_unconfirmed":
     "⚠️ Flujo de eventos detenido, pero el servidor no confirmó el aborto.\n\nRevisa /status y vuelve a intentar /abort en unos segundos.",
-  "stop.warn_maybe_finished":
-    "⚠️ Flujo de eventos detenido, pero el agente podría haber terminado ya.",
-  "stop.success":
-    "✅ Acción del agente interrumpida. No se enviarán más mensajes de esta ejecución.",
+  "stop.warn_maybe_finished": "⚠️ Flujo de eventos detenido, pero el agente podría haber terminado ya.",
+  "stop.success": "✅ Acción del agente interrumpida. No se enviarán más mensajes de esta ejecución.",
   "stop.warn_still_busy":
     "⚠️ Señal enviada, pero el agente sigue ocupado.\n\nEl flujo de eventos ya está deshabilitado, así que no se enviarán mensajes intermedios.",
   "stop.warn_timeout":
     "⚠️ Tiempo de espera agotado al solicitar el aborto.\n\nEl flujo de eventos ya está deshabilitado; vuelve a intentar /abort en unos segundos.",
-  "stop.warn_local_only":
-    "⚠️ Flujo de eventos detenido localmente, pero el aborto en el servidor falló.",
-  "stop.error":
-    "🔴 No se pudo detener la acción.\n\nEl flujo de eventos está detenido; prueba /abort otra vez.",
+  "stop.warn_local_only": "⚠️ Flujo de eventos detenido localmente, pero el aborto en el servidor falló.",
+  "stop.error": "🔴 No se pudo detener la acción.\n\nEl flujo de eventos está detenido; prueba /abort otra vez.",
 
   "opencode_start.already_running_managed":
     "⚠️ OpenCode Server ya está en ejecución\n\nPID: {pid}\nTiempo activo: {seconds} segundos",
@@ -173,8 +153,7 @@ export const es: I18nDictionary = {
     "🔴 No se pudo iniciar OpenCode Server\n\nError: {error}\n\nRevisa que OpenCode CLI esté instalado y disponible en PATH:\nopencode --version\nnpm install -g @opencode-ai/cli",
   "opencode_start.started_not_ready":
     "⚠️ OpenCode Server se inició, pero no responde\n\nPID: {pid}\n\nEl servidor puede estar iniciando. Prueba /status en unos segundos.",
-  "opencode_start.success":
-    "✅ OpenCode Server iniciado correctamente\n\nPID: {pid}\nVersión: {version}",
+  "opencode_start.success": "✅ OpenCode Server iniciado correctamente\n\nPID: {pid}\nVersión: {version}",
   "opencode_start.error":
     "🔴 Ocurrió un error al iniciar el servidor.\n\nRevisa los logs de la aplicación para más detalles.",
   "opencode_stop.external_running":
@@ -204,8 +183,7 @@ export const es: I18nDictionary = {
   "model.menu.favorites_empty": "— Vacío.",
   "model.menu.recent_title": "🕘 Recientes",
   "model.menu.recent_empty": "— Vacío.",
-  "model.menu.favorites_hint":
-    "ℹ️ Agrega modelos a favoritos en OpenCode CLI para mantenerlos arriba de la lista.",
+  "model.menu.favorites_hint": "ℹ️ Agrega modelos a favoritos en OpenCode CLI para mantenerlos arriba de la lista.",
   "model.menu.error": "🔴 No se pudo obtener la lista de modelos",
 
   "variant.model_not_selected_callback": "Error: no hay un modelo seleccionado",
@@ -234,8 +212,7 @@ export const es: I18nDictionary = {
   "permission.reply.always": "Siempre permitido",
   "permission.reply.reject": "Rechazado",
   "permission.send_reply_error": "❌ No se pudo enviar la respuesta de permisos",
-  "permission.blocked.expected_reply":
-    "⚠️ Primero responde a la solicitud de permisos usando los botones de arriba.",
+  "permission.blocked.expected_reply": "⚠️ Primero responde a la solicitud de permisos usando los botones de arriba.",
   "permission.blocked.command_not_allowed":
     "⚠️ Este comando no está disponible hasta que respondas a la solicitud de permisos.",
   "permission.header": "{emoji} Solicitud de permisos: {name}\n\n",
@@ -300,14 +277,12 @@ export const es: I18nDictionary = {
   "runtime.wizard.ask_token": "Introduce el token del bot de Telegram (obtenlo de @BotFather).\n> ",
   "runtime.wizard.ask_language":
     "Selecciona el idioma de la interfaz.\nIntroduce el número del idioma de la lista o el código de locale.\nPulsa Enter para mantener el idioma por defecto: {defaultLocale}\n{options}\n> ",
-  "runtime.wizard.language_invalid":
-    "Introduce un número de idioma de la lista o un código de locale compatible.\n",
+  "runtime.wizard.language_invalid": "Introduce un número de idioma de la lista o un código de locale compatible.\n",
   "runtime.wizard.language_selected": "Idioma seleccionado: {language}\n",
   "runtime.wizard.token_required": "El token es obligatorio. Inténtalo de nuevo.\n",
   "runtime.wizard.token_invalid":
     "El token parece inválido (se espera el formato <id>:<secret>). Inténtalo de nuevo.\n",
-  "runtime.wizard.ask_user_id":
-    "Introduce tu Telegram User ID (puedes obtenerlo de @userinfobot).\n> ",
+  "runtime.wizard.ask_user_id": "Introduce tu Telegram User ID (puedes obtenerlo de @userinfobot).\n> ",
   "runtime.wizard.user_id_invalid": "Introduce un entero positivo (> 0).\n",
   "runtime.wizard.ask_api_url":
     "Introduce la URL de la API de OpenCode (opcional).\nPulsa Enter para usar el valor por defecto: {defaultUrl}\n> ",
@@ -319,10 +294,9 @@ export const es: I18nDictionary = {
     "Introduce una URL válida (http/https) o pulsa Enter para usar el valor por defecto.\n",
   "runtime.wizard.start": "Configuración de OpenCode Telegram Bot.\n",
   "runtime.wizard.saved": "Configuración guardada:\n- {envPath}\n- {settingsPath}\n",
-  "runtime.wizard.not_configured_starting":
-    "La aplicación aún no está configurada. Iniciando el asistente...\n",
+  "runtime.wizard.not_configured_starting": "La aplicación aún no está configurada. Iniciando el asistente...\n",
   "runtime.wizard.tty_required":
-    "El asistente interactivo requiere un terminal TTY. Ejecuta `opencode-telegram config` en una shell interactiva.",
+    "El asistente interactivo requiere un terminal TTY. Ejecuta `gateclaw telegram setup` en una shell interactiva.",
 
   "rename.no_session": "⚠️ No hay una sesión activa. Crea o selecciona una sesión primero.",
   "rename.prompt": "📝 Introduce un nuevo título para la sesión:\n\nActual: {title}",
@@ -331,8 +305,7 @@ export const es: I18nDictionary = {
   "rename.error": "🔴 No se pudo renombrar la sesión.",
   "rename.cancelled": "❌ Cambio de nombre cancelado.",
   "rename.inactive_callback": "La solicitud de cambio de nombre está inactiva",
-  "rename.inactive":
-    "⚠️ La solicitud de cambio de nombre no está activa. Ejecuta /rename otra vez.",
+  "rename.inactive": "⚠️ La solicitud de cambio de nombre no está activa. Ejecuta /rename otra vez.",
   "rename.blocked.expected_name":
     "⚠️ Introduce el nuevo nombre de la sesión como texto o toca Cancelar en el mensaje de cambio de nombre.",
   "rename.blocked.command_not_allowed":
@@ -351,14 +324,13 @@ export const es: I18nDictionary = {
   "commands.cancelled_callback": "Cancelado",
   "commands.execute_callback": "Ejecutando comando...",
   "commands.executing_prefix": "⚡ Ejecutando comando:",
-  "commands.arguments_empty":
-    "⚠️ Los argumentos no pueden estar vacíos. Envía texto o toca Ejecutar.",
+  "commands.arguments_empty": "⚠️ Los argumentos no pueden estar vacíos. Envía texto o toca Ejecutar.",
   "commands.execute_error": "🔴 No se pudo ejecutar el comando de OpenCode.",
 
   "cmd.description.rename": "Renombrar la sesión actual",
 
   "cli.usage":
-    "Uso:\n  opencode-telegram [start] [--mode sources|installed]\n  opencode-telegram status\n  opencode-telegram stop\n  opencode-telegram config\n\nNotas:\n  - Sin comando, el valor por defecto es `start`\n  - `--mode` actualmente solo se admite para `start`",
+    "Uso:\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\nNotas:\n  - Todos los comandos requieren daemon ejecutándose (gateclaw start)\n  - Setup es interactivo y configura el bot",
   "cli.placeholder.status":
     "El comando `status` es actualmente un marcador de posición. Las comprobaciones reales de estado se agregarán en la capa de servicio (Fase 5).",
   "cli.placeholder.stop":
@@ -371,8 +343,7 @@ export const es: I18nDictionary = {
   "cli.args.unknown_option": "Opción desconocida: {value}",
   "cli.args.mode_only_start": "La opción --mode solo se admite para el comando start",
 
-  "legacy.models.fetch_error":
-    "🔴 No se pudo obtener la lista de modelos. Revisa el estado del servidor con /status.",
+  "legacy.models.fetch_error": "🔴 No se pudo obtener la lista de modelos. Revisa el estado del servidor con /status.",
   "legacy.models.empty": "📋 No hay modelos disponibles. Configura los proveedores en OpenCode.",
   "legacy.models.header": "📋 Modelos disponibles:\n\n",
   "legacy.models.no_provider_models": "  ⚠️ No hay modelos disponibles\n",
@@ -385,4 +356,4 @@ export const es: I18nDictionary = {
     "🎤 El reconocimiento de voz no está configurado.\n\nConfigura STT_API_URL y STT_API_KEY en .env para habilitarlo.",
   "stt.error": "🔴 No se pudo reconocer el audio: {error}",
   "stt.empty_result": "🎤 No se detectó voz en el mensaje de audio.",
-};
+}

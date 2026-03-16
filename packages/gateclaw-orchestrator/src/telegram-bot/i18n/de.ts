@@ -1,4 +1,4 @@
-import type { I18nDictionary } from "./en.js";
+import type { I18nDictionary } from "./en.js"
 
 export const de: I18nDictionary = {
   "cmd.description.status": "Server- und Sitzungsstatus",
@@ -25,18 +25,14 @@ export const de: I18nDictionary = {
     "⚠️ Bitte benutze für diesen Schritt die Inline-Buttons oder tippe auf Abbrechen.",
   "interaction.blocked.expected_text": "⚠️ Bitte sende für diesen Schritt eine Textnachricht.",
   "interaction.blocked.expected_command": "⚠️ Bitte sende für diesen Schritt einen Befehl.",
-  "interaction.blocked.command_not_allowed":
-    "⚠️ Dieser Befehl ist in diesem Schritt nicht verfügbar.",
+  "interaction.blocked.command_not_allowed": "⚠️ Dieser Befehl ist in diesem Schritt nicht verfügbar.",
   "interaction.blocked.finish_current":
     "⚠️ Schließe zuerst die aktuelle Interaktion ab (antworten oder abbrechen), dann öffne ein anderes Menü.",
 
-  "inline.blocked.expected_choice":
-    "⚠️ Wähle eine Option über die Inline-Buttons oder tippe auf Abbrechen.",
-  "inline.blocked.command_not_allowed":
-    "⚠️ Dieser Befehl ist nicht verfügbar, solange das Inline-Menü aktiv ist.",
+  "inline.blocked.expected_choice": "⚠️ Wähle eine Option über die Inline-Buttons oder tippe auf Abbrechen.",
+  "inline.blocked.command_not_allowed": "⚠️ Dieser Befehl ist nicht verfügbar, solange das Inline-Menü aktiv ist.",
 
-  "question.blocked.expected_answer":
-    "⚠️ Beantworte die aktuelle Frage über Buttons, Eigene Antwort oder Abbrechen.",
+  "question.blocked.expected_answer": "⚠️ Beantworte die aktuelle Frage über Buttons, Eigene Antwort oder Abbrechen.",
   "question.blocked.command_not_allowed":
     "⚠️ Dieser Befehl ist erst verfügbar, wenn der aktuelle Frage-Flow abgeschlossen ist.",
 
@@ -49,14 +45,12 @@ export const de: I18nDictionary = {
 
   "start.welcome":
     "👋 Willkommen beim OpenCode Telegram Bot!\n\nNutze Befehle:\n/projects — Projekt auswählen\n/sessions — Sitzungsliste\n/new — neue Sitzung\n/status — Status\n/help — Hilfe\n\nNutze die unteren Buttons, um Modus, Modell und Variante zu wählen.",
-  "help.keyboard_hint":
-    "💡 Nutze die unteren Buttons für Modus, Modell, Variante und Kontextaktionen.",
+  "help.keyboard_hint": "💡 Nutze die unteren Buttons für Modus, Modell, Variante und Kontextaktionen.",
   "help.text":
     "📖 **Hilfe**\n\n/status - Serverstatus prüfen\n/sessions - Sitzungsliste\n/new - Neue Sitzung erstellen\n/help - Hilfe",
 
   "bot.thinking": "💭 Denke...",
-  "bot.project_not_selected":
-    "🏗 Projekt ist nicht ausgewählt.\n\nWähle zuerst ein Projekt mit /projects.",
+  "bot.project_not_selected": "🏗 Projekt ist nicht ausgewählt.\n\nWähle zuerst ein Projekt mit /projects.",
   "bot.creating_session": "🔄 Erstelle eine neue Sitzung...",
   "bot.create_session_error":
     "🔴 Sitzung konnte nicht erstellt werden. Versuche /new oder prüfe den Serverstatus mit /status.",
@@ -69,12 +63,10 @@ export const de: I18nDictionary = {
   "bot.session_error": "🔴 OpenCode meldete einen Fehler: {message}",
   "bot.session_retry":
     "🔁 {message}\n\nDer Provider liefert bei wiederholten Versuchen immer wieder denselben Fehler. Mit /abort abbrechen.",
-  "bot.unknown_command":
-    "⚠️ Unbekannter Befehl: {command}. Nutze /help, um verfügbare Befehle zu sehen.",
+  "bot.unknown_command": "⚠️ Unbekannter Befehl: {command}. Nutze /help, um verfügbare Befehle zu sehen.",
   "bot.photo_downloading": "⏳ Lade Foto herunter...",
   "bot.photo_too_large": "⚠️ Foto ist zu groß (max. {maxSizeMb}MB)",
-  "bot.photo_model_no_image":
-    "⚠️ Das aktuelle Modell unterstützt keine Bildeingabe. Sende nur Text.",
+  "bot.photo_model_no_image": "⚠️ Das aktuelle Modell unterstützt keine Bildeingabe. Sende nur Text.",
   "bot.photo_download_error": "🔴 Foto konnte nicht heruntergeladen werden",
   "bot.photo_no_caption":
     "💡 Tipp: Füge eine Bildunterschrift hinzu, um zu beschreiben, was du mit diesem Foto tun möchtest.",
@@ -119,8 +111,7 @@ export const de: I18nDictionary = {
     "✅ Projekt ausgewählt: {project}\n\n📋 Sitzung wurde zurückgesetzt. Nutze /sessions oder /new für dieses Projekt.",
   "projects.select_error": "🔴 Projekt konnte nicht ausgewählt werden.",
 
-  "sessions.project_not_selected":
-    "🏗 Projekt ist nicht ausgewählt.\n\nWähle zuerst ein Projekt mit /projects.",
+  "sessions.project_not_selected": "🏗 Projekt ist nicht ausgewählt.\n\nWähle zuerst ein Projekt mit /projects.",
   "sessions.empty": "📭 Keine Sitzungen gefunden.\n\nErstelle eine neue Sitzung mit /new.",
   "sessions.select": "Sitzung auswählen:",
   "sessions.select_page": "Sitzung auswählen (Seite {page}):",
@@ -128,8 +119,7 @@ export const de: I18nDictionary = {
     "🔴 OpenCode-Server ist nicht verfügbar oder beim Laden der Sitzungen ist ein Fehler aufgetreten.",
   "sessions.select_project_first": "🔴 Projekt ist nicht ausgewählt. Nutze /projects.",
   "sessions.page_empty_callback": "Auf dieser Seite gibt es keine Sitzungen",
-  "sessions.page_load_error_callback":
-    "Diese Seite kann nicht geladen werden. Bitte versuche es erneut.",
+  "sessions.page_load_error_callback": "Diese Seite kann nicht geladen werden. Bitte versuche es erneut.",
   "sessions.button.prev_page": "⬅️ Zurück",
   "sessions.button.next_page": "Weiter ➡️",
   "sessions.loading_context": "⏳ Lade Kontext und letzte Nachrichten...",
@@ -140,30 +130,24 @@ export const de: I18nDictionary = {
   "sessions.preview.you": "Du:",
   "sessions.preview.agent": "Agent:",
 
-  "new.project_not_selected":
-    "🏗 Projekt ist nicht ausgewählt.\n\nWähle zuerst ein Projekt mit /projects.",
+  "new.project_not_selected": "🏗 Projekt ist nicht ausgewählt.\n\nWähle zuerst ein Projekt mit /projects.",
   "new.created": "✅ Neue Sitzung erstellt: {title}",
   "new.create_error":
     "🔴 OpenCode-Server ist nicht verfügbar oder beim Erstellen der Sitzung ist ein Fehler aufgetreten.",
 
   "stop.no_active_session":
     "🛑 Agent wurde nicht gestartet\n\nErstelle eine Sitzung mit /new oder wähle eine über /sessions aus.",
-  "stop.in_progress":
-    "🛑 Event-Stream gestoppt, sende Abbruchsignal...\n\nWarte darauf, dass der Agent stoppt.",
+  "stop.in_progress": "🛑 Event-Stream gestoppt, sende Abbruchsignal...\n\nWarte darauf, dass der Agent stoppt.",
   "stop.warn_unconfirmed":
     "⚠️ Event-Stream gestoppt, aber der Server hat den Abbruch nicht bestätigt.\n\nPrüfe /status und versuche /abort in ein paar Sekunden erneut.",
-  "stop.warn_maybe_finished":
-    "⚠️ Event-Stream gestoppt, aber der Agent konnte bereits fertig sein.",
-  "stop.success":
-    "✅ Agent-Aktion unterbrochen. Von diesem Lauf werden keine weiteren Nachrichten gesendet.",
+  "stop.warn_maybe_finished": "⚠️ Event-Stream gestoppt, aber der Agent konnte bereits fertig sein.",
+  "stop.success": "✅ Agent-Aktion unterbrochen. Von diesem Lauf werden keine weiteren Nachrichten gesendet.",
   "stop.warn_still_busy":
     "⚠️ Signal gesendet, aber der Agent ist noch beschäftigt.\n\nDer Event-Stream ist bereits deaktiviert, daher werden keine Zwischenmeldungen gesendet.",
   "stop.warn_timeout":
     "⚠️ Timeout beim Abbruch.\n\nDer Event-Stream ist bereits deaktiviert, versuche /abort in ein paar Sekunden erneut.",
-  "stop.warn_local_only":
-    "⚠️ Event-Stream lokal gestoppt, aber serverseitiger Abbruch ist fehlgeschlagen.",
-  "stop.error":
-    "🔴 Aktion konnte nicht gestoppt werden.\n\nEvent-Stream ist gestoppt, versuche /abort erneut.",
+  "stop.warn_local_only": "⚠️ Event-Stream lokal gestoppt, aber serverseitiger Abbruch ist fehlgeschlagen.",
+  "stop.error": "🔴 Aktion konnte nicht gestoppt werden.\n\nEvent-Stream ist gestoppt, versuche /abort erneut.",
 
   "opencode_start.already_running_managed":
     "⚠️ OpenCode-Server läuft bereits\n\nPID: {pid}\nBetriebszeit: {seconds} Sekunden",
@@ -174,8 +158,7 @@ export const de: I18nDictionary = {
     "🔴 OpenCode-Server konnte nicht gestartet werden\n\nFehler: {error}\n\nPrüfe, ob OpenCode CLI installiert und im PATH verfügbar ist:\nopencode --version\nnpm install -g @opencode-ai/cli",
   "opencode_start.started_not_ready":
     "⚠️ OpenCode-Server gestartet, aber reagiert nicht\n\nPID: {pid}\n\nDer Server startet möglicherweise noch. Versuche /status in ein paar Sekunden.",
-  "opencode_start.success":
-    "✅ OpenCode-Server erfolgreich gestartet\n\nPID: {pid}\nVersion: {version}",
+  "opencode_start.success": "✅ OpenCode-Server erfolgreich gestartet\n\nPID: {pid}\nVersion: {version}",
   "opencode_start.error":
     "🔴 Beim Starten des Servers ist ein Fehler aufgetreten.\n\nSiehe Anwendungslogs für Details.",
   "opencode_stop.external_running":
@@ -184,8 +167,7 @@ export const de: I18nDictionary = {
   "opencode_stop.stopping": "🛑 Stoppe OpenCode-Server...\n\nPID: {pid}",
   "opencode_stop.stop_error": "🔴 OpenCode-Server konnte nicht gestoppt werden\n\nFehler: {error}",
   "opencode_stop.success": "✅ OpenCode-Server erfolgreich gestoppt",
-  "opencode_stop.error":
-    "🔴 Beim Stoppen des Servers ist ein Fehler aufgetreten.\n\nSiehe Anwendungslogs für Details.",
+  "opencode_stop.error": "🔴 Beim Stoppen des Servers ist ein Fehler aufgetreten.\n\nSiehe Anwendungslogs für Details.",
 
   "agent.changed_callback": "Modus geändert: {name}",
   "agent.changed_message": "✅ Modus geändert zu: {name}",
@@ -201,8 +183,7 @@ export const de: I18nDictionary = {
   "model.menu.empty": "⚠️ Keine verfügbaren Modelle",
   "model.menu.select": "Modell auswählen:",
   "model.menu.current": "Aktuelles Modell: {name}\n\nModell auswählen:",
-  "model.menu.favorites_title":
-    "⭐ Favoriten (Füge Modelle in OpenCode CLI zu den Favoriten hinzu)",
+  "model.menu.favorites_title": "⭐ Favoriten (Füge Modelle in OpenCode CLI zu den Favoriten hinzu)",
   "model.menu.favorites_empty": "— Leer.",
   "model.menu.recent_title": "🕘 Zuletzt verwendet",
   "model.menu.recent_empty": "— Leer.",
@@ -236,8 +217,7 @@ export const de: I18nDictionary = {
   "permission.reply.always": "Immer erlaubt",
   "permission.reply.reject": "Abgelehnt",
   "permission.send_reply_error": "❌ Antwort auf Berechtigungsanfrage konnte nicht gesendet werden",
-  "permission.blocked.expected_reply":
-    "⚠️ Bitte beantworte zuerst die Berechtigungsanfrage mit den Buttons oben.",
+  "permission.blocked.expected_reply": "⚠️ Bitte beantworte zuerst die Berechtigungsanfrage mit den Buttons oben.",
   "permission.blocked.command_not_allowed":
     "⚠️ Dieser Befehl ist erst verfügbar, wenn du die Berechtigungsanfrage beantwortet hast.",
   "permission.header": "{emoji} Berechtigungsanfrage: {name}\n\n",
@@ -302,29 +282,24 @@ export const de: I18nDictionary = {
   "runtime.wizard.ask_token": "Telegram-Bot-Token eingeben (von @BotFather).\n> ",
   "runtime.wizard.ask_language":
     "Oberflächensprache auswählen.\nGib die Sprach-Nummer aus der Liste oder den Locale-Code ein.\nDrücke Enter, um die Standardsprache beizubehalten: {defaultLocale}\n{options}\n> ",
-  "runtime.wizard.language_invalid":
-    "Gib eine Sprach-Nummer aus der Liste oder einen unterstützten Locale-Code ein.\n",
+  "runtime.wizard.language_invalid": "Gib eine Sprach-Nummer aus der Liste oder einen unterstützten Locale-Code ein.\n",
   "runtime.wizard.language_selected": "Ausgewählte Sprache: {language}\n",
   "runtime.wizard.token_required": "Token ist erforderlich. Bitte versuche es erneut.\n",
   "runtime.wizard.token_invalid":
     "Token sieht ungültig aus (erwartetes Format <id>:<secret>). Bitte versuche es erneut.\n",
-  "runtime.wizard.ask_user_id":
-    "Gib deine Telegram User ID ein (du bekommst sie bei @userinfobot).\n> ",
+  "runtime.wizard.ask_user_id": "Gib deine Telegram User ID ein (du bekommst sie bei @userinfobot).\n> ",
   "runtime.wizard.user_id_invalid": "Gib eine positive ganze Zahl ein (> 0).\n",
-  "runtime.wizard.ask_api_url":
-    "OpenCode API URL eingeben (optional).\nEnter drücken für Standard: {defaultUrl}\n> ",
+  "runtime.wizard.ask_api_url": "OpenCode API URL eingeben (optional).\nEnter drücken für Standard: {defaultUrl}\n> ",
   "runtime.wizard.ask_server_username":
     "OpenCode-Server-Benutzername eingeben (optional).\nEnter drücken für Standard: {defaultUsername}\n> ",
   "runtime.wizard.ask_server_password":
     "OpenCode-Server-Passwort eingeben (optional).\nEnter drücken, um es leer zu lassen.\n> ",
-  "runtime.wizard.api_url_invalid":
-    "Gib eine gültige URL (http/https) ein oder drücke Enter für Standard.\n",
+  "runtime.wizard.api_url_invalid": "Gib eine gültige URL (http/https) ein oder drücke Enter für Standard.\n",
   "runtime.wizard.start": "OpenCode Telegram Bot Einrichtung.\n",
   "runtime.wizard.saved": "Konfiguration gespeichert:\n- {envPath}\n- {settingsPath}\n",
-  "runtime.wizard.not_configured_starting":
-    "Anwendung ist noch nicht konfiguriert. Starte Assistent...\n",
+  "runtime.wizard.not_configured_starting": "Anwendung ist noch nicht konfiguriert. Starte Assistent...\n",
   "runtime.wizard.tty_required":
-    "Der interaktive Assistent erfordert ein TTY-Terminal. Führe `opencode-telegram config` in einer interaktiven Shell aus.",
+    "Der interaktive Assistent erfordert ein TTY-Terminal. Führe `gateclaw telegram setup` in einer interaktiven Shell aus.",
 
   "rename.no_session": "⚠️ Keine aktive Sitzung. Erstelle oder wähle zuerst eine Sitzung.",
   "rename.prompt": "📝 Neuen Titel für die Sitzung eingeben:\n\nAktuell: {title}",
@@ -352,14 +327,13 @@ export const de: I18nDictionary = {
   "commands.cancelled_callback": "Abgebrochen",
   "commands.execute_callback": "Befehl wird ausgeführt...",
   "commands.executing_prefix": "⚡ Befehl wird ausgeführt:",
-  "commands.arguments_empty":
-    "⚠️ Argumente dürfen nicht leer sein. Sende Text oder tippe auf Ausführen.",
+  "commands.arguments_empty": "⚠️ Argumente dürfen nicht leer sein. Sende Text oder tippe auf Ausführen.",
   "commands.execute_error": "🔴 OpenCode-Befehl konnte nicht ausgeführt werden.",
 
   "cmd.description.rename": "Aktuelle Sitzung umbenennen",
 
   "cli.usage":
-    "Verwendung:\n  opencode-telegram [start] [--mode sources|installed]\n  opencode-telegram status\n  opencode-telegram stop\n  opencode-telegram config\n\nHinweise:\n  - Ohne Befehl wird standardmäßig `start` verwendet\n  - `--mode` wird derzeit nur für `start` unterstützt",
+    "Verwendung:\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\nHinweise:\n  - Alle Befehle benötigen laufenden Daemon (gateclaw start)\n  - Setup ist interaktiv und konfiguriert den Bot",
   "cli.placeholder.status":
     "Befehl `status` ist derzeit ein Platzhalter. Echte Statusprüfungen werden in der Service-Schicht hinzugefügt (Phase 5).",
   "cli.placeholder.stop":
@@ -372,8 +346,7 @@ export const de: I18nDictionary = {
   "cli.args.unknown_option": "Unbekannte Option: {value}",
   "cli.args.mode_only_start": "Option --mode wird nur für den start-Befehl unterstützt",
 
-  "legacy.models.fetch_error":
-    "🔴 Modellliste konnte nicht geladen werden. Prüfe den Serverstatus mit /status.",
+  "legacy.models.fetch_error": "🔴 Modellliste konnte nicht geladen werden. Prüfe den Serverstatus mit /status.",
   "legacy.models.empty": "📋 Keine verfügbaren Modelle. Konfiguriere Provider in OpenCode.",
   "legacy.models.header": "📋 Verfügbare Modelle:\n\n",
   "legacy.models.no_provider_models": "  ⚠️ Keine verfügbaren Modelle\n",
@@ -386,4 +359,4 @@ export const de: I18nDictionary = {
     "🎤 Spracherkennung ist nicht konfiguriert.\n\nSetze STT_API_URL und STT_API_KEY in .env, um sie zu aktivieren.",
   "stt.error": "🔴 Audio konnte nicht erkannt werden: {error}",
   "stt.empty_result": "🎤 Keine Sprache in der Audionachricht erkannt.",
-};
+}

@@ -21,7 +21,7 @@ import {
   getMessages,
 } from "../../opencode/src/gateclaw/memory"
 
-import { sendMessage } from "./telegram"
+import { sendTelegramMessage } from "./telegram-bot/utils/telegram-send.js"
 import { getSoulName, getSoulPrompt, getPIDPath, getLogPath, getConfigDir, getSOULPath } from "./soul"
 import { TOOLS_PROMPT } from "./tools"
 import { broadcast, clients } from "./events"
@@ -132,7 +132,7 @@ app.post("/fact", async (c) => {
     const parsed = factSchema.parse(body)
     saveFact(parsed.key, parsed.value)
     const chatId = Number(process.env.GATECLAW_TELEGRAM_CHAT_ID)
-    if (chatId) sendMessage(chatId, `🐾 *Fact stored*\n\`${parsed.key}\` = ${parsed.value}`)
+    if (chatId) sendTelegramMessage(chatId, `🐾 *Fact stored*\n\`${parsed.key}\` = ${parsed.value}`)
     logger.info("Fact stored", { key: parsed.key })
     return c.json({ ok: true })
   } catch (err) {
@@ -471,7 +471,7 @@ app.post("/telegram/send", async (c) => {
   try {
     const body = await c.req.json()
     const parsed = telegramSchema.parse(body)
-    await sendMessage(parsed.chat_id, parsed.text)
+    await sendTelegramMessage(parsed.chat_id, parsed.text)
     logger.info("Telegram message sent", { chat_id: parsed.chat_id })
     return c.json({ ok: true })
   } catch (err) {

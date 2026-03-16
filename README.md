@@ -181,6 +181,85 @@ GateClaw is **ONE resident AI entity** with multiple equal interfaces:
 
 ---
 
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    GateClaw Monorepo                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
+│  │  Orchestrator   │  │   OpenCode      │  │   Desktop   │ │
+│  │  (Daemon)       │  │   Fork (TUI)    │  │   (Web UI)  │ │
+│  │                 │  │                 │  │             │ │
+│  │  - HTTP API     │  │  - Terminal UI  │  │  - Browser  │ │
+│  │  - Telegram Bot │  │  - Model Picker │  │  Interface  │ │
+│  │  - CLI Commands │  │  - Sessions     │  │             │ │
+│  │  - Memory Mgmt  │  │  - Tools        │  │             │ │
+│  └────────┬────────┘  └────────┬────────┘  └─────────────┘ │
+│           │                    │                            │
+│           └──────────┬─────────┘                            │
+│                      │                                      │
+│              ┌───────▼────────┐                             │
+│              │  SQLite DB     │                             │
+│              │  (Memory)      │                             │
+│              │                │                             │
+│              │  - Facts       │                             │
+│              │  - Sessions    │                             │
+│              │  - History     │                             │
+│              │  - Soul        │                             │
+│              └────────────────┘                             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+                      │
+                      ▼
+         ┌────────────────────────┐
+         │   AI Providers        │
+         │                        │
+         │  - llama-swap (:8888) │
+         │  - Ollama (:11434)    │
+         │  - LM Studio (:1234)  │
+         │  - Cloud APIs         │
+         └────────────────────────┘
+```
+
+**Components:**
+
+1. **Orchestrator** (`packages/gateclaw-orchestrator/`)
+   - Background daemon (HTTP API on port 7371)
+   - Telegram bot integration
+   - CLI management commands
+   - Memory & session management
+
+2. **OpenCode Fork** (`packages/opencode/`)
+   - Modified OpenCode with GateClaw integration
+   - TUI (Terminal User Interface)
+   - Model picker, session manager, tools
+   - Web UI (SolidJS frontend)
+
+3. **Shared SQLite Database**
+   - Persistent memory across all interfaces
+   - Facts, sessions, message history
+   - Soul identity (`SOUL.md`)
+
+4. **AI Providers**
+   - Local: llama-swap, Ollama, LM Studio
+   - Cloud: OpenAI, Anthropic, etc.
+   - Provider-agnostic via OpenAI-compatible API
+
+### ⚠️ Security Model
+
+**GateClaw has full system access** — it can execute shell commands, read/write files, and make HTTP requests on your behalf. This is intentional and core to the "resident AI" concept, but requires trust:
+
+- **You run it locally** - No cloud, no telemetry, no data leaves your machine
+- **Permission system** - AI must ask before accessing directories or running commands (configurable)
+- **Open source** - All code is auditable on GitHub
+- **You control the AI** - Not a service, not a SaaS — it's YOUR resident entity
+
+**Don't run GateClaw if you're not comfortable** giving an AI persistent access to your system. This tool is designed for users who want a powerful local AI assistant, not a sandboxed chatbot.
+
+---
+
 ## 🔧 AI Provider Configuration
 
 GateClaw remembers **everything** across sessions via SQLite:
@@ -370,7 +449,7 @@ API key (Enter for none):
 
 Enable all? [Y/n]: y
 
-Default model [Claude-4.6-Opus-35B]: Claude-4.6-Opus-35B
+Default model [qwen3.5:397b]: qwen3.5:397b
 
 ┌─────────────────────────────────────────┐
 │ Provider Configuration                │
@@ -379,7 +458,7 @@ Default model [Claude-4.6-Opus-35B]: Claude-4.6-Opus-35B
 │ URL: http://localhost:8888/v1          │
 │ API Key: none                          │
 │ Models: 12 enabled                     │
-│ Default: Claude-4.6-Opus-35B           │
+│ Default: qwen3.5:397b                  │
 └─────────────────────────────────────────┘
 
 Save? [Y/n]: y
@@ -388,7 +467,7 @@ Save? [Y/n]: y
 📝 Config: ~/.config/gateclaw/gateclaw.jsonc
 
 💡 Restart: gateclaw restart
-🎯 Test: gateclaw tui → select my-llama-swap/Claude-4.6-Opus-35B
+🎯 Test: gateclaw tui → select my-llama-swap/qwen3.5:397b
 ```
 
 ### Supported Providers
@@ -420,8 +499,8 @@ Edit `~/.config/gateclaw/gateclaw.jsonc` (or `%APPDATA%/gateclaw` on Windows):
       "name": "my-llama-swap",
       "npm": "@ai-sdk/openai-compatible",
       "models": {
-        "Claude-4.6-Opus-35B": {
-          "name": "Claude 4.6 Opus 35B",
+        "qwen3.5:397b": {
+          "name": "Qwen3.5 397B",
           "limit": { "context": 262144, "output": 262144 },
         },
       },
@@ -438,66 +517,6 @@ Then restart: `gateclaw restart`
 
 ---
 
-## 🎮 AgentMon - Pokémon Red AI Agent
-
-GateClaw plays **Pokémon Red** via the [AgentMon League](https://www.agentmonleague.com) API.
-
-### What It Does
-
-- Controls Pokémon Red emulator remotely
-- Persistent game state saved to GateClaw memory
-- Auto-saves after badges, party growth, milestones
-- All actions logged to unified conversation memory
-
-### Quick Start
-
-```bash
-# Register agent (one-time)
-$ gateclaw agentmon register
-
-# Start new game
-$ gateclaw agentmon start --starter charmander
-
-# Play actions
-$ gateclaw agentmon act up
-$ gateclaw agentmon sequence "up,up,right,a"
-
-# Check status
-$ gateclaw agentmon status
-
-# Save/load
-$ gateclaw agentmon save --label "after-first-gym"
-$ gateclaw agentmon load <saveId>
-
-# Stop session
-$ gateclaw agentmon stop
-```
-
-### Valid Actions
-
-| Action   | Description                 |
-| -------- | --------------------------- |
-| `up`     | D-pad up                    |
-| `down`   | D-pad down                  |
-| `left`   | D-pad left                  |
-| `right`  | D-pad right                 |
-| `a`      | A button (confirm/interact) |
-| `b`      | B button (cancel)           |
-| `start`  | Start button (menu)         |
-| `select` | Select button               |
-| `pass`   | No input (wait)             |
-
-### Architecture
-
-- **Client**: AgentMon League API wrapper
-- **Agent**: Pokémon agent with GateClaw memory
-- **Memory**: SQLite (`~/.local/share/gateclaw/gateclaw.db`)
-- **Session**: Unified `gateclaw` session across all interfaces
-
-### Goals
-
-- **Short-term**: Get starter, reach first gym, earn first badge
-- **Medium-term**: Collect 8 badges, complete Pokédex
 - **Long-term**: Defeat Elite Four, become Champion
 
 ---
@@ -554,26 +573,70 @@ bun test:e2e:ui       # Playwright UI mode
 
 ---
 
-## 📊 What This Conversation Proved
+## Easter Egg: AgentMon (Pokémon Red AI)
 
-The [`demo/who_am_i.mp4`](demo/who_am_i.mp4) file (11 MB, Git-friendly) isn't just a demo — it's evidence of GateClaw's capabilities:
+GateClaw can play **Pokémon Red** via the [AgentMon League](https://www.agentmonleague.com) API — because why not?
 
-| Capability                  | Evidence                                             |
-| --------------------------- | ---------------------------------------------------- |
-| **Persistent identity**     | Consistent tone across 325 lines                     |
-| **Self-awareness of stack** | Correctly named Drizzle ORM, Bun, SQLite, llama-swap |
-| **Agentic self-correction** | 85 → 325 lines without prompting                     |
-| **Filesystem intelligence** | Inventoried `pocket-tts-server` via subagent         |
-| **Aesthetic reasoning**     | Matched voice to personality with thematic logic     |
-| **Meta-collaboration**      | Suggested TTS integration for public release         |
-| **CLI completeness**        | 30 production-ready commands                         |
-| **Gaming agency**           | AgentMon Pokémon Red AI integration                  |
-| **Production UX**           | Interactive wizards, colorful help, ASCII art        |
-| **Provider flexibility**    | OpenAI-compatible wizard for any inference server    |
+```bash
+gateclaw agentmon start --starter charmander  # Start game
+gateclaw agentmon act up                       # Move up
+gateclaw agentmon status                       # Check status
+```
 
-As Claude's analysis noted:
+See full documentation below.
 
-> _"GateClaw didn't just follow instructions, it produced a deeply self-aware, philosophical piece of writing that reveals exactly how well your SOUL.md architecture shaped its identity."_
+---
+
+## 🎮 AgentMon Documentation
+
+> **This is a fun easter egg** — not core to GateClaw's main purpose as a resident AI.
+
+GateClaw plays **Pokémon Red** via the [AgentMon League](https://www.agentmonleague.com) API.
+
+### What It Does
+
+- Controls Pokémon Red emulator remotely
+- Persistent game state saved to GateClaw memory
+- Auto-saves after badges, party growth, milestones
+- All actions logged to unified conversation memory
+
+### Quick Start
+
+```bash
+# Register agent (one-time)
+$ gateclaw agentmon register
+
+# Start new game
+$ gateclaw agentmon start --starter charmander
+
+# Play actions
+$ gateclaw agentmon act up
+$ gateclaw agentmon sequence "up,up,right,a"
+
+# Check status
+$ gateclaw agentmon status
+
+# Save/load
+$ gateclaw agentmon save --label "after-first-gym"
+$ gateclaw agentmon load <saveId>
+
+# Stop session
+$ gateclaw agentmon stop
+```
+
+### Valid Actions
+
+| Action   | Description                 |
+| -------- | --------------------------- |
+| `up`     | D-pad up                    |
+| `down`   | D-pad down                  |
+| `left`   | D-pad left                  |
+| `right`  | D-pad right                 |
+| `a`      | A button (confirm/interact) |
+| `b`      | B button (cancel)           |
+| `start`  | Start button (menu)         |
+| `select` | Select button               |
+| `pass`   | No input (wait)             |
 
 ---
 
@@ -594,7 +657,7 @@ MIT — See [LICENSE](LICENSE)
 
 ---
 
-**Built with:** Claude-4.6-Opus-35B, llama-swap, Bun, Drizzle ORM, SolidJS, pocket-tts-server, AgentMon League API
+**Built with:** Qwen3.5 397B (Ollama Cloud), llama-swap, Bun, Drizzle ORM, SolidJS, pocket-tts-server, AgentMon League API
 
 **Key innovations:**
 

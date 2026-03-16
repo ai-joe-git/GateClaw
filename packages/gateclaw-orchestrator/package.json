@@ -1,27 +1,30 @@
 {
-  "name": "gateclaw",
+  "name": "@gateclaw/monorepo",
   "version": "0.2.0-beta",
   "type": "module",
-  "description": "Resident AI Entity - Local Control. Zero Bullshit.",
+  "description": "Resident AI Entity - Full Stack (Daemon + TUI + Telegram + Web UI + OpenCode Fork)",
   "keywords": [
     "ai",
     "assistant",
     "resident",
     "local",
     "telegram",
-    "cli"
+    "tui",
+    "opencode",
+    "monorepo"
   ],
   "author": "GateClaw Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ai-joe-git/GateClaw.git",
-    "directory": "packages/gateclaw-orchestrator"
+    "url": "https://github.com/ai-joe-git/GateClaw.git"
   },
   "bugs": {
     "url": "https://github.com/ai-joe-git/GateClaw/issues"
   },
   "homepage": "https://github.com/ai-joe-git/GateClaw#readme",
+  "private": true,
+  "note": "This is a monorepo - install via git clone, not npm. See install scripts in root directory.",
   "bin": {
     "gateclaw": "./bin/gateclaw"
   },

@@ -76,6 +76,8 @@ $ gateclaw soul reset     # Reset to defaults
 
 ## ⚡ Quick Start (60 seconds)
 
+> **⚠️ IMPORTANT:** GateClaw is a **complete monorepo** - it includes the daemon, TUI, Telegram bot, Web UI, AND the OpenCode fork. You must install the entire repository, not just an npm package.
+
 ### 🪟 Windows (PowerShell)
 
 ```powershell
@@ -88,17 +90,24 @@ powershell -c "irm https://raw.githubusercontent.com/ai-joe-git/GateClaw/dev/ins
 curl -fsSL https://raw.githubusercontent.com/ai-joe-git/GateClaw/dev/install | bash
 ```
 
-**What it does:**
+**What you get (complete package):**
 
-1. ✅ Auto-detects your AI provider (llama-swap :8888, Ollama :11434, LM Studio :1234)
-2. ✅ Creates `SOUL.md` personality profile
-3. ✅ Clones repo, runs `bun install`, adds to PATH
-4. ✅ Creates `gateclaw` command
+1. ✅ **GateClaw Daemon** - Background service with HTTP API (port 7371)
+2. ✅ **Telegram Bot** - Chat interface with full model support
+3. ✅ **TUI** - Terminal UI (model picker, sessions, tools)
+4. ✅ **Web UI** - Browser interface (OpenCode fork)
+5. ✅ **CLI** - Management commands (start/stop/status/etc.)
+6. ✅ **OpenCode Fork** - Modified OpenCode with GateClaw integration
+7. ✅ **Auto-detects** your AI provider (llama-swap :8888, Ollama :11434, LM Studio :1234)
+8. ✅ **Creates** `SOUL.md` personality profile
+9. ✅ **Adds** `gateclaw` command to PATH
 
 **Then run:**
 
 - `gateclaw providers add` - Interactive AI provider setup
 - `gateclaw telegram setup` - Telegram bot configuration
+- `gateclaw tui` - Launch terminal UI
+- `gateclaw web` - Open web UI
 
 ### First Run
 

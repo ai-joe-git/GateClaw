@@ -23,20 +23,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 📦 Changed
 
-- **Package name** - `@gateclaw/orchestrator` → `gateclaw` (simpler)
+- **Package name** - `@gateclaw/orchestrator` → `@gateclaw/monorepo` (clarifies it's the full repo)
+- **Marked as private** - npm package disabled (must install via git clone)
 - **Version** - `1.0.0` → `0.2.0-beta` (accurate beta status)
 
 ### 📝 Documentation
 
-- Updated README with Windows/Linux install instructions
+- Updated README emphasizing complete monorepo installation
 - Added installation guide
 - Updated Telegram debugging guide
+- Clarified that GateClaw = Daemon + TUI + Telegram + Web UI + OpenCode fork
 
 ### 🏗️ Architecture
 
 - **Model Manager** - No longer filters favorites by server catalog
 - **State Management** - Unified state path across TUI and daemon
 - **Cross-platform** - Full Windows + Linux/macOS support
+
+### ⚠️ Installation Note
+
+**GateClaw is ONLY available via git clone** (not npm):
+
+- Windows: `powershell -c "irm gateclaw.ai/install.ps1|iex"`
+- Linux/Mac: `curl -fsSL gateclaw.ai/install | bash`
+
+This ensures you get the complete package: daemon, TUI, Telegram bot, Web UI, AND the OpenCode fork.
 
 ---
 

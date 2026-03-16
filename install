@@ -31,9 +31,16 @@ print_msg() {
     echo -e "${col}${msg}${NC}"
 }
 
-echo -e "${GREEN}🐾 GateClaw Installer - Resident AI${NC}"
+echo -e "${GREEN}🐾 GateClaw Installer - Resident AI Entity${NC}"
 echo -e "${MUTED}Version:${NC} ${VERSION_NUMBER}"
 echo -e "${MUTED}Repo:${NC} https://github.com/ai-joe-git/GateClaw"
+echo
+echo -e "${CYAN}📦 Installing COMPLETE GateClaw monorepo:${NC}"
+echo -e "  ${GREEN}✅${NC} GateClaw Daemon (HTTP API + Telegram bot)"
+echo -e "  ${GREEN}✅${NC} TUI (Terminal User Interface)"
+echo -e "  ${GREEN}✅${NC} Web UI (Browser interface)"
+echo -e "  ${GREEN}✅${NC} OpenCode Fork (Modified OpenCode)"
+echo -e "  ${GREEN}✅${NC} CLI (Management commands)"
 echo
 
 # Check Bun

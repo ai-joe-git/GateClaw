@@ -5,9 +5,16 @@ $VERSION = "0.2.0-beta"
 $REPO = "ai-joe-git/GateClaw"
 $BRANCH = "dev"
 
-Write-Host "🐾 GateClaw Installer - Resident AI" -ForegroundColor Green
+Write-Host "🐾 GateClaw Installer - Resident AI Entity" -ForegroundColor Green
 Write-Host "Version: $VERSION" -ForegroundColor Gray
 Write-Host "Repo: https://github.com/$REPO" -ForegroundColor Gray
+Write-Host ""
+Write-Host "📦 Installing COMPLETE GateClaw monorepo:" -ForegroundColor Cyan
+Write-Host "  ✅ GateClaw Daemon (HTTP API + Telegram bot)" -ForegroundColor Gray
+Write-Host "  ✅ TUI (Terminal User Interface)" -ForegroundColor Gray
+Write-Host "  ✅ Web UI (Browser interface)" -ForegroundColor Gray
+Write-Host "  ✅ OpenCode Fork (Modified OpenCode)" -ForegroundColor Gray
+Write-Host "  ✅ CLI (Management commands)" -ForegroundColor Gray
 Write-Host ""
 
 # Check if running as admin

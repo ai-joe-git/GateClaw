@@ -93,7 +93,7 @@ const startOpenCodeServer = async () => {
     const child = Bun.spawn(["bun", "run", "src/index.ts", "serve", "--port", "4100"], {
       cwd: opencodeDir,
       stdio: ["ignore", "ignore", "ignore"],
-      detached: true,
+      detached: false,
       windowsHide: true,
       env: {
         ...process.env,
@@ -102,12 +102,11 @@ const startOpenCodeServer = async () => {
         OPENCODE_SERVER_PASSWORD: "",
       },
     })
-    child.unref()
     saveOpenCodePID(child.pid)
     console.log(`[gateclaw] OpenCode server spawned (pid ${child.pid})`)
 
     // Wait a bit and check if it started
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
       await sleep(500)
       try {
         const res = await fetch("http://localhost:4100/global/health", { signal: AbortSignal.timeout(500) })

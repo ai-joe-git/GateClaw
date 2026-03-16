@@ -8,8 +8,8 @@ import { getRuntimePaths, type RuntimePaths } from "./paths.js"
 import { getLocale, getLocaleOptions, resolveSupportedLocale, setRuntimeLocale, t, type Locale } from "../i18n/index.js"
 
 const DEFAULT_API_URL = "http://localhost:4100"
-const DEFAULT_SERVER_USERNAME = "opencode"
-const FALLBACK_MODEL_PROVIDER = "opencode"
+const DEFAULT_SERVER_USERNAME = "gateclaw"
+const FALLBACK_MODEL_PROVIDER = "gateclaw"
 const FALLBACK_MODEL_ID = "big-pickle"
 
 interface ModelDefaults {

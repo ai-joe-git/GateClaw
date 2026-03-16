@@ -34,6 +34,12 @@ await Promise.all([
   fs.mkdir(Global.Path.bin, { recursive: true }),
 ])
 
+// Debug: log config path on startup
+console.log(`[gateclaw/opencode] Config path: ${Global.Path.config}`)
+console.log(`[gateclaw/opencode] xdgConfig value: ${xdgConfig}`)
+console.log(`[gateclaw/opencode] APPDATA env: ${process.env.APPDATA}`)
+console.log(`[gateclaw/opencode] OPENCODE_CONFIG_DIR env: ${process.env.OPENCODE_CONFIG_DIR}`)
+
 const CACHE_VERSION = "21"
 
 const version = await Filesystem.readText(path.join(Global.Path.cache, "version")).catch(() => "0")

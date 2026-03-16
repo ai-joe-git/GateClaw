@@ -22,7 +22,25 @@ async function prompt(question: string, options?: { default?: string }): Promise
   })
 }
 
+async function checkDaemonStatus(): Promise<boolean> {
+  try {
+    const res = await fetch("http://127.0.0.1:7371/health", { signal: AbortSignal.timeout(1000) })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
+async function ensureDaemonRunning(): Promise<boolean> {
+  if (await checkDaemonStatus()) return true
+  console.log("🐾 Daemon not running, please start it with: gateclaw start")
+  return false
+}
+
 async function storeFact(key: string, value: string) {
+  if (!(await ensureDaemonRunning())) {
+    process.exit(1)
+  }
   try {
     const res = await fetch("http://127.0.0.1:7371/fact", {
       method: "POST",
@@ -35,12 +53,15 @@ async function storeFact(key: string, value: string) {
       console.error("❌ Failed to store fact")
     }
   } catch {
-    console.error("🔴 GateClaw daemon not running")
+    console.error("❌ Failed to store fact")
     process.exit(1)
   }
 }
 
 async function deleteFact(key: string) {
+  if (!(await ensureDaemonRunning())) {
+    process.exit(1)
+  }
   try {
     const res = await fetch(`http://127.0.0.1:7371/fact/${key}`, {
       method: "DELETE",
@@ -51,12 +72,15 @@ async function deleteFact(key: string) {
       console.error("❌ Fact not found")
     }
   } catch {
-    console.error("🔴 GateClaw daemon not running")
+    console.error("❌ Failed to delete fact")
     process.exit(1)
   }
 }
 
 async function getFact(key: string) {
+  if (!(await ensureDaemonRunning())) {
+    process.exit(1)
+  }
   try {
     const res = await fetch(`http://127.0.0.1:7371/fact/${key}`)
     if (res.ok) {
@@ -66,7 +90,7 @@ async function getFact(key: string) {
       console.error("❌ Fact not found")
     }
   } catch {
-    console.error("🔴 GateClaw daemon not running")
+    console.error("❌ Failed to get fact")
     process.exit(1)
   }
 }

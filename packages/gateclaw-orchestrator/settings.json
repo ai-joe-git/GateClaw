@@ -1,0 +1,20 @@
+{
+  "sessionDirectoryCache": {
+    "version": 1,
+    "lastSyncedUpdatedAt": 1773599901078,
+    "directories": [
+      {
+        "worktree": "C:\\Users\\uscha\\Desktop\\Sandbox\\GateClaw",
+        "lastUpdated": 1773599901078
+      },
+      {
+        "worktree": "C:\\Users\\uscha\\Desktop\\Sandbox\\GateClaw\\packages\\gateclaw-orchestrator",
+        "lastUpdated": 1773592637844
+      },
+      {
+        "worktree": "C:\\Users\\uscha\\Desktop\\Sandbox\\GateClaw\\packages\\opencode",
+        "lastUpdated": 1773565119273
+      }
+    ]
+  }
+}

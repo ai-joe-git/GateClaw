@@ -8,18 +8,71 @@ if (process.platform === "win32") {
 } else {
   process.env.XDG_DATA_HOME = process.env.XDG_DATA_HOME || path.join(os.homedir(), ".local", "share")
 }
-
-import { runMigrations } from "../../opencode/src/gateclaw/migrator"
 import { app } from "./server"
 import { startBotApp } from "./telegram-bot/app/start-bot-app.js"
 import { getSoulName, getPIDPath, getLogPath, getConfigDir } from "./soul"
 import { spawn } from "bun"
+import { execSync } from "child_process"
 import fs from "node:fs"
 import path from "node:path"
 import { setTimeout as sleep } from "node:timers/promises"
 
-// Apply migrations at startup BEFORE any message handling
-runMigrations()
+const OPENCODE_PID_FILE = path.join(getConfigDir(), "opencode-server.pid")
+
+function getOpenCodePID(): number | null {
+  try {
+    if (fs.existsSync(OPENCODE_PID_FILE)) {
+      return parseInt(fs.readFileSync(OPENCODE_PID_FILE, "utf8").trim(), 10)
+    }
+  } catch {}
+  return null
+}
+
+function saveOpenCodePID(pid: number): void {
+  fs.writeFileSync(OPENCODE_PID_FILE, String(pid), "utf8")
+}
+
+function deleteOpenCodePID(): void {
+  try {
+    fs.unlinkSync(OPENCODE_PID_FILE)
+  } catch {}
+}
+
+function killOpenCodeServer(): void {
+  const pid = getOpenCodePID()
+  if (!pid) return
+
+  try {
+    if (process.platform === "win32") {
+      execSync(`taskkill /PID ${pid} /T /F`, { stdio: "ignore" })
+    } else {
+      process.kill(pid, "SIGTERM")
+    }
+    console.log("[gateclaw] OpenCode server stopped")
+  } catch {
+    // Process already dead or not found
+  }
+  deleteOpenCodePID()
+}
+
+let telegramBotRunning = false
+
+async function startTelegramBot(): Promise<void> {
+  if (telegramBotRunning) return
+  telegramBotRunning = true
+  try {
+    await startBotApp()
+  } catch (err) {
+    console.error("Failed to start Telegram bot:", err)
+    telegramBotRunning = false
+  }
+}
+
+async function stopTelegramBot(): Promise<void> {
+  if (!telegramBotRunning) return
+  telegramBotRunning = false
+  console.log("[gateclaw] Telegram bot stop requested")
+}
 
 // Start OpenCode server on port 4100 if not already running
 const startOpenCodeServer = async () => {
@@ -33,29 +86,43 @@ const startOpenCodeServer = async () => {
     // Server not running, start it
   }
 
-  console.log("[gateclaw] Starting OpenCode server on port 4100...")
-  const serverProcess = spawn({
-    cmd: ["bun", "run", "--conditions=node", "./src/index.ts", "serve", "--port", "4100"],
-    cwd: path.join(process.cwd(), "..", "opencode"),
-    stdout: "pipe",
-    stderr: "pipe",
-  })
+  // Try to start OpenCode server as detached process
+  const opencodeDir = path.resolve(__dirname, "../../opencode")
+  const gateclawConfigDir = getConfigDir()
+  try {
+    const child = Bun.spawn(["bun", "run", "src/index.ts", "serve", "--port", "4100"], {
+      cwd: opencodeDir,
+      stdout: "ignore",
+      stderr: "ignore",
+      detached: true,
+      env: {
+        ...process.env,
+        XDG_CONFIG_HOME: process.env.APPDATA,
+        OPENCODE_CONFIG_DIR: gateclawConfigDir,
+        OPENCODE_SERVER_PASSWORD: "",
+      },
+    })
+    child.unref()
+    saveOpenCodePID(child.pid)
+    console.log(`[gateclaw] OpenCode server spawned (pid ${child.pid})`)
 
-  // Wait for server to start
-  for (let i = 0; i < 10; i++) {
-    await sleep(500)
-    try {
-      const healthRes = await fetch("http://localhost:4100/global/health", { signal: AbortSignal.timeout(1000) })
-      if (healthRes.ok) {
-        console.log("[gateclaw] OpenCode server started on port 4100")
-        return
+    // Wait a bit and check if it started
+    for (let i = 0; i < 10; i++) {
+      await sleep(500)
+      try {
+        const res = await fetch("http://localhost:4100/global/health", { signal: AbortSignal.timeout(500) })
+        if (res.ok) {
+          console.log("[gateclaw] OpenCode server is ready on port 4100")
+          return
+        }
+      } catch {
+        // Still starting
       }
-    } catch {
-      // Still waiting
     }
+    console.log("[gateclaw] OpenCode server may have failed to start - check manually")
+  } catch (err) {
+    console.log("[gateclaw] Failed to spawn OpenCode server:", err)
   }
-
-  console.error("[gateclaw] Failed to start OpenCode server on port 4100")
 }
 
 // Load environment from .env file
@@ -71,12 +138,14 @@ if (fs.existsSync(ENV_PATH)) {
 const port = 7371
 const host = "127.0.0.1"
 
-// Start OpenCode server before Telegram
+// Start OpenCode server first
 await startOpenCodeServer()
 
-// Start original grammy-based Telegram bot
-console.log("[gateclaw] Starting grammy Telegram bot...")
-startBotApp().catch((err) => console.error("Failed to start Telegram bot:", err))
+// Start Telegram bot after 3 seconds delay
+console.log("[gateclaw] Starting Telegram bot in 3s...")
+setTimeout(() => {
+  startTelegramBot()
+}, 3000)
 
 console.log("GateClaw daemon listening on 127.0.0.1:7371")
 
@@ -120,16 +189,21 @@ process.on("unhandledRejection", (reason) => {
   console.error("[gateclaw] Unhandled rejection (daemon kept alive):", reason)
 })
 
-const cleanup = () => {
+const cleanup = async () => {
   const pidPath = getPIDPath()
   const logPath = getLogPath()
+
+  // Stop Telegram bot
+  await stopTelegramBot()
+
+  // Stop OpenCode server
+  killOpenCodeServer()
 
   if (fs.existsSync(pidPath)) {
     fs.unlinkSync(pidPath)
   }
 
   fs.appendFileSync(logPath, `[${new Date().toISOString()}] SHUTDOWN\n`, "utf8")
-  // Shutdown message is now handled by the original grammy bot
   server.stop()
   process.exit(0)
 }

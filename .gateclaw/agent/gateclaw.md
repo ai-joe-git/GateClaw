@@ -1,5 +1,5 @@
 ---
-model: llama-swap/Claude-4.6-Opus-35B
+model: llama-swap/gpt-oss-20b
 description: GateClaw - Resident AI entity with persistent memory and Telegram-native interface
 mode: primary
 temperature: 0.3

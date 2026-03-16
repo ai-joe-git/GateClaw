@@ -77,9 +77,14 @@ export namespace Server {
         // Allow CORS preflight requests to succeed without auth.
         // Browser clients sending Authorization headers will preflight with OPTIONS.
         if (c.req.method === "OPTIONS") return next()
-        const password = Flag.OPENCODE_SERVER_PASSWORD
-        if (!password) return next()
-        const username = Flag.OPENCODE_SERVER_USERNAME ?? "opencode"
+        const password = Flag.OPENCODE_SERVER_PASSWORD?.trim() ?? ""
+        const username = Flag.OPENCODE_SERVER_USERNAME?.trim() ?? "opencode"
+        // Only enable auth if password is a non-empty string
+        if (password.length === 0) {
+          log.info("auth", { message: "Basic auth disabled (no password set)" })
+          return next()
+        }
+        log.info("auth", { message: "Basic auth enabled", username })
         return basicAuth({ username, password })(c, next)
       })
       .use(async (c, next) => {

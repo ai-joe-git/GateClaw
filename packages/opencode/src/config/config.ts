@@ -209,7 +209,7 @@ export namespace Config {
     // which would fail on system directories requiring elevated permissions
     // This way it only loads config file and not skills/plugins/commands
     if (existsSync(managedDir)) {
-      for (const file of ["opencode.jsonc", "opencode.json"]) {
+      for (const file of ["gateclaw.jsonc", "gateclaw.json", "opencode.jsonc", "opencode.json"]) {
         result = mergeConfigConcatArrays(result, await loadFile(path.join(managedDir, file)))
       }
     }
@@ -1219,15 +1219,20 @@ export namespace Config {
 
   export const global = lazy(async () => {
     const files = [
-      path.join(Global.Path.config, "config.json"),
-      path.join(Global.Path.config, "gateclaw.json"),
       path.join(Global.Path.config, "gateclaw.jsonc"),
-      path.join(Global.Path.config, "opencode.json"),
+      path.join(Global.Path.config, "gateclaw.json"),
       path.join(Global.Path.config, "opencode.jsonc"),
+      path.join(Global.Path.config, "opencode.json"),
+      path.join(Global.Path.config, "config.json"),
     ]
     let result: Info = {}
     for (const file of files) {
-      result = mergeDeep(result, await loadFile(file))
+      const loaded = await loadFile(file)
+      if (loaded && Object.keys(loaded).length > 0) {
+        console.log(`[gateclaw/opencode] Loaded config from: ${file}`)
+        console.log(`[gateclaw/opencode] Config keys: ${Object.keys(loaded).join(", ")}`)
+      }
+      result = mergeDeep(result, loaded)
     }
 
     const legacy = path.join(Global.Path.config, "config")

@@ -1,9 +1,13 @@
 import { AgentMonClient } from "./client.js"
 import type { GameState, StepResponse } from "./client.js"
 import { saveFact, getFact, saveMessage } from "../gateclaw/memory.js"
-import { logger } from "../telegram-bot/utils/logger.js"
 
-const log = logger
+const log = {
+  debug: (...args: unknown[]) => console.log(`[DEBUG]`, ...args),
+  info: (...args: unknown[]) => console.log(`[INFO]`, ...args),
+  warn: (...args: unknown[]) => console.warn(`[WARN]`, ...args),
+  error: (...args: unknown[]) => console.error(`[ERROR]`, ...args),
+}
 
 export interface AgentConfig {
   displayName: string

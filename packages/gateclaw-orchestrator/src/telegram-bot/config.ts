@@ -114,8 +114,8 @@ export const config = {
     username: getEnvVar("OPENCODE_SERVER_USERNAME", false) || "gateclaw",
     password: getEnvVar("OPENCODE_SERVER_PASSWORD", false),
     model: {
-      provider: getEnvVar("GATECLAW_MODEL_PROVIDER", false) || "ollama-cloud",
-      modelId: getEnvVar("GATECLAW_MODEL", false) || "qwen3.5:397b",
+      provider: getEnvVar("GATECLAW_MODEL_PROVIDER", false) || "llama-swap",
+      modelId: getEnvVar("GATECLAW_MODEL", false) || "gpt-oss-20b",
     },
   },
   server: {

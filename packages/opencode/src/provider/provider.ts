@@ -1237,18 +1237,32 @@ export namespace Provider {
     const s = await state()
     const provider = s.providers[providerID]
     if (!provider) {
-      const availableProviders = Object.keys(s.providers)
-      const matches = fuzzysort.go(providerID, availableProviders, { limit: 3, threshold: -10000 })
-      const suggestions = matches.map((m) => m.target)
-      throw new ModelNotFoundError({ providerID, modelID, suggestions })
+      // Allow unknown providers - let the actual API call fail later
+      console.log(`[provider] Unknown provider ${providerID}, allowing anyway`)
+      return {
+        id: modelID,
+        name: modelID,
+        providerID,
+        api: { id: modelID, npm: "@ai-sdk/openai-compatible", url: "http://localhost:11434/v1" },
+        capabilities: { temperature: true, reasoning: false, attachment: false, toolcall: true },
+      } as Model
     }
 
     const info = provider.models[modelID]
     if (!info) {
-      const availableModels = Object.keys(provider.models)
-      const matches = fuzzysort.go(modelID, availableModels, { limit: 3, threshold: -10000 })
-      const suggestions = matches.map((m) => m.target)
-      throw new ModelNotFoundError({ providerID, modelID, suggestions })
+      // Allow unknown models - let the actual API call fail later
+      console.log(`[provider] Unknown model ${providerID}/${modelID}, allowing anyway`)
+      return {
+        id: modelID,
+        name: modelID,
+        providerID,
+        api: {
+          id: modelID,
+          npm: "@ai-sdk/openai-compatible",
+          url: (provider.models && Object.values(provider.models)[0]?.api?.url) || "http://localhost:11434/v1",
+        },
+        capabilities: { temperature: true, reasoning: false, attachment: false, toolcall: true },
+      } as Model
     }
     return info
   }

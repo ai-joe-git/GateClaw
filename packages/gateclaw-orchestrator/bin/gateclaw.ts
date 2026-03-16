@@ -42,6 +42,39 @@ async function checkStatus(retries = 5, delayMs = 500): Promise<any | null> {
   return null
 }
 
+async function ensureDaemonRunning(): Promise<boolean> {
+  const data = await checkStatus()
+  if (data) return true
+
+  console.log("🐾 Daemon not running, starting it...")
+  const pid = readPid()
+  if (pid && isRunning(pid)) {
+    // Process exists but HTTP not responding, wait a bit
+    await new Promise((r) => setTimeout(r, 2000))
+    const retry = await checkStatus()
+    if (retry) return true
+  }
+
+  // Start daemon
+  const child = spawn("bun", ["run", SRC_INDEX], {
+    detached: true,
+    stdio: ["ignore", fs.openSync(CLI_LOG_FILE, "a"), fs.openSync(CLI_LOG_FILE, "a")],
+    env: { ...process.env },
+  })
+  child.unref()
+  fs.writeFileSync(CLI_PID_FILE, String(child.pid), "utf8")
+
+  // Wait for daemon to be ready
+  await new Promise((r) => setTimeout(r, 2000))
+  const ready = await checkStatus()
+  if (ready) {
+    console.log(`✅ Daemon started (pid ${child.pid})`)
+    return true
+  }
+  console.log("⚠️  Daemon started but health check failed")
+  return false
+}
+
 function printHelp() {
   const blue = "\x1b[36m"
   const green = "\x1b[32m"
@@ -104,8 +137,17 @@ switch (cmd) {
   case "start": {
     const existing = readPid()
     if (existing && isRunning(existing)) {
-      console.log(`✅ GateClaw already running (pid ${existing})`)
-      process.exit(0)
+      // Double-check HTTP is actually responding
+      const health = await checkStatus(1, 100)
+      if (health) {
+        console.log(`✅ GateClaw already running (pid ${existing})`)
+        process.exit(0)
+      }
+      // Process exists but HTTP not responding - stale, remove PID
+      console.log(`⚠️  Stale PID file (process ${existing} not responding), cleaning up...`)
+      try {
+        fs.unlinkSync(CLI_PID_FILE)
+      } catch {}
     }
     console.log("🐾 Starting GateClaw daemon...")
     const child = spawn("bun", ["run", SRC_INDEX], {
@@ -116,6 +158,17 @@ switch (cmd) {
     child.unref()
     fs.writeFileSync(CLI_PID_FILE, String(child.pid), "utf8")
     console.log(`✅ GateClaw started (pid ${child.pid})`)
+
+    // Wait for daemon to be ready
+    const ready = await checkStatus(15, 500)
+    if (ready) {
+      console.log(`🟢 Daemon is ready`)
+      console.log(`🌐 OpenCode server starting on port 4100...`)
+      console.log(`🤖 Telegram bot will start in 3s...`)
+    } else {
+      console.log(`⚠️  Daemon started but not responding yet`)
+      console.log(`   Try: gateclaw status`)
+    }
     console.log(`📋 Logs: gateclaw logs`)
     break
   }
@@ -201,7 +254,7 @@ switch (cmd) {
     fs.writeFileSync(CLI_PID_FILE, String(child.pid), "utf8")
 
     // Wait for daemon to be ready
-    const ready = await checkStatus()
+    const ready = await checkStatus(15, 500)
     if (ready) {
       console.log(`✅ GateClaw restarted (pid ${child.pid})`)
     } else {
@@ -263,10 +316,17 @@ switch (cmd) {
       await new Promise((r) => setTimeout(r, 1500))
     }
 
+    const configDir = process.env.APPDATA
+      ? path.join(process.env.APPDATA, "gateclaw")
+      : path.join(process.env.HOME || "", ".config", "gateclaw")
+
     console.log("🌐 Opening GateClaw Web UI in browser...")
     spawnSync("bun", ["run", "--cwd", path.join(ROOT, "packages", "opencode"), "src/index.ts", "web"], {
       stdio: "inherit",
-      env: { ...process.env },
+      env: {
+        ...process.env,
+        OPENCODE_CONFIG_DIR: configDir,
+      },
       cwd: ROOT,
     })
     break
@@ -289,13 +349,20 @@ switch (cmd) {
       await new Promise((r) => setTimeout(r, 1500))
     }
 
+    const configDir = process.env.APPDATA
+      ? path.join(process.env.APPDATA, "gateclaw")
+      : path.join(process.env.HOME || "", ".config", "gateclaw")
+
     console.log("🖥️  Launching GateClaw TUI...")
     spawnSync(
       "bun",
       ["run", "--cwd", path.join(ROOT, "packages", "opencode"), "--conditions=browser", "src/index.ts"],
       {
         stdio: "inherit",
-        env: { ...process.env },
+        env: {
+          ...process.env,
+          OPENCODE_CONFIG_DIR: configDir,
+        },
         cwd: ROOT,
       },
     )
@@ -444,6 +511,11 @@ switch (cmd) {
         break
       }
       case "start": {
+        // First mark as started via API
+        try {
+          await fetch("http://127.0.0.1:7371/telegram/start", { method: "POST" })
+        } catch {}
+
         console.log("🐾 Starting Telegram bot...")
         const { startBotApp } = await import("../src/telegram-bot/app/start-bot-app.js")
         await startBotApp()
@@ -451,16 +523,16 @@ switch (cmd) {
       }
       case "stop": {
         console.log("🛑 Stopping Telegram bot...")
-        const { processManager } = await import("../src/telegram-bot/process/manager.js")
-        if (processManager.isRunning()) {
-          const { success } = await processManager.stop()
-          if (success) {
+        try {
+          const res = await fetch("http://127.0.0.1:7371/telegram/stop", { method: "POST" })
+          const data = (await res.json()) as any
+          if (data.success) {
             console.log("✅ Telegram bot stopped")
           } else {
             console.log("⚠️  Failed to stop Telegram bot")
           }
-        } else {
-          console.log("ℹ️  Telegram bot not running")
+        } catch {
+          console.log("ℹ️  Telegram bot not running (or daemon offline)")
         }
         break
       }
@@ -469,17 +541,27 @@ switch (cmd) {
           console.log("📊 Telegram Bot Status\n")
 
           // Check daemon health
-          try {
-            const daemonRes = await fetch("http://127.0.0.1:7371/health")
-            const daemonData = (await daemonRes.json()) as any
-
-            console.log(`Daemon: ${daemonData.status === "ok" ? "🟢 Online" : "🔴 Offline"}`)
+          const daemonData = await checkStatus()
+          if (daemonData) {
+            console.log(`Daemon: 🟢 Online`)
             console.log(`  Soul: ${daemonData.soul || "unknown"}`)
             console.log(`  Uptime: ${Math.floor((daemonData.uptime_ms || 0) / 1000)}s`)
-          } catch {
+          } else {
             console.log("Daemon: 🔴 Offline")
             console.log("\n💡 Start daemon: gateclaw start")
             break
+          }
+
+          // Check Telegram bot status via API
+          let botRunning = false
+          let botConfigured = false
+          try {
+            const tgRes = await fetch("http://127.0.0.1:7371/telegram/status")
+            const tgData = (await tgRes.json()) as any
+            botRunning = tgData.running
+            botConfigured = tgData.configured
+          } catch {
+            // Fall back to config check
           }
 
           // Check Telegram configuration
@@ -502,11 +584,14 @@ switch (cmd) {
           console.log(`  Token: ${tokenConfigured ? "✅ Configured" : "❌ Not set"}`)
           console.log(`  Chat ID: ${chatIdConfigured ? "✅ Configured" : "❌ Not set"}`)
 
-          // Bot status inference
-          if (tokenConfigured && chatIdConfigured) {
-            console.log("\nBot Status: 🟢 Running (in-process with daemon)")
-            console.log("  The bot runs inside the daemon process")
-            console.log("  Test: Message your bot on Telegram")
+          // Bot status
+          if (botRunning) {
+            console.log("\nBot Status: 🟢 Running")
+            console.log("  The bot is active and polling for messages")
+          } else if (tokenConfigured && chatIdConfigured) {
+            console.log("\nBot Status: 🟡 Stopped")
+            console.log("  Bot is configured but not running")
+            console.log("  Run: gateclaw telegram start")
           } else if (!tokenConfigured) {
             console.log("\nBot Status: ⚠️  Not configured")
             console.log("  Run: gateclaw telegram setup")
@@ -532,9 +617,13 @@ switch (cmd) {
   }
 
   case "facts": {
+    if (!(await ensureDaemonRunning())) {
+      console.log("🔴 Failed to start daemon")
+      process.exit(1)
+    }
     const res = await fetch("http://127.0.0.1:7371/facts")
     if (!res.ok) {
-      console.log("🔴 GateClaw daemon not running")
+      console.log("🔴 Failed to fetch facts")
       process.exit(1)
     }
     const facts = (await res.json()) as any[]
@@ -556,10 +645,14 @@ switch (cmd) {
   }
 
   case "history": {
-    const session = process.argv[3] || "default"
+    const session = process.argv[3] || "gateclaw"
+    if (!(await ensureDaemonRunning())) {
+      console.log("💡 Start daemon: gateclaw start")
+      process.exit(1)
+    }
     const res = await fetch(`http://127.0.0.1:7371/messages/${session}`)
     if (!res.ok) {
-      console.log("🔴 GateClaw daemon not running")
+      console.log("🔴 Failed to fetch messages")
       process.exit(1)
     }
     const msgs = (await res.json()) as any[]
@@ -576,10 +669,13 @@ switch (cmd) {
     const subcmd = process.argv[3]
 
     if (subcmd === "refresh") {
+      if (!(await ensureDaemonRunning())) {
+        process.exit(1)
+      }
       console.log("\n🔄 Refreshing providers from config...\n")
       try {
         const res = await fetch("http://127.0.0.1:7371/provider", { signal: AbortSignal.timeout(5000) })
-        if (!res.ok) throw new Error("Daemon not running")
+        if (!res.ok) throw new Error("Failed to fetch providers")
         const data = (await res.json()) as any
         const providers = data.data || []
         console.log(`✅ Found ${providers.length} providers`)
@@ -590,7 +686,6 @@ switch (cmd) {
         console.log("   Or restart: gateclaw restart")
       } catch (e: any) {
         console.log(`❌ Failed: ${e.message}`)
-        console.log("\n💡 Start daemon: gateclaw start")
         process.exit(1)
       }
       break
@@ -734,9 +829,14 @@ switch (cmd) {
       process.exit(1)
     }
 
+    if (!(await ensureDaemonRunning())) {
+      console.log("💡 Start daemon: gateclaw start")
+      process.exit(1)
+    }
+
     try {
       const res = await fetch(`http://127.0.0.1:7371/messages/${session}`)
-      if (!res.ok) throw new Error("Daemon not running")
+      if (!res.ok) throw new Error("Failed to fetch messages")
       const msgs = (await res.json()) as any[]
 
       if (msgs.length === 0) {
@@ -771,9 +871,8 @@ switch (cmd) {
       console.log(`   Messages: ${msgs.length}`)
       console.log(`   Size: ${(Buffer.byteLength(content) / 1024).toFixed(2)} KB`)
     } catch (e: any) {
-      console.log("🔴 GateClaw daemon not running")
-      console.log("   Start with: gateclaw start")
-      console.log("\nError:", e.message)
+      console.log("❌ Export failed:", e.message)
+      process.exit(1)
     }
     break
   }
@@ -850,6 +949,33 @@ switch (cmd) {
   gateclaw agentmon save [label]        - Save current game
   gateclaw agentmon load <saveId>       - Load saved game
   gateclaw agentmon stop                - Stop session`)
+    }
+    break
+  }
+
+  case "models": {
+    if (!(await ensureDaemonRunning())) {
+      console.log("💡 Start daemon: gateclaw start")
+      process.exit(1)
+    }
+    console.log("\n📋 AI Models\n")
+    try {
+      const res = await fetch("http://127.0.0.1:7371/models")
+      if (!res.ok) throw new Error("Failed to fetch models")
+      const data = (await res.json()) as any
+      const models = data.data || []
+      if (models.length === 0) {
+        console.log("🧠 No models configured")
+      } else {
+        console.log(`✅ Found ${models.length} model(s):\n`)
+        models.forEach((m: any, i: number) => {
+          console.log(`  ${i + 1}. ${m.name || m.modelID || m.id}`)
+          console.log(`     Provider: ${m.provider || m.providerID || "unknown"}`)
+        })
+      }
+    } catch (e: any) {
+      console.log(`❌ Failed: ${e.message}`)
+      process.exit(1)
     }
     break
   }

@@ -27,6 +27,8 @@ import { TOOLS_PROMPT } from "./tools"
 import { broadcast, clients } from "./events"
 import fs from "node:fs"
 import path from "node:path"
+import os from "node:os"
+import { parse as parseJSONC } from "jsonc-parser"
 
 // SSE Event Bus for OpenCode SDK compatibility
 type SseClient = { send: (type: string, data: unknown) => void; close: () => void }
@@ -98,8 +100,28 @@ app.get("/health", (c) => {
   })
 })
 
-app.post("/shutdown", (c) => {
+app.post("/shutdown", async (c) => {
   logger.info("Shutdown requested via HTTP")
+
+  // Import and call cleanup from index.ts
+  const { execSync } = await import("child_process")
+  const { getConfigDir } = await import("./soul")
+
+  // Stop OpenCode server
+  const opencodePidPath = path.join(getConfigDir(), "opencode-server.pid")
+  try {
+    if (fs.existsSync(opencodePidPath)) {
+      const pid = parseInt(fs.readFileSync(opencodePidPath, "utf8").trim(), 10)
+      if (pid && process.platform === "win32") {
+        execSync(`taskkill /PID ${pid} /T /F`, { stdio: "ignore" })
+      } else if (pid) {
+        process.kill(pid, "SIGTERM")
+      }
+      fs.unlinkSync(opencodePidPath)
+      logger.info("OpenCode server stopped via HTTP shutdown")
+    }
+  } catch {}
+
   setTimeout(() => process.exit(0), 100)
   return c.json({ ok: true })
 })
@@ -325,8 +347,8 @@ app.post("/process", async (c) => {
       { role: "user", content: parsed.text },
     ]
 
-    // Get model from env or default to llama-swap's Claude-4.6-Opus-35B
-    const model = process.env.GATECLAW_MODEL || "Claude-4.6-Opus-35B"
+    // Get model from env or default to llama-swap's gpt-oss-20b
+    const model = process.env.GATECLAW_MODEL || "gpt-oss-20b"
 
     // Call LLM with context
     const llmRes = await fetch("http://localhost:8888/v1/chat/completions", {
@@ -482,13 +504,43 @@ app.get("/projects", async (c) => {
 
 app.get("/models", async (c) => {
   try {
-    // Return configured model from env
-    const model = {
-      providerID: process.env.GATECLAW_MODEL_PROVIDER || "gateclaw",
-      modelID: process.env.GATECLAW_MODEL_ID || "big-pickle",
-      name: process.env.GATECLAW_MODEL_ID || "big-pickle",
+    const configDir = process.env.APPDATA
+      ? path.join(process.env.APPDATA, "gateclaw")
+      : path.join(os.homedir(), ".config", "gateclaw")
+    const configPath = path.join(configDir, "gateclaw.jsonc")
+
+    if (!fs.existsSync(configPath)) {
+      return c.json({
+        data: [
+          {
+            providerID: "gateclaw",
+            modelID: process.env.GATECLAW_MODEL_ID || "big-pickle",
+            name: process.env.GATECLAW_MODEL_ID || "big-pickle",
+          },
+        ],
+      })
     }
-    return c.json({ data: [model] })
+
+    const configContent = fs.readFileSync(configPath, "utf8")
+    const configJson = parseJSONC(configContent)
+    const providers = configJson.provider || {}
+
+    const allModels: any[] = []
+    for (const providerId of Object.keys(providers)) {
+      const provider = providers[providerId]
+      const models = provider?.models || {}
+      for (const modelId of Object.keys(models)) {
+        const model = models[modelId]
+        allModels.push({
+          providerID: providerId,
+          modelID: modelId,
+          name: model?.name || modelId,
+          limit: model?.limit,
+        })
+      }
+    }
+
+    return c.json({ data: allModels })
   } catch (err) {
     logger.error("Failed to fetch models", { error: formatError(err) })
     return c.json({ data: [] }, 500)
@@ -616,7 +668,71 @@ app.get("/model", async (c) => {
 })
 
 app.get("/provider", async (c) => {
-  return c.json({ data: [{ id: "gateclaw", name: "GateClaw" }] })
+  try {
+    const configDir = process.env.APPDATA
+      ? path.join(process.env.APPDATA, "gateclaw")
+      : path.join(os.homedir(), ".config", "gateclaw")
+    const configPath = path.join(configDir, "gateclaw.jsonc")
+
+    if (!fs.existsSync(configPath)) {
+      return c.json({ data: [{ id: "gateclaw", name: "GateClaw" }] })
+    }
+
+    const configContent = fs.readFileSync(configPath, "utf8")
+    // Use jsonc-parser to handle comments and trailing commas
+    const configJson = parseJSONC(configContent)
+    const providers = configJson.provider || {}
+
+    const providerList = Object.entries(providers).map(([id, config]: [string, any]) => ({
+      id,
+      name: config.name || id,
+      npm: config.npm,
+      models: config.models || {},
+    }))
+
+    return c.json({ data: providerList })
+  } catch (err) {
+    console.error("Failed to load providers:", err)
+    return c.json({ data: [{ id: "gateclaw", name: "GateClaw" }] })
+  }
+})
+
+// Telegram bot control endpoints
+let telegramBotRunning = false
+let telegramStopRequested = false
+
+app.get("/telegram/status", async (c) => {
+  const configDir = process.env.APPDATA
+    ? path.join(process.env.APPDATA, "gateclaw")
+    : path.join(os.homedir(), ".config", "gateclaw")
+  const envPath = path.join(configDir, ".env")
+
+  let tokenConfigured = false
+  let chatIdConfigured = false
+
+  if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, "utf8")
+    tokenConfigured = !!envContent.match(/GATECLAW_TELEGRAM_TOKEN="([^"]+)"/)
+    chatIdConfigured = !!envContent.match(/GATECLAW_TELEGRAM_CHAT_ID="(\d+)"/)
+  }
+
+  return c.json({
+    running: telegramBotRunning,
+    configured: tokenConfigured && chatIdConfigured,
+    stopRequested: telegramStopRequested,
+  })
+})
+
+app.post("/telegram/stop", async (c) => {
+  telegramStopRequested = true
+  telegramBotRunning = false // Mark as stopped
+  return c.json({ success: true, message: "Stop signal sent to bot" })
+})
+
+app.post("/telegram/start", async (c) => {
+  telegramStopRequested = false
+  telegramBotRunning = true
+  return c.json({ success: true, message: "Bot marked as started" })
 })
 
 export { app }

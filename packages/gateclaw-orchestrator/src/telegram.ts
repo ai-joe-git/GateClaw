@@ -11,7 +11,7 @@ import fs from "node:fs"
 const SESSION = "gateclaw"
 let lastUpdateId = 0
 let running = true
-let currentModel = "Claude-4.6-Opus-35B"
+let currentModel = "gpt-oss-20b"
 
 function getConfigDir(): string {
   if (process.platform === "win32") {

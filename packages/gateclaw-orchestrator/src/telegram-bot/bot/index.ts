@@ -1,147 +1,139 @@
-import { Bot, Context, InputFile, NextFunction } from "grammy";
-import { promises as fs } from "fs";
-import * as path from "path";
-import { fileURLToPath } from "url";
-import { SocksProxyAgent } from "socks-proxy-agent";
-import { HttpsProxyAgent } from "https-proxy-agent";
-import { config } from "../config.js";
-import { authMiddleware } from "./middleware/auth.js";
-import { interactionGuardMiddleware } from "./middleware/interaction-guard.js";
-import { unknownCommandMiddleware } from "./middleware/unknown-command.js";
-import { BOT_COMMANDS } from "./commands/definitions.js";
-import { startCommand } from "./commands/start.js";
-import { helpCommand } from "./commands/help.js";
-import { statusCommand } from "./commands/status.js";
+import { Bot, Context, InputFile, NextFunction } from "grammy"
+import { promises as fs } from "fs"
+import * as path from "path"
+import { fileURLToPath } from "url"
+import { SocksProxyAgent } from "socks-proxy-agent"
+import { HttpsProxyAgent } from "https-proxy-agent"
+import { config } from "../config.js"
+import { authMiddleware } from "./middleware/auth.js"
+import { interactionGuardMiddleware } from "./middleware/interaction-guard.js"
+import { unknownCommandMiddleware } from "./middleware/unknown-command.js"
+import { BOT_COMMANDS } from "./commands/definitions.js"
+import { startCommand } from "./commands/start.js"
+import { helpCommand } from "./commands/help.js"
+import { statusCommand } from "./commands/status.js"
 import {
   AGENT_MODE_BUTTON_TEXT_PATTERN,
   MODEL_BUTTON_TEXT_PATTERN,
   VARIANT_BUTTON_TEXT_PATTERN,
-} from "./message-patterns.js";
-import { sessionsCommand, handleSessionSelect } from "./commands/sessions.js";
-import { newCommand } from "./commands/new.js";
-import { projectsCommand, handleProjectSelect } from "./commands/projects.js";
-import { abortCommand } from "./commands/abort.js";
-import { opencodeStartCommand } from "./commands/opencode-start.js";
-import { opencodeStopCommand } from "./commands/opencode-stop.js";
-import { renameCommand, handleRenameCancel, handleRenameTextAnswer } from "./commands/rename.js";
-import {
-  commandsCommand,
-  handleCommandsCallback,
-  handleCommandTextArguments,
-} from "./commands/commands.js";
-import {
-  handleQuestionCallback,
-  showCurrentQuestion,
-  handleQuestionTextAnswer,
-} from "./handlers/question.js";
-import { handlePermissionCallback, showPermissionRequest } from "./handlers/permission.js";
-import { handleAgentSelect, showAgentSelectionMenu } from "./handlers/agent.js";
-import { handleModelSelect, showModelSelectionMenu } from "./handlers/model.js";
-import { handleVariantSelect, showVariantSelectionMenu } from "./handlers/variant.js";
-import { handleContextButtonPress, handleCompactConfirm } from "./handlers/context.js";
-import { handleInlineMenuCancel } from "./handlers/inline-menu.js";
-import { questionManager } from "../question/manager.js";
-import { interactionManager } from "../interaction/manager.js";
-import { clearAllInteractionState } from "../interaction/cleanup.js";
-import { keyboardManager } from "../keyboard/manager.js";
-import { subscribeToEvents } from "../opencode/events.js";
-import { summaryAggregator } from "../summary/aggregator.js";
-import { formatSummary, formatToolInfo, getAssistantParseMode } from "../summary/formatter.js";
-import { ToolMessageBatcher } from "../summary/tool-message-batcher.js";
-import { getCurrentSession } from "../session/manager.js";
-import { ingestSessionInfoForCache } from "../session/cache-manager.js";
-import { logger } from "../utils/logger.js";
-import { safeBackgroundTask } from "../utils/safe-background-task.js";
-import { pinnedMessageManager } from "../pinned/manager.js";
-import { t } from "../i18n/index.js";
-import { processUserPrompt } from "./handlers/prompt.js";
-import { handleVoiceMessage } from "./handlers/voice.js";
-import { handleDocumentMessage } from "./handlers/document.js";
-import { downloadTelegramFile, toDataUri } from "./utils/file-download.js";
-import { sendBotText } from "./utils/telegram-text.js";
-import { getModelCapabilities, supportsInput } from "../model/capabilities.js";
-import { getStoredModel } from "../model/manager.js";
-import type { FilePartInput } from "@opencode-ai/sdk/v2";
+} from "./message-patterns.js"
+import { sessionsCommand, handleSessionSelect } from "./commands/sessions.js"
+import { newCommand } from "./commands/new.js"
+import { projectsCommand, handleProjectSelect } from "./commands/projects.js"
+import { abortCommand } from "./commands/abort.js"
+import { opencodeStartCommand } from "./commands/opencode-start.js"
+import { opencodeStopCommand } from "./commands/opencode-stop.js"
+import { renameCommand, handleRenameCancel, handleRenameTextAnswer } from "./commands/rename.js"
+import { commandsCommand, handleCommandsCallback, handleCommandTextArguments } from "./commands/commands.js"
+import { handleQuestionCallback, showCurrentQuestion, handleQuestionTextAnswer } from "./handlers/question.js"
+import { handlePermissionCallback, showPermissionRequest } from "./handlers/permission.js"
+import { handleAgentSelect, showAgentSelectionMenu } from "./handlers/agent.js"
+import { handleModelSelect, showModelSelectionMenu } from "./handlers/model.js"
+import { handleVariantSelect, showVariantSelectionMenu } from "./handlers/variant.js"
+import { handleContextButtonPress, handleCompactConfirm } from "./handlers/context.js"
+import { handleInlineMenuCancel } from "./handlers/inline-menu.js"
+import { questionManager } from "../question/manager.js"
+import { interactionManager } from "../interaction/manager.js"
+import { clearAllInteractionState } from "../interaction/cleanup.js"
+import { keyboardManager } from "../keyboard/manager.js"
+import { subscribeToEvents } from "../opencode/events.js"
+import { summaryAggregator } from "../summary/aggregator.js"
+import { formatSummary, formatToolInfo, getAssistantParseMode } from "../summary/formatter.js"
+import { ToolMessageBatcher } from "../summary/tool-message-batcher.js"
+import { getCurrentSession } from "../session/manager.js"
+import { ingestSessionInfoForCache } from "../session/cache-manager.js"
+import { logger } from "../utils/logger.js"
+import { safeBackgroundTask } from "../utils/safe-background-task.js"
+import { pinnedMessageManager } from "../pinned/manager.js"
+import { t } from "../i18n/index.js"
+import { processUserPrompt } from "./handlers/prompt.js"
+import { handleVoiceMessage } from "./handlers/voice.js"
+import { handleDocumentMessage } from "./handlers/document.js"
+import { downloadTelegramFile, toDataUri } from "./utils/file-download.js"
+import { sendBotText } from "./utils/telegram-text.js"
+import { getModelCapabilities, supportsInput } from "../model/capabilities.js"
+import { getStoredModel } from "../model/manager.js"
+import type { FilePartInput } from "@opencode-ai/sdk/v2"
 
-let botInstance: Bot<Context> | null = null;
-let chatIdInstance: number | null = null;
-let commandsInitialized = false;
+let botInstance: Bot<Context> | null = null
+let chatIdInstance: number | null = null
+let commandsInitialized = false
 
-const TELEGRAM_DOCUMENT_CAPTION_MAX_LENGTH = 1024;
-const SESSION_RETRY_PREFIX = "🔁";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const TEMP_DIR = path.join(__dirname, "..", ".tmp");
+const TELEGRAM_DOCUMENT_CAPTION_MAX_LENGTH = 1024
+const SESSION_RETRY_PREFIX = "🔁"
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const TEMP_DIR = path.join(__dirname, "..", ".tmp")
 
 function prepareDocumentCaption(caption: string): string {
-  const normalizedCaption = caption.trim();
+  const normalizedCaption = caption.trim()
   if (!normalizedCaption) {
-    return "";
+    return ""
   }
 
   if (normalizedCaption.length <= TELEGRAM_DOCUMENT_CAPTION_MAX_LENGTH) {
-    return normalizedCaption;
+    return normalizedCaption
   }
 
-  return `${normalizedCaption.slice(0, TELEGRAM_DOCUMENT_CAPTION_MAX_LENGTH - 3)}...`;
+  return `${normalizedCaption.slice(0, TELEGRAM_DOCUMENT_CAPTION_MAX_LENGTH - 3)}...`
 }
 
 const toolMessageBatcher = new ToolMessageBatcher({
   intervalSeconds: 5,
   sendText: async (sessionId, text) => {
     if (!botInstance || !chatIdInstance) {
-      return;
+      return
     }
 
-    const currentSession = getCurrentSession();
+    const currentSession = getCurrentSession()
     if (!currentSession || currentSession.id !== sessionId) {
-      return;
+      return
     }
 
     await botInstance.api.sendMessage(chatIdInstance, text, {
       disable_notification: true,
-    });
+    })
   },
   sendFile: async (sessionId, fileData) => {
     if (!botInstance || !chatIdInstance) {
-      return;
+      return
     }
 
-    const currentSession = getCurrentSession();
+    const currentSession = getCurrentSession()
     if (!currentSession || currentSession.id !== sessionId) {
-      return;
+      return
     }
 
-    const tempFilePath = path.join(TEMP_DIR, fileData.filename);
+    const tempFilePath = path.join(TEMP_DIR, fileData.filename)
 
     try {
       logger.debug(
         `[Bot] Sending code file: ${fileData.filename} (${fileData.buffer.length} bytes, session=${sessionId})`,
-      );
+      )
 
-      await fs.mkdir(TEMP_DIR, { recursive: true });
-      await fs.writeFile(tempFilePath, fileData.buffer);
+      await fs.mkdir(TEMP_DIR, { recursive: true })
+      await fs.writeFile(tempFilePath, fileData.buffer)
 
       await botInstance.api.sendDocument(chatIdInstance, new InputFile(tempFilePath), {
         caption: fileData.caption,
         disable_notification: true,
-      });
+      })
     } finally {
-      await fs.unlink(tempFilePath).catch(() => {});
+      await fs.unlink(tempFilePath).catch(() => {})
     }
   },
-});
+})
 
 async function ensureCommandsInitialized(ctx: Context, next: NextFunction): Promise<void> {
   if (commandsInitialized || !ctx.from || ctx.from.id !== config.telegram.allowedUserId) {
-    await next();
-    return;
+    await next()
+    return
   }
 
   if (!ctx.chat) {
-    logger.warn("[Bot] Cannot initialize commands: chat context is missing");
-    await next();
-    return;
+    logger.warn("[Bot] Cannot initialize commands: chat context is missing")
+    await next()
+    return
   }
 
   try {
@@ -150,55 +142,59 @@ async function ensureCommandsInitialized(ctx: Context, next: NextFunction): Prom
         type: "chat",
         chat_id: ctx.chat.id,
       },
-    });
+    })
 
-    commandsInitialized = true;
-    logger.debug(`[Bot] Commands initialized for authorized user (chat_id=${ctx.chat.id})`);
+    commandsInitialized = true
+    logger.debug(`[Bot] Commands initialized for authorized user (chat_id=${ctx.chat.id})`)
   } catch (err) {
-    logger.error("[Bot] Failed to set commands:", err);
+    logger.error("[Bot] Failed to set commands:", err)
   }
 
-  await next();
+  await next()
 }
 
 async function ensureEventSubscription(directory: string): Promise<void> {
   if (!directory) {
-    logger.error("No directory found for event subscription");
-    return;
+    logger.error("No directory found for event subscription")
+    return
   }
 
-  toolMessageBatcher.setIntervalSeconds(config.bot.serviceMessagesIntervalSec);
+  toolMessageBatcher.setIntervalSeconds(config.bot.serviceMessagesIntervalSec)
   summaryAggregator.setOnCleared(() => {
-    toolMessageBatcher.clearAll("summary_aggregator_clear");
-  });
+    toolMessageBatcher.clearAll("summary_aggregator_clear")
+  })
 
   summaryAggregator.setOnComplete(async (sessionId, messageText) => {
     if (!botInstance || !chatIdInstance) {
-      logger.error("Bot or chat ID not available for sending message");
-      return;
+      logger.error("Bot or chat ID not available for sending message")
+      return
     }
 
-    const currentSession = getCurrentSession();
+    const currentSession = getCurrentSession()
     if (currentSession?.id !== sessionId) {
-      return;
+      return
     }
 
-    await toolMessageBatcher.flushSession(sessionId, "assistant_message_completed");
+    await toolMessageBatcher.flushSession(sessionId, "assistant_message_completed")
+
+    // Check if TTS is enabled for this user
+    const userId = chatIdInstance || config.telegram.allowedUserId
+    const { isVoiceEnabled } = await import("../voice/manager.js")
+    const ttsEnabled = isVoiceEnabled(userId)
 
     try {
-      const parts = formatSummary(messageText);
-      const assistantParseMode = getAssistantParseMode();
-      const assistantMessageFormat = assistantParseMode === "MarkdownV2" ? "markdown_v2" : "raw";
+      const parts = formatSummary(messageText)
+      const assistantParseMode = getAssistantParseMode()
+      const assistantMessageFormat = assistantParseMode === "MarkdownV2" ? "markdown_v2" : "raw"
 
       logger.debug(
-        `[Bot] Sending completed message to Telegram (chatId=${chatIdInstance}, parts=${parts.length})`,
-      );
+        `[Bot] Sending completed message to Telegram (chatId=${chatIdInstance}, parts=${parts.length}, tts=${ttsEnabled})`,
+      )
 
       for (let i = 0; i < parts.length; i++) {
-        const isLastPart = i === parts.length - 1;
-        const keyboard =
-          isLastPart && keyboardManager.isInitialized() ? keyboardManager.getKeyboard() : undefined;
-        const options = keyboard ? { reply_markup: keyboard } : undefined;
+        const isLastPart = i === parts.length - 1
+        const keyboard = isLastPart && keyboardManager.isInitialized() ? keyboardManager.getKeyboard() : undefined
+        const options = keyboard ? { reply_markup: keyboard } : undefined
 
         await sendBotText({
           api: botInstance.api,
@@ -206,294 +202,311 @@ async function ensureEventSubscription(directory: string): Promise<void> {
           text: parts[i],
           options,
           format: assistantMessageFormat,
-        });
+        })
+      }
+
+      // Send TTS audio if enabled (only for last part which is the complete response)
+      if (ttsEnabled && messageText.trim().length > 0) {
+        try {
+          const { synthesizeSpeech } = await import("../tts/client.js")
+          const { getUserVoiceSettings } = await import("../voice/manager.js")
+          const userSettings = getUserVoiceSettings(userId)
+          const cleanText = truncateForTts(messageText, 800)
+          logger.info(
+            `[Voice] Triggering TTS: userId=${userId}, voice=${userSettings.voice}, text length=${cleanText.length}`,
+          )
+          const audioResult = await synthesizeSpeech(cleanText, userSettings.voice)
+
+          const tempPath = path.join(TEMP_DIR, `tts-${Date.now()}.mp3`)
+          await fs.mkdir(TEMP_DIR, { recursive: true })
+          await fs.writeFile(tempPath, audioResult.audio)
+
+          await botInstance.api.sendAudio(chatIdInstance, new InputFile(tempPath), {
+            disable_notification: true,
+          })
+
+          await fs.unlink(tempPath).catch(() => {})
+          logger.info("[Bot] TTS audio sent successfully")
+        } catch (ttsErr) {
+          logger.warn("[Bot] TTS synthesis failed, continuing with text-only", ttsErr)
+        }
       }
     } catch (err) {
-      logger.error("Failed to send message to Telegram:", err);
+      logger.error("Failed to send message to Telegram:", err)
       // Stop processing events after critical error to prevent infinite loop
-      logger.error("[Bot] CRITICAL: Stopping event processing due to error");
-      summaryAggregator.clear();
+      logger.error("[Bot] CRITICAL: Stopping event processing due to error")
+      summaryAggregator.clear()
     }
-  });
+  })
 
   summaryAggregator.setOnTool(async (toolInfo) => {
     if (!botInstance || !chatIdInstance) {
-      logger.error("Bot or chat ID not available for sending tool notification");
-      return;
+      logger.error("Bot or chat ID not available for sending tool notification")
+      return
     }
 
-    const currentSession = getCurrentSession();
+    const currentSession = getCurrentSession()
     if (!currentSession || currentSession.id !== toolInfo.sessionId) {
-      return;
+      return
     }
 
     const shouldIncludeToolInfoInFileCaption =
       toolInfo.hasFileAttachment &&
-      (toolInfo.tool === "write" || toolInfo.tool === "edit" || toolInfo.tool === "apply_patch");
+      (toolInfo.tool === "write" || toolInfo.tool === "edit" || toolInfo.tool === "apply_patch")
 
     if (config.bot.hideToolCallMessages || shouldIncludeToolInfoInFileCaption) {
-      return;
+      return
     }
 
     try {
-      const message = formatToolInfo(toolInfo);
+      const message = formatToolInfo(toolInfo)
       if (message) {
-        toolMessageBatcher.enqueue(toolInfo.sessionId, message);
+        toolMessageBatcher.enqueue(toolInfo.sessionId, message)
       }
     } catch (err) {
-      logger.error("Failed to send tool notification to Telegram:", err);
+      logger.error("Failed to send tool notification to Telegram:", err)
     }
-  });
+  })
 
   summaryAggregator.setOnToolFile(async (fileInfo) => {
     if (!botInstance || !chatIdInstance) {
-      logger.error("Bot or chat ID not available for sending file");
-      return;
+      logger.error("Bot or chat ID not available for sending file")
+      return
     }
 
-    const currentSession = getCurrentSession();
+    const currentSession = getCurrentSession()
     if (!currentSession || currentSession.id !== fileInfo.sessionId) {
-      return;
+      return
     }
 
     try {
-      const toolMessage = formatToolInfo(fileInfo);
-      const caption = prepareDocumentCaption(toolMessage || fileInfo.fileData.caption);
+      const toolMessage = formatToolInfo(fileInfo)
+      const caption = prepareDocumentCaption(toolMessage || fileInfo.fileData.caption)
 
       toolMessageBatcher.enqueueFile(fileInfo.sessionId, {
         ...fileInfo.fileData,
         caption,
-      });
+      })
     } catch (err) {
-      logger.error("Failed to send file to Telegram:", err);
+      logger.error("Failed to send file to Telegram:", err)
     }
-  });
+  })
 
   summaryAggregator.setOnQuestion(async (questions, requestID) => {
     if (!botInstance || !chatIdInstance) {
-      logger.error("Bot or chat ID not available for showing questions");
-      return;
+      logger.error("Bot or chat ID not available for showing questions")
+      return
     }
 
-    const currentSession = getCurrentSession();
+    const currentSession = getCurrentSession()
     if (currentSession) {
-      await toolMessageBatcher.flushSession(currentSession.id, "question_asked");
+      await toolMessageBatcher.flushSession(currentSession.id, "question_asked")
     }
 
     if (questionManager.isActive()) {
-      logger.warn("[Bot] Replacing active poll with a new one");
+      logger.warn("[Bot] Replacing active poll with a new one")
 
-      const previousMessageIds = questionManager.getMessageIds();
+      const previousMessageIds = questionManager.getMessageIds()
       for (const messageId of previousMessageIds) {
-        await botInstance.api.deleteMessage(chatIdInstance, messageId).catch(() => {});
+        await botInstance.api.deleteMessage(chatIdInstance, messageId).catch(() => {})
       }
 
-      clearAllInteractionState("question_replaced_by_new_poll");
+      clearAllInteractionState("question_replaced_by_new_poll")
     }
 
-    logger.info(`[Bot] Received ${questions.length} questions from agent, requestID=${requestID}`);
-    questionManager.startQuestions(questions, requestID);
-    await showCurrentQuestion(botInstance.api, chatIdInstance);
-  });
+    logger.info(`[Bot] Received ${questions.length} questions from agent, requestID=${requestID}`)
+    questionManager.startQuestions(questions, requestID)
+    await showCurrentQuestion(botInstance.api, chatIdInstance)
+  })
 
   summaryAggregator.setOnQuestionError(async () => {
-    logger.info(`[Bot] Question tool failed, clearing active poll and deleting messages`);
+    logger.info(`[Bot] Question tool failed, clearing active poll and deleting messages`)
 
     // Delete all messages from the invalid poll
-    const messageIds = questionManager.getMessageIds();
+    const messageIds = questionManager.getMessageIds()
     for (const messageId of messageIds) {
       if (chatIdInstance) {
         await botInstance?.api.deleteMessage(chatIdInstance, messageId).catch((err) => {
-          logger.error(`[Bot] Failed to delete question message ${messageId}:`, err);
-        });
+          logger.error(`[Bot] Failed to delete question message ${messageId}:`, err)
+        })
       }
     }
 
-    clearAllInteractionState("question_error");
-  });
+    clearAllInteractionState("question_error")
+  })
 
   summaryAggregator.setOnPermission(async (request) => {
     if (!botInstance || !chatIdInstance) {
-      logger.error("Bot or chat ID not available for showing permission request");
-      return;
+      logger.error("Bot or chat ID not available for showing permission request")
+      return
     }
 
-    await toolMessageBatcher.flushSession(request.sessionID, "permission_asked");
+    await toolMessageBatcher.flushSession(request.sessionID, "permission_asked")
 
-    logger.info(
-      `[Bot] Received permission request from agent: type=${request.permission}, requestID=${request.id}`,
-    );
-    await showPermissionRequest(botInstance.api, chatIdInstance, request);
-  });
+    logger.info(`[Bot] Received permission request from agent: type=${request.permission}, requestID=${request.id}`)
+    await showPermissionRequest(botInstance.api, chatIdInstance, request)
+  })
 
   summaryAggregator.setOnThinking(async (sessionId) => {
     if (config.bot.hideThinkingMessages) {
-      return;
+      return
     }
 
     if (!botInstance || !chatIdInstance) {
-      return;
+      return
     }
 
-    const currentSession = getCurrentSession();
+    const currentSession = getCurrentSession()
     if (!currentSession || currentSession.id !== sessionId) {
-      return;
+      return
     }
 
-    logger.debug("[Bot] Agent started thinking");
+    logger.debug("[Bot] Agent started thinking")
 
-    toolMessageBatcher.enqueue(sessionId, t("bot.thinking"));
-  });
+    toolMessageBatcher.enqueue(sessionId, t("bot.thinking"))
+  })
 
   summaryAggregator.setOnTokens(async (tokens) => {
     if (!pinnedMessageManager.isInitialized()) {
-      return;
+      return
     }
 
     try {
-      logger.debug(`[Bot] Received tokens: input=${tokens.input}, output=${tokens.output}`);
+      logger.debug(`[Bot] Received tokens: input=${tokens.input}, output=${tokens.output}`)
 
       // Update keyboardManager SYNCHRONOUSLY before any await
       // This ensures keyboard has correct context when onComplete sends the reply
-      const contextSize = tokens.input + tokens.cacheRead;
-      const contextLimit = pinnedMessageManager.getContextLimit();
+      const contextSize = tokens.input + tokens.cacheRead
+      const contextLimit = pinnedMessageManager.getContextLimit()
       if (contextLimit > 0) {
-        keyboardManager.updateContext(contextSize, contextLimit);
+        keyboardManager.updateContext(contextSize, contextLimit)
       }
 
-      await pinnedMessageManager.onMessageComplete(tokens);
+      await pinnedMessageManager.onMessageComplete(tokens)
     } catch (err) {
-      logger.error("[Bot] Error updating pinned message with tokens:", err);
+      logger.error("[Bot] Error updating pinned message with tokens:", err)
     }
-  });
+  })
 
   summaryAggregator.setOnSessionCompacted(async (sessionId, directory) => {
     if (!pinnedMessageManager.isInitialized()) {
-      return;
+      return
     }
 
     try {
-      logger.info(`[Bot] Session compacted, reloading context: ${sessionId}`);
-      await pinnedMessageManager.onSessionCompacted(sessionId, directory);
+      logger.info(`[Bot] Session compacted, reloading context: ${sessionId}`)
+      await pinnedMessageManager.onSessionCompacted(sessionId, directory)
     } catch (err) {
-      logger.error("[Bot] Error reloading context after compaction:", err);
+      logger.error("[Bot] Error reloading context after compaction:", err)
     }
-  });
+  })
 
   summaryAggregator.setOnSessionError(async (sessionId, message) => {
     if (!botInstance || !chatIdInstance) {
-      return;
+      return
     }
 
-    const currentSession = getCurrentSession();
+    const currentSession = getCurrentSession()
     if (!currentSession || currentSession.id !== sessionId) {
-      return;
+      return
     }
 
-    await toolMessageBatcher.flushSession(sessionId, "session_error");
+    await toolMessageBatcher.flushSession(sessionId, "session_error")
 
-    const normalizedMessage = message.trim() || t("common.unknown_error");
+    const normalizedMessage = message.trim() || t("common.unknown_error")
     const truncatedMessage =
-      normalizedMessage.length > 3500
-        ? `${normalizedMessage.slice(0, 3497)}...`
-        : normalizedMessage;
+      normalizedMessage.length > 3500 ? `${normalizedMessage.slice(0, 3497)}...` : normalizedMessage
 
     await botInstance.api
       .sendMessage(chatIdInstance, t("bot.session_error", { message: truncatedMessage }))
       .catch((err) => {
-        logger.error("[Bot] Failed to send session.error message:", err);
-      });
-  });
+        logger.error("[Bot] Failed to send session.error message:", err)
+      })
+  })
 
   summaryAggregator.setOnSessionRetry(async ({ sessionId, message }) => {
     if (!botInstance || !chatIdInstance) {
-      return;
+      return
     }
 
-    const currentSession = getCurrentSession();
+    const currentSession = getCurrentSession()
     if (!currentSession || currentSession.id !== sessionId) {
-      return;
+      return
     }
 
-    const normalizedMessage = message.trim() || t("common.unknown_error");
+    const normalizedMessage = message.trim() || t("common.unknown_error")
     const truncatedMessage =
-      normalizedMessage.length > 3500
-        ? `${normalizedMessage.slice(0, 3497)}...`
-        : normalizedMessage;
+      normalizedMessage.length > 3500 ? `${normalizedMessage.slice(0, 3497)}...` : normalizedMessage
 
-    const retryMessage = t("bot.session_retry", { message: truncatedMessage });
-    toolMessageBatcher.enqueueUniqueByPrefix(sessionId, retryMessage, SESSION_RETRY_PREFIX);
-  });
+    const retryMessage = t("bot.session_retry", { message: truncatedMessage })
+    toolMessageBatcher.enqueueUniqueByPrefix(sessionId, retryMessage, SESSION_RETRY_PREFIX)
+  })
 
   summaryAggregator.setOnSessionDiff(async (_sessionId, diffs) => {
     if (!pinnedMessageManager.isInitialized()) {
-      return;
+      return
     }
 
     try {
-      await pinnedMessageManager.onSessionDiff(diffs);
+      await pinnedMessageManager.onSessionDiff(diffs)
     } catch (err) {
-      logger.error("[Bot] Error updating session diff:", err);
+      logger.error("[Bot] Error updating session diff:", err)
     }
-  });
+  })
 
   summaryAggregator.setOnFileChange((change) => {
     if (!pinnedMessageManager.isInitialized()) {
-      return;
+      return
     }
-    pinnedMessageManager.addFileChange(change);
-  });
+    pinnedMessageManager.addFileChange(change)
+  })
 
   pinnedMessageManager.setOnKeyboardUpdate(async (tokensUsed, tokensLimit) => {
     try {
-      logger.debug(`[Bot] Updating keyboard with context: ${tokensUsed}/${tokensLimit}`);
-      keyboardManager.updateContext(tokensUsed, tokensLimit);
+      logger.debug(`[Bot] Updating keyboard with context: ${tokensUsed}/${tokensLimit}`)
+      keyboardManager.updateContext(tokensUsed, tokensLimit)
       // Don't send automatic keyboard updates - keyboard will update naturally with user messages
     } catch (err) {
-      logger.error("[Bot] Error updating keyboard context:", err);
+      logger.error("[Bot] Error updating keyboard context:", err)
     }
-  });
+  })
 
-  logger.info(`[Bot] Subscribing to OpenCode events for project: ${directory}`);
+  logger.info(`[Bot] Subscribing to OpenCode events for project: ${directory}`)
   subscribeToEvents(directory, (event) => {
     if (event.type === "session.created" || event.type === "session.updated") {
-      const info = (
-        event.properties as { info?: { directory?: string; time?: { updated?: number } } }
-      ).info;
+      const info = (event.properties as { info?: { directory?: string; time?: { updated?: number } } }).info
 
       if (info?.directory) {
         safeBackgroundTask({
           taskName: `session.cache.${event.type}`,
           task: () => ingestSessionInfoForCache(info),
-        });
+        })
       }
     }
 
-    summaryAggregator.processEvent(event);
+    summaryAggregator.processEvent(event)
   }).catch((err) => {
-    logger.error("Failed to subscribe to events:", err);
-  });
+    logger.error("Failed to subscribe to events:", err)
+  })
 }
 
 export function createBot(): Bot<Context> {
-  clearAllInteractionState("bot_startup");
-  toolMessageBatcher.setIntervalSeconds(config.bot.serviceMessagesIntervalSec);
-  logger.debug(
-    `[ToolBatcher] Service messages interval: ${config.bot.serviceMessagesIntervalSec}s`,
-  );
+  clearAllInteractionState("bot_startup")
+  toolMessageBatcher.setIntervalSeconds(config.bot.serviceMessagesIntervalSec)
+  logger.debug(`[ToolBatcher] Service messages interval: ${config.bot.serviceMessagesIntervalSec}s`)
 
-  const botOptions: ConstructorParameters<typeof Bot<Context>>[1] = {};
+  const botOptions: ConstructorParameters<typeof Bot<Context>>[1] = {}
 
   if (config.telegram.proxyUrl) {
-    const proxyUrl = config.telegram.proxyUrl;
-    let agent;
+    const proxyUrl = config.telegram.proxyUrl
+    let agent
 
     if (proxyUrl.startsWith("socks")) {
-      agent = new SocksProxyAgent(proxyUrl);
-      logger.info(`[Bot] Using SOCKS proxy: ${proxyUrl.replace(/\/\/.*@/, "//***@")}`);
+      agent = new SocksProxyAgent(proxyUrl)
+      logger.info(`[Bot] Using SOCKS proxy: ${proxyUrl.replace(/\/\/.*@/, "//***@")}`)
     } else {
-      agent = new HttpsProxyAgent(proxyUrl);
-      logger.info(`[Bot] Using HTTP/HTTPS proxy: ${proxyUrl.replace(/\/\/.*@/, "//***@")}`);
+      agent = new HttpsProxyAgent(proxyUrl)
+      logger.info(`[Bot] Using HTTP/HTTPS proxy: ${proxyUrl.replace(/\/\/.*@/, "//***@")}`)
     }
 
     botOptions.client = {
@@ -501,101 +514,158 @@ export function createBot(): Bot<Context> {
         agent,
         compress: true,
       },
-    };
+    }
   }
 
-  const bot = new Bot(config.telegram.token, botOptions);
+  const bot = new Bot(config.telegram.token, botOptions)
 
   // Heartbeat for diagnostics: verify the event loop is not blocked
-  let heartbeatCounter = 0;
+  let heartbeatCounter = 0
   setInterval(() => {
-    heartbeatCounter++;
+    heartbeatCounter++
     if (heartbeatCounter % 6 === 0) {
       // Log every 30 seconds (5 sec * 6)
-      logger.debug(`[Bot] Heartbeat #${heartbeatCounter} - event loop alive`);
+      logger.debug(`[Bot] Heartbeat #${heartbeatCounter} - event loop alive`)
     }
-  }, 5000);
+  }, 5000)
 
   // Log all API calls for diagnostics
-  let lastGetUpdatesTime = Date.now();
+  let lastGetUpdatesTime = Date.now()
   bot.api.config.use(async (prev, method, payload, signal) => {
     if (method === "getUpdates") {
-      const now = Date.now();
-      const timeSinceLast = now - lastGetUpdatesTime;
-      logger.debug(`[Bot API] getUpdates called (${timeSinceLast}ms since last)`);
-      lastGetUpdatesTime = now;
+      const now = Date.now()
+      const timeSinceLast = now - lastGetUpdatesTime
+      logger.debug(`[Bot API] getUpdates called (${timeSinceLast}ms since last)`)
+      lastGetUpdatesTime = now
     } else if (method === "sendMessage") {
-      logger.debug(`[Bot API] sendMessage to chat ${(payload as { chat_id?: number }).chat_id}`);
+      logger.debug(`[Bot API] sendMessage to chat ${(payload as { chat_id?: number }).chat_id}`)
     }
-    return prev(method, payload, signal);
-  });
+    return prev(method, payload, signal)
+  })
 
   bot.use((ctx, next) => {
-    const hasCallbackQuery = !!ctx.callbackQuery;
-    const hasMessage = !!ctx.message;
-    const callbackData = ctx.callbackQuery?.data || "N/A";
+    const hasCallbackQuery = !!ctx.callbackQuery
+    const hasMessage = !!ctx.message
+    const callbackData = ctx.callbackQuery?.data || "N/A"
     logger.debug(
       `[DEBUG] Incoming update: hasCallbackQuery=${hasCallbackQuery}, hasMessage=${hasMessage}, callbackData=${callbackData}`,
-    );
-    return next();
-  });
+    )
+    return next()
+  })
 
-  bot.use(authMiddleware);
-  bot.use(ensureCommandsInitialized);
-  bot.use(interactionGuardMiddleware);
+  bot.use(authMiddleware)
+  bot.use(ensureCommandsInitialized)
+  bot.use(interactionGuardMiddleware)
 
   const blockMenuWhileInteractionActive = async (ctx: Context): Promise<boolean> => {
-    const activeInteraction = interactionManager.getSnapshot();
+    const activeInteraction = interactionManager.getSnapshot()
     if (!activeInteraction) {
-      return false;
+      return false
     }
 
     logger.debug(
       `[Bot] Blocking menu open while interaction active: kind=${activeInteraction.kind}, expectedInput=${activeInteraction.expectedInput}`,
-    );
-    await ctx.reply(t("interaction.blocked.finish_current"));
-    return true;
-  };
+    )
+    await ctx.reply(t("interaction.blocked.finish_current"))
+    return true
+  }
 
-  bot.command("start", startCommand);
-  bot.command("help", helpCommand);
-  bot.command("status", statusCommand);
-  bot.command("opencode_start", opencodeStartCommand);
-  bot.command("opencode_stop", opencodeStopCommand);
-  bot.command("projects", projectsCommand);
-  bot.command("sessions", sessionsCommand);
-  bot.command("new", newCommand);
-  bot.command("abort", abortCommand);
-  bot.command("rename", renameCommand);
-  bot.command("commands", commandsCommand);
+  bot.command("start", startCommand)
+  bot.command("help", helpCommand)
+  bot.command("status", statusCommand)
+  bot.command("opencode_start", opencodeStartCommand)
+  bot.command("opencode_stop", opencodeStopCommand)
+  bot.command("projects", projectsCommand)
+  bot.command("sessions", sessionsCommand)
+  bot.command("new", newCommand)
+  bot.command("abort", abortCommand)
+  bot.command("rename", renameCommand)
+  bot.command("commands", commandsCommand)
+  bot.command("voice", async (ctx) => {
+    const { handleVoiceCommand } = await import("./commands/voice.js")
+    await handleVoiceCommand(ctx)
+  })
 
-  bot.on("message:text", unknownCommandMiddleware);
+  bot.on("message:text", unknownCommandMiddleware)
 
   bot.on("callback_query:data", async (ctx) => {
-    logger.debug(`[Bot] Received callback_query:data: ${ctx.callbackQuery?.data}`);
-    logger.debug(`[Bot] Callback context: from=${ctx.from?.id}, chat=${ctx.chat?.id}`);
+    logger.debug(`[Bot] Received callback_query:data: ${ctx.callbackQuery?.data}`)
+
+    // Voice callback handler
+    const callbackData = ctx.callbackQuery?.data || ""
+    if (callbackData.startsWith("voice_")) {
+      const userId = ctx.from?.id || 0
+      if (callbackData.startsWith("voice_toggle:")) {
+        const { handleVoiceToggle } = await import("./commands/voice.js")
+        await handleVoiceToggle(ctx, userId)
+        return
+      }
+      if (callbackData.startsWith("voice_select:")) {
+        const { handleVoiceSelect } = await import("./commands/voice.js")
+        await handleVoiceSelect(ctx, userId)
+        return
+      }
+      if (callbackData.startsWith("voice_set:")) {
+        const parts = callbackData.split(":")
+        const voiceId = parts[2]
+        const { handleVoiceSet } = await import("./commands/voice.js")
+        await handleVoiceSet(ctx, userId, voiceId)
+        return
+      }
+    }
+    logger.debug(`[Bot] Callback context: from=${ctx.from?.id}, chat=${ctx.chat?.id}`)
 
     if (ctx.chat) {
-      botInstance = bot;
-      chatIdInstance = ctx.chat.id;
+      botInstance = bot
+      chatIdInstance = ctx.chat.id
     }
 
     try {
-      const handledInlineCancel = await handleInlineMenuCancel(ctx);
-      const handledSession = await handleSessionSelect(ctx);
-      const handledProject = await handleProjectSelect(ctx);
-      const handledQuestion = await handleQuestionCallback(ctx);
-      const handledPermission = await handlePermissionCallback(ctx);
-      const handledAgent = await handleAgentSelect(ctx);
-      const handledModel = await handleModelSelect(ctx);
-      const handledVariant = await handleVariantSelect(ctx);
-      const handledCompactConfirm = await handleCompactConfirm(ctx);
-      const handledRenameCancel = await handleRenameCancel(ctx);
-      const handledCommands = await handleCommandsCallback(ctx, { bot, ensureEventSubscription });
+      const handledInlineCancel = await handleInlineMenuCancel(ctx)
+      const handledSession = await handleSessionSelect(ctx)
+      const handledProject = await handleProjectSelect(ctx)
+      const handledQuestion = await handleQuestionCallback(ctx)
+      const handledPermission = await handlePermissionCallback(ctx)
+      const handledAgent = await handleAgentSelect(ctx)
+      const handledModel = await handleModelSelect(ctx)
+      const handledVariant = await handleVariantSelect(ctx)
+      const handledCompactConfirm = await handleCompactConfirm(ctx)
+      const handledRenameCancel = await handleRenameCancel(ctx)
+      const handledCommands = await handleCommandsCallback(ctx, { bot, ensureEventSubscription })
+
+      // Voice callback handler
+      const callbackData = ctx.callbackQuery?.data || ""
+      let handledVoice = false
+      if (callbackData.startsWith("voice_")) {
+        const userId = ctx.from?.id || 0
+        if (callbackData.startsWith("voice_toggle:")) {
+          const { handleVoiceToggle } = await import("./commands/voice.js")
+          await handleVoiceToggle(ctx, userId)
+          handledVoice = true
+        } else if (callbackData.startsWith("voice_select:")) {
+          const { handleVoiceSelect } = await import("./commands/voice.js")
+          await handleVoiceSelect(ctx, userId)
+          handledVoice = true
+        } else if (callbackData.startsWith("voice_set:")) {
+          const parts = callbackData.split(":")
+          const voiceId = parts[2]
+          const { handleVoiceSet } = await import("./commands/voice.js")
+          await handleVoiceSet(ctx, userId, voiceId)
+          handledVoice = true
+        } else if (callbackData.startsWith("voice_cancel:")) {
+          const { handleVoiceCancel } = await import("./commands/voice.js")
+          await handleVoiceCancel(ctx, userId)
+          handledVoice = true
+        } else if (callbackData.startsWith("voice_back:")) {
+          const { handleVoiceBack } = await import("./commands/voice.js")
+          await handleVoiceBack(ctx, userId)
+          handledVoice = true
+        }
+      }
 
       logger.debug(
-        `[Bot] Callback handled: inlineCancel=${handledInlineCancel}, session=${handledSession}, project=${handledProject}, question=${handledQuestion}, permission=${handledPermission}, agent=${handledAgent}, model=${handledModel}, variant=${handledVariant}, compactConfirm=${handledCompactConfirm}, rename=${handledRenameCancel}, commands=${handledCommands}`,
-      );
+        `[Bot] Callback handled: inlineCancel=${handledInlineCancel}, session=${handledSession}, project=${handledProject}, question=${handledQuestion}, permission=${handledPermission}, agent=${handledAgent}, model=${handledModel}, variant=${handledVariant}, compactConfirm=${handledCompactConfirm}, rename=${handledRenameCancel}, commands=${handledCommands}, voice=${handledVoice}`,
+      )
 
       if (
         !handledInlineCancel &&
@@ -608,94 +678,95 @@ export function createBot(): Bot<Context> {
         !handledVariant &&
         !handledCompactConfirm &&
         !handledRenameCancel &&
-        !handledCommands
+        !handledCommands &&
+        !handledVoice
       ) {
-        logger.debug("Unknown callback query:", ctx.callbackQuery?.data);
-        await ctx.answerCallbackQuery({ text: t("callback.unknown_command") });
+        logger.debug("Unknown callback query:", ctx.callbackQuery?.data)
+        await ctx.answerCallbackQuery({ text: t("callback.unknown_command") })
       }
     } catch (err) {
-      logger.error("[Bot] Error handling callback:", err);
-      clearAllInteractionState("callback_handler_error");
-      await ctx.answerCallbackQuery({ text: t("callback.processing_error") }).catch(() => {});
+      logger.error("[Bot] Error handling callback:", err)
+      clearAllInteractionState("callback_handler_error")
+      await ctx.answerCallbackQuery({ text: t("callback.processing_error") }).catch(() => {})
     }
-  });
+  })
 
   // Handle Reply Keyboard button press (agent mode indicator)
   bot.hears(AGENT_MODE_BUTTON_TEXT_PATTERN, async (ctx) => {
-    logger.debug(`[Bot] Agent mode button pressed: ${ctx.message?.text}`);
+    logger.debug(`[Bot] Agent mode button pressed: ${ctx.message?.text}`)
 
     try {
       if (await blockMenuWhileInteractionActive(ctx)) {
-        return;
+        return
       }
 
-      await showAgentSelectionMenu(ctx);
+      await showAgentSelectionMenu(ctx)
     } catch (err) {
-      logger.error("[Bot] Error showing agent menu:", err);
-      await ctx.reply(t("error.load_agents"));
+      logger.error("[Bot] Error showing agent menu:", err)
+      await ctx.reply(t("error.load_agents"))
     }
-  });
+  })
 
   // Handle Reply Keyboard button press (model selector)
   // Model button text is produced by formatModelForButton() and always starts with "🤖 ".
   bot.hears(MODEL_BUTTON_TEXT_PATTERN, async (ctx) => {
-    logger.debug(`[Bot] Model button pressed: ${ctx.message?.text}`);
+    logger.debug(`[Bot] Model button pressed: ${ctx.message?.text}`)
 
     try {
       if (await blockMenuWhileInteractionActive(ctx)) {
-        return;
+        return
       }
 
-      await showModelSelectionMenu(ctx);
+      await showModelSelectionMenu(ctx)
     } catch (err) {
-      logger.error("[Bot] Error showing model menu:", err);
-      await ctx.reply(t("error.load_models"));
+      logger.error("[Bot] Error showing model menu:", err)
+      await ctx.reply(t("error.load_models"))
     }
-  });
+  })
 
   // Handle Reply Keyboard button press (context button)
   bot.hears(/^📊(?:\s|$)/, async (ctx) => {
-    logger.debug(`[Bot] Context button pressed: ${ctx.message?.text}`);
+    logger.debug(`[Bot] Context button pressed: ${ctx.message?.text}`)
 
     try {
       if (await blockMenuWhileInteractionActive(ctx)) {
-        return;
+        return
       }
 
-      await handleContextButtonPress(ctx);
+      await handleContextButtonPress(ctx)
     } catch (err) {
-      logger.error("[Bot] Error handling context button:", err);
-      await ctx.reply(t("error.context_button"));
+      logger.error("[Bot] Error handling context button:", err)
+      await ctx.reply(t("error.context_button"))
     }
-  });
+  })
 
   // Handle Reply Keyboard button press (variant selector)
   // Keep support for both legacy "💭" and current "💡" prefix.
   bot.hears(VARIANT_BUTTON_TEXT_PATTERN, async (ctx) => {
-    logger.debug(`[Bot] Variant button pressed: ${ctx.message?.text}`);
+    logger.debug(`[Bot] Variant button pressed: ${ctx.message?.text}`)
 
     try {
       if (await blockMenuWhileInteractionActive(ctx)) {
-        return;
+        return
       }
 
-      await showVariantSelectionMenu(ctx);
+      await showVariantSelectionMenu(ctx)
     } catch (err) {
-      logger.error("[Bot] Error showing variant menu:", err);
-      await ctx.reply(t("error.load_variants"));
+      logger.error("[Bot] Error showing variant menu:", err)
+      await ctx.reply(t("error.load_variants"))
     }
-  });
+  })
 
   bot.on("message:text", async (ctx, next) => {
-    const text = ctx.message?.text;
+    const text = ctx.message?.text
     if (text) {
-      const isCommand = text.startsWith("/");
+      const isCommand = text.startsWith("/")
       logger.debug(
         `[Bot] Received text message: ${isCommand ? `command="${text}"` : `prompt (length=${text.length})`}, chatId=${ctx.chat.id}`,
-      );
+      )
     }
-    await next();
-  });
+    await next()
+  })
 
   // Remove any previously set global commands to prevent unauthorized users from seeing them
   safeBackgroundTask({
@@ -705,80 +776,78 @@ export function createBot(): Bot<Context> {
         await Promise.all([
           bot.api.setMyCommands([], { scope: { type: "default" } }),
           bot.api.setMyCommands([], { scope: { type: "all_private_chats" } }),
-        ]);
-        return { success: true as const };
+        ])
+        return { success: true as const }
       } catch (error) {
-        return { success: false as const, error };
+        return { success: false as const, error }
       }
     },
     onSuccess: (result) => {
       if (result.success) {
-        logger.debug("[Bot] Cleared global commands (default and all_private_chats scopes)");
-        return;
+        logger.debug("[Bot] Cleared global commands (default and all_private_chats scopes)")
+        return
       }
 
-      logger.warn("[Bot] Could not clear global commands:", result.error);
+      logger.warn("[Bot] Could not clear global commands:", result.error)
     },
-  });
+  })
 
   // Voice and audio message handlers (STT transcription -> prompt)
-  const voicePromptDeps = { bot, ensureEventSubscription };
+  const voicePromptDeps = { bot, ensureEventSubscription }
 
   bot.on("message:voice", async (ctx) => {
-    logger.debug(`[Bot] Received voice message, chatId=${ctx.chat.id}`);
-    botInstance = bot;
-    chatIdInstance = ctx.chat.id;
-    await handleVoiceMessage(ctx, voicePromptDeps);
-  });
+    logger.debug(`[Bot] Received voice message, chatId=${ctx.chat.id}`)
+    botInstance = bot
+    chatIdInstance = ctx.chat.id
+    await handleVoiceMessage(ctx, voicePromptDeps)
+  })
 
   bot.on("message:audio", async (ctx) => {
-    logger.debug(`[Bot] Received audio message, chatId=${ctx.chat.id}`);
-    botInstance = bot;
-    chatIdInstance = ctx.chat.id;
-    await handleVoiceMessage(ctx, voicePromptDeps);
-  });
+    logger.debug(`[Bot] Received audio message, chatId=${ctx.chat.id}`)
+    botInstance = bot
+    chatIdInstance = ctx.chat.id
+    await handleVoiceMessage(ctx, voicePromptDeps)
+  })
 
   // Photo message handler
   bot.on("message:photo", async (ctx) => {
-    logger.debug(`[Bot] Received photo message, chatId=${ctx.chat.id}`);
+    logger.debug(`[Bot] Received photo message, chatId=${ctx.chat.id}`)
 
-    const photos = ctx.message?.photo;
+    const photos = ctx.message?.photo
     if (!photos || photos.length === 0) {
-      return;
+      return
     }
 
-    const caption = ctx.message.caption || "";
+    const caption = ctx.message.caption || ""
 
     try {
       // Get the largest photo (last element in array)
-      const largestPhoto = photos[photos.length - 1];
+      const largestPhoto = photos[photos.length - 1]
 
       // Check model capabilities
-      const storedModel = getStoredModel();
-      const capabilities = await getModelCapabilities(storedModel.providerID, storedModel.modelID);
+      const storedModel = getStoredModel()
+      const capabilities = await getModelCapabilities(storedModel.providerID, storedModel.modelID)
 
       if (!supportsInput(capabilities, "image")) {
-        logger.warn(
-          `[Bot] Model ${storedModel.providerID}/${storedModel.modelID} doesn't support image input`,
-        );
-        await ctx.reply(t("bot.photo_model_no_image"));
+        logger.warn(`[Bot] Model ${storedModel.providerID}/${storedModel.modelID} doesn't support image input`)
+        await ctx.reply(t("bot.photo_model_no_image"))
 
         // Fall back to caption-only if present
         if (caption.trim().length > 0) {
-          botInstance = bot;
-          chatIdInstance = ctx.chat.id;
-          const promptDeps = { bot, ensureEventSubscription };
-          await processUserPrompt(ctx, caption, promptDeps);
+          botInstance = bot
+          chatIdInstance = ctx.chat.id
+          const promptDeps = { bot, ensureEventSubscription }
+          await processUserPrompt(ctx, caption, promptDeps)
         }
-        return;
+        return
       }
 
       // Download photo
-      await ctx.reply(t("bot.photo_downloading"));
-      const downloadedFile = await downloadTelegramFile(ctx.api, largestPhoto.file_id);
+      await ctx.reply(t("bot.photo_downloading"))
+      const downloadedFile = await downloadTelegramFile(ctx.api, largestPhoto.file_id)
 
       // Convert to data URI (Telegram always converts photos to JPEG)
-      const dataUri = toDataUri(downloadedFile.buffer, "image/jpeg");
+      const dataUri = toDataUri(downloadedFile.buffer, "image/jpeg")
 
       // Create file part
       const filePart: FilePartInput = {
@@ -786,75 +855,107 @@ export function createBot(): Bot<Context> {
         mime: "image/jpeg",
         filename: "photo.jpg",
         url: dataUri,
-      };
+      }
 
-      logger.info(`[Bot] Sending photo (${downloadedFile.buffer.length} bytes) with prompt`);
+      logger.info(`[Bot] Sending photo (${downloadedFile.buffer.length} bytes) with prompt`)
 
-      botInstance = bot;
-      chatIdInstance = ctx.chat.id;
+      botInstance = bot
+      chatIdInstance = ctx.chat.id
 
       // Send via processUserPrompt with file part
-      const promptDeps = { bot, ensureEventSubscription };
-      await processUserPrompt(ctx, caption, promptDeps, [filePart]);
+      const promptDeps = { bot, ensureEventSubscription }
+      await processUserPrompt(ctx, caption, promptDeps, [filePart])
     } catch (err) {
-      logger.error("[Bot] Error handling photo message:", err);
-      await ctx.reply(t("bot.photo_download_error"));
+      logger.error("[Bot] Error handling photo message:", err)
+      await ctx.reply(t("bot.photo_download_error"))
     }
-  });
+  })
 
   // Document message handler (PDF and text files)
   bot.on("message:document", async (ctx) => {
-    logger.debug(`[Bot] Received document message, chatId=${ctx.chat.id}`);
-    botInstance = bot;
-    chatIdInstance = ctx.chat.id;
-    const deps = { bot, ensureEventSubscription };
-    await handleDocumentMessage(ctx, deps);
-  });
+    logger.debug(`[Bot] Received document message, chatId=${ctx.chat.id}`)
+    botInstance = bot
+    chatIdInstance = ctx.chat.id
+    const deps = { bot, ensureEventSubscription }
+    await handleDocumentMessage(ctx, deps)
+  })
 
   bot.on("message:text", async (ctx) => {
-    const text = ctx.message?.text;
+    const text = ctx.message?.text
     if (!text) {
-      return;
+      return
     }
 
-    botInstance = bot;
-    chatIdInstance = ctx.chat.id;
+    botInstance = bot
+    chatIdInstance = ctx.chat.id
 
     if (text.startsWith("/")) {
-      return;
+      return
     }
 
     if (questionManager.isActive()) {
-      await handleQuestionTextAnswer(ctx);
-      return;
+      await handleQuestionTextAnswer(ctx)
+      return
     }
 
-    const handledRename = await handleRenameTextAnswer(ctx);
+    const handledRename = await handleRenameTextAnswer(ctx)
     if (handledRename) {
-      return;
+      return
     }
 
-    const promptDeps = { bot, ensureEventSubscription };
-    const handledCommandArgs = await handleCommandTextArguments(ctx, promptDeps);
+    const promptDeps = { bot, ensureEventSubscription }
+    const handledCommandArgs = await handleCommandTextArguments(ctx, promptDeps)
     if (handledCommandArgs) {
-      return;
+      return
     }
 
-    await processUserPrompt(ctx, text, promptDeps);
+    await processUserPrompt(ctx, text, promptDeps)
 
-    logger.debug("[Bot] message:text handler completed (prompt sent in background)");
-  });
+    logger.debug("[Bot] message:text handler completed (prompt sent in background)")
+  })
 
   bot.catch((err) => {
-    logger.error("[Bot] Unhandled error in bot:", err);
-    clearAllInteractionState("bot_unhandled_error");
+    logger.error("[Bot] Unhandled error in bot:", err)
+    clearAllInteractionState("bot_unhandled_error")
     if (err.ctx) {
-      logger.error(
-        "[Bot] Error context - update type:",
-        err.ctx.update ? Object.keys(err.ctx.update) : "unknown",
-      );
+      logger.error("[Bot] Error context - update type:", err.ctx.update ? Object.keys(err.ctx.update) : "unknown")
     }
-  });
+  })
 
-  return bot;
+  return bot
+}
+
+/**
+ * Strips markdown formatting for TTS to avoid reading symbols literally.
+ */
+function stripMarkdownForTts(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, "") // remove code blocks entirely
+    .replace(/`[^`]*`/g, "") // remove inline code
+    .replace(/[*_#>\[\]]/g, "") // remove markdown symbols
+    .replace(/https?:\/\/\S+/g, "") // remove URLs
+    .replace(/\n{2,}/g, ". ") // collapse newlines
+    .replace(/•\s*/g, "") // remove bullet points
+    .trim()
+}
+
+/**
+ * Truncates text for TTS at sentence boundaries to avoid mid-word cutoff.
+ */
+function truncateForTts(text: string, maxChars = 800): string {
+  // Strip markdown first
+  let clean = stripMarkdownForTts(text)
+
+  if (clean.length <= maxChars) return clean
+
+  // Truncate at sentence boundary to avoid mid-word cutoff
+  const sentences = clean.split(/[.!?]+/).filter((s) => s.trim())
+  let truncated = ""
+
+  for (const sentence of sentences) {
+    if ((truncated + sentence + ". ").length > maxChars) break
+    truncated += sentence + ". "
+  }
+
+  return truncated.trim() + (truncated.length < clean.length ? "..." : "")
 }

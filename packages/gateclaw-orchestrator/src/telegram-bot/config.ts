@@ -142,4 +142,10 @@ export const config = {
     model: getEnvVar("STT_MODEL", false) || "whisper-large-v3-turbo",
     language: getEnvVar("STT_LANGUAGE", false),
   },
+  tts: {
+    apiUrl: getEnvVar("TTS_API_URL", false) || "http://localhost:8000",
+    voice: getEnvVar("TTS_DEFAULT_VOICE", false) || "david-attenborough-original",
+    model: getEnvVar("TTS_MODEL", false) || "tts-1",
+    speed: parseFloat(getEnvVar("TTS_SPEED", false) || "1.0"),
+  },
 }

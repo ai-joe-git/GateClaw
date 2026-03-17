@@ -697,6 +697,71 @@ app.get("/provider", async (c) => {
   }
 })
 
+// Voice endpoints
+app.get("/voice/voices", async (c) => {
+  try {
+    const { getAvailableVoices } = await import("./telegram-bot/tts/client.js")
+    const voices = await getAvailableVoices()
+    return c.json({ data: voices })
+  } catch (err) {
+    logger.error("Failed to fetch voices", { error: formatError(err) })
+    return c.json({ data: [] }, 500)
+  }
+})
+
+app.post("/voice/synthesize", async (c) => {
+  try {
+    const body = await c.req.json()
+    const { text, voice } = body
+    if (!text || text.length < 1) {
+      return c.json({ error: "empty text" }, 400)
+    }
+
+    const { synthesizeSpeech } = await import("./telegram-bot/tts/client.js")
+    const result = await synthesizeSpeech(text, voice)
+
+    return c.json({ ok: true, audio: result.audio.toString("base64"), contentType: result.contentType })
+  } catch (err: any) {
+    logger.error("Failed to synthesize speech", { error: formatError(err) })
+    return c.json({ error: "synthesis failed", detail: err.message }, 500)
+  }
+})
+
+app.get("/voice/status/:user_id", async (c) => {
+  try {
+    const userId = parseInt(c.req.param("user_id"))
+    if (isNaN(userId)) {
+      return c.json({ error: "invalid user_id" }, 400)
+    }
+
+    const { getUserVoiceSettings } = await import("./telegram-bot/voice/manager.js")
+    const settings = getUserVoiceSettings(userId)
+
+    return c.json({ enabled: settings.enabled, voice: settings.voice })
+  } catch (err) {
+    logger.error("Failed to get voice status", { error: formatError(err) })
+    return c.json({ enabled: false, voice: "david-attenborough-original" })
+  }
+})
+
+app.post("/voice/settings", async (c) => {
+  try {
+    const body = await c.req.json()
+    const { user_id, enabled, voice } = body
+    if (!user_id || typeof enabled !== "boolean") {
+      return c.json({ error: "invalid request" }, 400)
+    }
+
+    const { setUserVoiceSettings } = await import("./telegram-bot/voice/manager.js")
+    setUserVoiceSettings(user_id, { enabled, voice: voice || "david-attenborough-original" })
+
+    return c.json({ ok: true })
+  } catch (err) {
+    logger.error("Failed to save voice settings", { error: formatError(err) })
+    return c.json({ error: "save failed" }, 500)
+  }
+})
+
 // Telegram bot control endpoints
 let telegramBotRunning = false
 let telegramStopRequested = false

@@ -308,6 +308,7 @@ export const en = {
   "commands.execute_error": "🔴 Failed to execute OpenCode command.",
 
   "cmd.description.rename": "Rename current session",
+  "cmd.description.voice": "Configure voice output settings",
 
   "cli.usage":
     "Usage:\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\nNotes:\n  - All commands require daemon running (gateclaw start)\n  - Setup is interactive and configures bot",

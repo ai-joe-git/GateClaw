@@ -331,6 +331,7 @@ export const de: I18nDictionary = {
   "commands.execute_error": "🔴 OpenCode-Befehl konnte nicht ausgeführt werden.",
 
   "cmd.description.rename": "Aktuelle Sitzung umbenennen",
+  "cmd.description.voice": "Sprachausgabe-Einstellungen konfigurieren",
 
   "cli.usage":
     "Verwendung:\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\nHinweise:\n  - Alle Befehle benötigen laufenden Daemon (gateclaw start)\n  - Setup ist interaktiv und konfiguriert den Bot",

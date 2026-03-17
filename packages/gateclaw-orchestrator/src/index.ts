@@ -124,6 +124,102 @@ const startOpenCodeServer = async () => {
   }
 }
 
+// Start TTS server on port 8000 if not already running
+const startTtsServer = async () => {
+  try {
+    const res = await fetch("http://localhost:8000/health", { signal: AbortSignal.timeout(1000) })
+    if (res.ok) {
+      console.log("[gateclaw] TTS server already running on port 8000")
+      return
+    }
+  } catch {
+    // Server not running, start it
+  }
+
+  try {
+    const ttsDir = path.resolve(__dirname, "../tts-server")
+    if (fs.existsSync(ttsDir)) {
+      const child = Bun.spawn(["bun", "run", "start"], {
+        cwd: ttsDir,
+        stdio: ["ignore", "ignore", "ignore"],
+        detached: false,
+        windowsHide: true,
+        env: {
+          ...process.env,
+        },
+      })
+      console.log(`[gateclaw] TTS server spawned (pid ${child.pid})`)
+
+      // Wait a bit and check if it started
+      for (let i = 0; i < 20; i++) {
+        await sleep(500)
+        try {
+          const res = await fetch("http://localhost:8000/health", { signal: AbortSignal.timeout(500) })
+          if (res.ok) {
+            console.log("[gateclaw] TTS server is ready on port 8000")
+            return
+          }
+        } catch {
+          // Still starting
+        }
+      }
+      console.log("[gateclaw] TTS server may have failed to start - check manually")
+    } else {
+      console.log("[gateclaw] TTS server directory not found, skipping spawn")
+    }
+  } catch (err) {
+    console.log("[gateclaw] Failed to spawn TTS server:", err)
+  }
+}
+
+// Start STT server on port 7372 if not already running
+const startSttServer = async () => {
+  try {
+    const res = await fetch("http://localhost:7372/health", { signal: AbortSignal.timeout(1000) })
+    if (res.ok) {
+      console.log("[gateclaw] STT server already running on port 7372")
+      return
+    }
+  } catch {
+    // Server not running, start it
+  }
+
+  try {
+    const sttDir = path.resolve(__dirname, "../stt-server")
+    if (fs.existsSync(sttDir)) {
+      const child = Bun.spawn(["bun", "run", "start"], {
+        cwd: sttDir,
+        stdio: ["ignore", "ignore", "ignore"],
+        detached: false,
+        windowsHide: true,
+        env: {
+          ...process.env,
+        },
+      })
+      console.log(`[gateclaw] STT server spawned (pid ${child.pid})`)
+
+      // Wait a bit and check if it started
+      for (let i = 0; i < 20; i++) {
+        await sleep(500)
+        try {
+          const res = await fetch("http://localhost:7372/health", { signal: AbortSignal.timeout(500) })
+          if (res.ok) {
+            console.log("[gateclaw] STT server is ready on port 7372")
+            return
+          }
+        } catch {
+          // Still starting
+        }
+      }
+      console.log("[gateclaw] STT server may have failed to start - check manually")
+    } else {
+      console.log("[gateclaw] STT server directory not found, skipping spawn")
+    }
+  } catch (err) {
+    console.log("[gateclaw] Failed to spawn STT server:", err)
+  }
+}
+
 // Load environment from .env file
 const ENV_PATH = path.join(getConfigDir(), ".env")
 if (fs.existsSync(ENV_PATH)) {
@@ -139,6 +235,10 @@ const host = "127.0.0.1"
 
 // Start OpenCode server first
 await startOpenCodeServer()
+
+// Start TTS and STT servers
+await startTtsServer()
+await startSttServer()
 
 // Start Telegram bot after 3 seconds delay
 console.log("[gateclaw] Starting Telegram bot in 3s...")

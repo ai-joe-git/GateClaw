@@ -300,6 +300,7 @@ export const zh: I18nDictionary = {
   "commands.execute_error": "🔴 执行 OpenCode 命令失败。",
 
   "cmd.description.rename": "重命名当前会话",
+  "cmd.description.voice": "配置语音输出设置",
 
   "cli.usage":
     "用法：\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\n说明：\n  - 所有命令需要 daemon 运行 (gateclaw start)\n  - Setup 交互式配置机器人",

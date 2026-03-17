@@ -1,5 +1,5 @@
-import type { I18nKey } from "../../i18n/en.js";
-import { t } from "../../i18n/index.js";
+import type { I18nKey } from "../../i18n/en.js"
+import { t } from "../../i18n/index.js"
 
 /**
  * Centralized bot commands definitions
@@ -7,13 +7,13 @@ import { t } from "../../i18n/index.js";
  */
 
 export interface BotCommandDefinition {
-  command: string;
-  description: string;
+  command: string
+  description: string
 }
 
 interface BotCommandI18nDefinition {
-  command: string;
-  descriptionKey: I18nKey;
+  command: string
+  descriptionKey: I18nKey
 }
 
 /**
@@ -31,13 +31,14 @@ const COMMAND_DEFINITIONS: BotCommandI18nDefinition[] = [
   { command: "opencode_start", descriptionKey: "cmd.description.opencode_start" },
   { command: "opencode_stop", descriptionKey: "cmd.description.opencode_stop" },
   { command: "help", descriptionKey: "cmd.description.help" },
-];
+  { command: "voice", descriptionKey: "cmd.description.voice" },
+]
 
 export function getLocalizedBotCommands(): BotCommandDefinition[] {
   return COMMAND_DEFINITIONS.map(({ command, descriptionKey }) => ({
     command,
     description: t(descriptionKey),
-  }));
+  }))
 }
 
-export const BOT_COMMANDS: BotCommandDefinition[] = getLocalizedBotCommands();
+export const BOT_COMMANDS: BotCommandDefinition[] = getLocalizedBotCommands()

@@ -317,6 +317,7 @@ export const ru: I18nDictionary = {
   "commands.execute_error": "🔴 Не удалось выполнить команду OpenCode.",
 
   "cmd.description.rename": "Переименовать текущую сессию",
+  "cmd.description.voice": "Настроить параметры голосового вывода",
 
   "cli.usage":
     "Использование:\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\nЗаметки:\n  - Все команды требуют запущенный daemon (gateclaw start)\n  - Setup интерактивный и настраивает бота",

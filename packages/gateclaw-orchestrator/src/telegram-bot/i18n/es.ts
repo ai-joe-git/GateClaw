@@ -328,6 +328,7 @@ export const es: I18nDictionary = {
   "commands.execute_error": "🔴 No se pudo ejecutar el comando de OpenCode.",
 
   "cmd.description.rename": "Renombrar la sesión actual",
+  "cmd.description.voice": "Configurar ajustes de salida de voz",
 
   "cli.usage":
     "Uso:\n  gateclaw telegram start\n  gateclaw telegram status\n  gateclaw telegram stop\n  gateclaw telegram setup\n\nNotas:\n  - Todos los comandos requieren daemon ejecutándose (gateclaw start)\n  - Setup es interactivo y configura el bot",

@@ -303,8 +303,6 @@ switch (cmd) {
   }
 
   case "web": {
-    const ROOT = path.resolve(PKG_DIR, "..", "..")
-
     try {
       await fetch("http://127.0.0.1:7371/health")
     } catch {
@@ -323,21 +321,25 @@ switch (cmd) {
       ? path.join(process.env.APPDATA, "gateclaw")
       : path.join(process.env.HOME || "", ".config", "gateclaw")
 
+    const workingDir = process.cwd()
+    const opencodeDir = path.resolve(PKG_DIR, "..", "..", "packages", "opencode")
+
     console.log("🌐 Opening GateClaw Web UI in browser...")
-    spawnSync("bun", ["run", "--cwd", path.join(ROOT, "packages", "opencode"), "src/index.ts", "web"], {
+    console.log(`   Working directory: ${workingDir}`)
+    spawnSync("bun", ["run", "--cwd", opencodeDir, "src/index.ts", "web"], {
       stdio: "inherit",
       env: {
         ...process.env,
         OPENCODE_CONFIG_DIR: configDir,
+        PWD: workingDir,
+        GATECLAW_DIRECTORY: workingDir,
       },
-      cwd: ROOT,
+      cwd: opencodeDir,
     })
     break
   }
 
   case "tui": {
-    const ROOT = path.resolve(PKG_DIR, "..", "..")
-
     try {
       await fetch("http://127.0.0.1:7371/health")
     } catch {
@@ -356,19 +358,21 @@ switch (cmd) {
       ? path.join(process.env.APPDATA, "gateclaw")
       : path.join(process.env.HOME || "", ".config", "gateclaw")
 
+    const workingDir = process.cwd()
+    const opencodeDir = path.resolve(PKG_DIR, "..", "..", "packages", "opencode")
+
     console.log("🖥️  Launching GateClaw TUI...")
-    spawnSync(
-      "bun",
-      ["run", "--cwd", path.join(ROOT, "packages", "opencode"), "--conditions=browser", "src/index.ts"],
-      {
-        stdio: "inherit",
-        env: {
-          ...process.env,
-          OPENCODE_CONFIG_DIR: configDir,
-        },
-        cwd: ROOT,
+    console.log(`   Working directory: ${workingDir}`)
+    spawnSync("bun", ["run", "--cwd", opencodeDir, "--conditions=browser", "src/index.ts"], {
+      stdio: "inherit",
+      env: {
+        ...process.env,
+        OPENCODE_CONFIG_DIR: configDir,
+        PWD: workingDir,
+        GATECLAW_DIRECTORY: workingDir,
       },
-    )
+      cwd: opencodeDir,
+    })
     break
   }
 

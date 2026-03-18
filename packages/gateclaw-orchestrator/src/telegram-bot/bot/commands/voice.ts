@@ -3,6 +3,15 @@ import { logger } from "../../utils/logger.js"
 import { getVoiceList, getUserVoiceSettings, setUserVoiceSettings } from "../../voice/manager.js"
 import { isTtsConfigured } from "../../tts/client.js"
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
 export async function handleVoiceCommand(ctx: Context): Promise<void> {
   const userId = ctx.from?.id || 0
   const settings = getUserVoiceSettings(userId)
@@ -25,10 +34,10 @@ export async function handleVoiceCommand(ctx: Context): Promise<void> {
   }
 
   const statusText =
-    `🔊 Voice Settings\n\n` +
-    `Status: ${isConfigured ? "Configured" : "Not configured"}\n` +
-    `Enabled: ${settings.enabled ? "Yes" : "No"}\n` +
-    `Voice: ${settings.voice}\n\n` +
+    `<b>🔊 Voice Settings</b>\n\n` +
+    `<b>Status:</b> ${isConfigured ? "Configured" : "Not configured"}\n` +
+    `<b>Enabled:</b> ${settings.enabled ? "Yes" : "No"}\n` +
+    `<b>Voice:</b> ${escapeHtml(settings.voice)}\n\n` +
     (isConfigured ? "Use buttons below to toggle or change voice" : "TTS API not configured. Set TTS_API_URL in .env")
 
   const keyboard = new InlineKeyboard()
@@ -40,7 +49,7 @@ export async function handleVoiceCommand(ctx: Context): Promise<void> {
 
   await ctx.reply(statusText, {
     reply_markup: keyboard,
-    parse_mode: "Markdown",
+    parse_mode: "HTML",
   })
 }
 
@@ -61,9 +70,9 @@ export async function handleVoiceToggle(ctx: Context, userId: number): Promise<v
   // Replace menu with confirmation
   try {
     await ctx.editMessageText(
-      `${emoji} Voice **${action}**! GateClaw will ${newSettings.enabled ? "now speak" : "no longer speak"} responses.`,
+      `${emoji} <b>Voice ${action}!</b> GateClaw will ${newSettings.enabled ? "now speak" : "no longer speak"} responses.`,
       {
-        parse_mode: "Markdown",
+        parse_mode: "HTML",
         reply_markup: undefined,
       },
     )
@@ -94,9 +103,9 @@ export async function handleVoiceSelect(ctx: Context, userId: number): Promise<v
   keyboard.text("« Back", `voice_back:${userId}`)
 
   try {
-    await ctx.editMessageText(`🎤 Select Voice\n\nCurrent: ${getUserVoiceSettings(userId).voice}`, {
+    await ctx.editMessageText(`<b>🎤 Select Voice</b>\n\nCurrent: ${escapeHtml(getUserVoiceSettings(userId).voice)}`, {
       reply_markup: keyboard,
-      parse_mode: "Markdown",
+      parse_mode: "HTML",
     })
     await ctx.answerCallbackQuery({ text: "Voice selection opened", show_alert: false })
   } catch (err: any) {
@@ -122,8 +131,8 @@ export async function handleVoiceSet(ctx: Context, userId: number, voiceId: stri
 
   // Replace menu with confirmation
   try {
-    await ctx.editMessageText(`🔊 Voice set to **${voiceId}**!`, {
-      parse_mode: "Markdown",
+    await ctx.editMessageText(`<b>🔊 Voice set to ${escapeHtml(voiceId)}!</b>`, {
+      parse_mode: "HTML",
       reply_markup: undefined,
     })
     await ctx.answerCallbackQuery({ text: `Voice set to ${voiceId}`, show_alert: false })
@@ -142,8 +151,8 @@ export async function handleVoiceCancel(ctx: Context, userId: number): Promise<v
 
   // Replace menu with confirmation
   try {
-    await ctx.editMessageText("✨ Voice menu closed.", {
-      parse_mode: "Markdown",
+    await ctx.editMessageText("<b>✨ Voice menu closed.</b>", {
+      parse_mode: "HTML",
       reply_markup: undefined,
     })
     await ctx.answerCallbackQuery({ text: "Cancelled", show_alert: false })

@@ -1,7 +1,7 @@
 import { config } from "../config.js"
 import { logger } from "../utils/logger.js"
 
-const TTS_REQUEST_TIMEOUT_MS = 60_000
+const TTS_REQUEST_TIMEOUT_MS = 2_400_000 // 40 minutes for long GateClaw responses
 
 export interface TtsResult {
   audio: Buffer

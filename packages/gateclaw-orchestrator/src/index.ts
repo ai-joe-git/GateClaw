@@ -89,6 +89,7 @@ const startOpenCodeServer = async () => {
   // Try to start OpenCode server as detached process
   const opencodeDir = path.resolve(__dirname, "../../opencode")
   const gateclawConfigDir = getConfigDir()
+  const gateclawRoot = path.resolve(__dirname, "../..")
   try {
     const child = Bun.spawn(["bun", "run", "src/index.ts", "serve", "--port", "4100"], {
       cwd: opencodeDir,
@@ -99,6 +100,7 @@ const startOpenCodeServer = async () => {
         ...process.env,
         XDG_CONFIG_HOME: process.env.APPDATA,
         OPENCODE_CONFIG_DIR: gateclawConfigDir,
+        GATECLAW_DIRECTORY: gateclawRoot,
         OPENCODE_SERVER_PASSWORD: "",
       },
     })

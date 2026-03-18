@@ -96,7 +96,7 @@ const startEventStream = (input: { directory: string; workspaceID?: string }) =>
   })
 }
 
-startEventStream({ directory: process.cwd() })
+startEventStream({ directory: process.env.GATECLAW_DIRECTORY ?? process.cwd() })
 
 export const rpc = {
   async fetch(input: { url: string; method: string; headers: Record<string, string>; body?: string }) {

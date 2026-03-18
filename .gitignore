@@ -34,3 +34,4 @@ tsconfig.tsbuildinfo
 **/daemon.pid
 **/daily.log
 nul
+/packages/gateclaw-orchestrator/src/telegram-bot/.tmp

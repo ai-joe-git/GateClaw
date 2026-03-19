@@ -13,7 +13,7 @@ GateClaw is a **resident AI entity** with persistent memory, soul identity (`SOU
 ### Root Level
 
 ```bash
-bun dev                # Opencode CLI dev mode
+bun dev                # GateClaw CLI dev mode
 bun dev:desktop        # Desktop app dev
 bun dev:web            # Web app dev
 bun typecheck          # TypeScript check all packages (turbo)
@@ -24,7 +24,7 @@ bun prepare            # Pre-commit hooks (husky)
 
 | Package              | Command                                                                |
 | -------------------- | ---------------------------------------------------------------------- |
-| **Opencode**         | `bun test <file>.test.ts` or `bun test -t "pattern"`                   |
+| **OpenCode (core)**  | `bun test <file>.test.ts` or `bun test -t "pattern"`                   |
 | **App units**        | `cd packages/app && bun test --preload ./happydom.ts src/foo.test.ts`  |
 | **E2E**              | `cd packages/app && bun test:e2e -- app/home.spec.ts` or `-g "title"`  |
 | **Desktop**          | `cd packages/desktop && bun run typecheck && bun run build`            |
@@ -33,7 +33,7 @@ bun prepare            # Pre-commit hooks (husky)
 
 ### Package-Specific Commands
 
-- **Opencode** | `bun test <file>.test.ts` or `-t "pattern"` | `bun run typecheck` | `bun run db generate --name <slug>`
+- **OpenCode (core)** | `bun test <file>.test.ts` or `-t "pattern"` | `bun run typecheck` | `bun run db generate --name <slug>`
 - **App** | `cd packages/app && bun test --preload ./happydom.ts src/foo.test.ts` | `tsgo -b` | `bun test:unit` / `test:e2e`
 - **Desktop (Tauri)**: `bun run typecheck`, `bun run build`, `bun run tauri dev`
 - **Electron**: `bun run package` (distro), `bun run dev`, `bun run preview`
@@ -52,8 +52,8 @@ bun prepare            # Pre-commit hooks (husky)
 
 ### Imports
 
-- **Absolute**: `@/*` → `packages/opencode/src/`
-- **Cross-package**: `@opencode-ai/*`
+- **Absolute**: `@/*` → `packages/opencode/src/` (OpenCode is the core fork)
+- **Cross-package**: `@opencode-ai/*` (internal package namespace)
 - **Order**: Std lib → External → Internal → Relative (alphabetical within groups)
 - **E2E tests**: Import from `../fixtures`, never `@playwright/test` directly
 
@@ -142,9 +142,9 @@ export const session = sqliteTable("session", {
 
 ## Environment & Configuration
 
-- **Config dir**: `.gateclaw/` (legacy: `.opencode/`)
+- **Config dir**: `.gateclaw/` (primary), `.opencode/` (legacy support)
 - **Agents**: `.gateclaw/agent/*.md`
-- **Global envs**: `CI`, `OPENCODE_DISABLE_SHARE` (turbo.json)
+- **Global envs**: `CI`, `GATECLAW_*` environment variables
 - **.env**: Never commit
 
 ---
@@ -156,7 +156,7 @@ export const session = sqliteTable("session", {
 - **Never commit** unless explicitly requested
 - **ALWAYS use parallel tools**: Batch reads/writes/bash
 - **Type-safe**: No `any`, use `unknown` + narrowing
-- **Respect imports**: `@opencode-ai/*` cross-package, `@/*` internal
+- **Respect imports**: `@opencode-ai/*` cross-package (internal), `@/*` internal to opencode
 - **Agentic initiative**: Self-correct, explore autonomously
 
 ---

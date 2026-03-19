@@ -35,7 +35,7 @@ Locale guidance does not override code/command preservation rules or the global 
 
 ---
 
-# Do-Not-Translate Terms (OpenCode Docs)
+# Do-Not-Translate Terms (GateClaw Docs)
 
 Generated from: `packages/web/src/content/docs/*.mdx` (default English docs)
 Generated on: 2026-02-10
@@ -58,6 +58,8 @@ Bun
 Chocolatey
 Cursor
 Docker
+GateClaw
+gateclaw
 Git
 GitHub Actions
 GitLab CI
@@ -84,7 +86,7 @@ Windows Terminal
 Yarn
 Zellij
 Zed
-anomalyco
+ai-joe-git
 ```
 
 Extracted from link labels in the English docs (review and prune as desired):

@@ -1,233 +1,234 @@
-import { ToolInfo } from "./aggregator.js";
-import * as path from "path";
-import { convert } from "telegram-markdown-v2";
-import { config } from "../config.js";
-import type { MessageFormatMode } from "../config.js";
-import { logger } from "../utils/logger.js";
-import { t } from "../i18n/index.js";
-import { getCurrentProject } from "../settings/manager.js";
+import { ToolInfo } from "./aggregator.js"
+import * as path from "path"
+import { convert } from "telegram-markdown-v2"
+import { config } from "../config.js"
+import type { MessageFormatMode } from "../config.js"
+import { logger } from "../utils/logger.js"
+import { t } from "../i18n/index.js"
+import { getCurrentProject } from "../settings/manager.js"
 
-const TELEGRAM_MESSAGE_LIMIT = 4096;
+const TELEGRAM_MESSAGE_LIMIT = 4096
 
 function splitText(text: string, maxLength: number): string[] {
-  const parts: string[] = [];
-  let currentIndex = 0;
+  const parts: string[] = []
+  let currentIndex = 0
 
   while (currentIndex < text.length) {
-    let endIndex = currentIndex + maxLength;
+    let endIndex = currentIndex + maxLength
 
     if (endIndex >= text.length) {
-      parts.push(text.slice(currentIndex));
-      break;
+      parts.push(text.slice(currentIndex))
+      break
     }
 
-    const breakPoint = text.lastIndexOf("\n", endIndex);
+    const breakPoint = text.lastIndexOf("\n", endIndex)
     if (breakPoint > currentIndex) {
-      endIndex = breakPoint + 1;
+      endIndex = breakPoint + 1
     }
 
-    parts.push(text.slice(currentIndex, endIndex));
-    currentIndex = endIndex;
+    parts.push(text.slice(currentIndex, endIndex))
+    currentIndex = endIndex
   }
 
-  return parts;
+  return parts
 }
 
 function isCodeFenceLine(line: string): boolean {
-  return line.trimStart().startsWith("```");
+  return line.trimStart().startsWith("```")
 }
 
 function isHorizontalRuleLine(line: string): boolean {
-  const normalized = line.trim();
+  const normalized = line.trim()
   if (!normalized) {
-    return false;
+    return false
   }
 
-  return /^([-*_])(?:\s*\1){2,}$/.test(normalized);
+  return /^([-*_])(?:\s*\1){2,}$/.test(normalized)
 }
 
 function isHeadingLine(line: string): boolean {
-  return /^\s{0,3}#{1,6}\s+\S/.test(line);
+  return /^\s{0,3}#{1,6}\s+\S/.test(line)
 }
 
 function normalizeHeadingLine(line: string): string {
-  const match = line.match(/^\s{0,3}#{1,6}\s+(.+?)\s*$/);
+  const match = line.match(/^\s{0,3}#{1,6}\s+(.+?)\s*$/)
   if (!match) {
-    return line;
+    return line
   }
 
-  return `**${match[1]}**`;
+  return `**${match[1]}**`
 }
 
 function normalizeChecklistLine(line: string): string | null {
-  const match = line.match(/^(\s*)(?:[-+*]|\d+\.)\s+\[( |x|X)\]\s+(.*)$/);
+  const match = line.match(/^(\s*)(?:[-+*]|\d+\.)\s+\[( |x|X)\]\s+(.*)$/)
   if (!match) {
-    return null;
+    return null
   }
 
-  const marker = match[2].toLowerCase() === "x" ? "✅" : "🔲";
-  return `${match[1]}${marker} ${match[3]}`;
+  const marker = match[2].toLowerCase() === "x" ? "✅" : "🔲"
+  return `${match[1]}${marker} ${match[3]}`
 }
 
-function preprocessMarkdownForTelegram(text: string): string {
-  const lines = text.split("\n");
-  const output: string[] = [];
-  let inCodeFence = false;
-  let inQuote = false;
+export function preprocessMarkdownForTelegram(text: string): string {
+  const lines = text.split("\n")
+  const output: string[] = []
+  let inCodeFence = false
+  let inQuote = false
 
   for (let index = 0; index < lines.length; index++) {
-    const line = lines[index];
+    const line = lines[index]
 
     if (isCodeFenceLine(line)) {
-      inCodeFence = !inCodeFence;
-      inQuote = false;
-      output.push(line);
-      continue;
+      inCodeFence = !inCodeFence
+      inQuote = false
+      output.push(line)
+      continue
     }
 
     if (inCodeFence) {
-      output.push(line);
-      continue;
+      output.push(line)
+      continue
     }
 
     if (!line.trim()) {
-      inQuote = false;
-      output.push(line);
-      continue;
+      inQuote = false
+      output.push(line)
+      continue
     }
 
     if (isHeadingLine(line)) {
-      output.push(normalizeHeadingLine(line));
-      inQuote = false;
-      continue;
+      output.push(normalizeHeadingLine(line))
+      inQuote = false
+      continue
     }
 
     if (isHorizontalRuleLine(line)) {
-      output.push("──────────");
-      inQuote = false;
-      continue;
+      output.push("──────────")
+      inQuote = false
+      continue
     }
 
-    const trimmedLeft = line.trimStart();
+    const trimmedLeft = line.trimStart()
     if (trimmedLeft.startsWith(">")) {
-      inQuote = true;
-      const quoteContent = trimmedLeft.replace(/^>\s?/, "");
-      const normalizedChecklistInQuote = normalizeChecklistLine(quoteContent);
+      inQuote = true
+      const quoteContent = trimmedLeft.replace(/^>\s?/, "")
+      const escapedQuoteContent = quoteContent.replace(/\|/g, "\\|")
+      const normalizedChecklistInQuote = normalizeChecklistLine(escapedQuoteContent)
       output.push(
-        normalizedChecklistInQuote ? `> ${normalizedChecklistInQuote.trimStart()}` : trimmedLeft,
-      );
-      continue;
+        normalizedChecklistInQuote ? `> ${normalizedChecklistInQuote.trimStart()}` : `> ${escapedQuoteContent}`,
+      )
+      continue
     }
 
-    const normalizedChecklist = normalizeChecklistLine(line);
+    const normalizedChecklist = normalizeChecklistLine(line)
     if (normalizedChecklist) {
-      output.push(inQuote ? `> ${normalizedChecklist.trimStart()}` : normalizedChecklist);
-      continue;
+      output.push(inQuote ? `> ${normalizedChecklist.trimStart()}` : normalizedChecklist)
+      continue
     }
 
     if (inQuote) {
-      output.push(`> ${trimmedLeft}`);
-      continue;
+      const escaped = trimmedLeft.replace(/\|/g, "\\|")
+      output.push(`> ${escaped}`)
+      continue
     }
 
-    output.push(line);
+    const escapedLine = line.replace(/\|/g, "\\|")
+    output.push(escapedLine)
   }
 
-  return output.join("\n");
+  return output.join("\n")
 }
 
 export function normalizePathForDisplay(filePath: string): string {
-  const normalizedPath = filePath.replace(/\\/g, "/");
-  const project = getCurrentProject();
+  const normalizedPath = filePath.replace(/\\/g, "/")
+  const project = getCurrentProject()
 
   if (!project?.worktree) {
-    return normalizedPath;
+    return normalizedPath
   }
 
-  const normalizedWorktree = project.worktree.replace(/\\/g, "/").replace(/\/+$/, "");
+  const normalizedWorktree = project.worktree.replace(/\\/g, "/").replace(/\/+$/, "")
   if (!normalizedWorktree) {
-    return normalizedPath;
+    return normalizedPath
   }
 
-  const pathForCompare =
-    process.platform === "win32" ? normalizedPath.toLowerCase() : normalizedPath;
-  const worktreeForCompare =
-    process.platform === "win32" ? normalizedWorktree.toLowerCase() : normalizedWorktree;
+  const pathForCompare = process.platform === "win32" ? normalizedPath.toLowerCase() : normalizedPath
+  const worktreeForCompare = process.platform === "win32" ? normalizedWorktree.toLowerCase() : normalizedWorktree
 
   if (pathForCompare === worktreeForCompare) {
-    return ".";
+    return "."
   }
 
-  const worktreePrefix = `${worktreeForCompare}/`;
+  const worktreePrefix = `${worktreeForCompare}/`
   if (pathForCompare.startsWith(worktreePrefix)) {
-    return normalizedPath.slice(normalizedWorktree.length + 1);
+    return normalizedPath.slice(normalizedWorktree.length + 1)
   }
 
-  return normalizedPath;
+  return normalizedPath
 }
 
 export function formatSummary(text: string): string[] {
-  return formatSummaryWithMode(text, config.bot.messageFormatMode);
+  return formatSummaryWithMode(text, config.bot.messageFormatMode)
 }
 
 export function getAssistantParseMode(): "MarkdownV2" | undefined {
   if (config.bot.messageFormatMode === "markdown") {
-    return "MarkdownV2";
+    return "MarkdownV2"
   }
 
-  return undefined;
+  return undefined
 }
 
 function formatMarkdownForTelegram(text: string): string {
   try {
-    const preprocessed = preprocessMarkdownForTelegram(text);
-    return convert(preprocessed, "keep");
+    const preprocessed = preprocessMarkdownForTelegram(text)
+    return convert(preprocessed, "keep")
   } catch (error) {
-    logger.warn("[Formatter] Failed to convert markdown summary, falling back to raw text", error);
-    return text;
+    logger.warn("[Formatter] Failed to convert markdown summary, falling back to raw text", error)
+    return text
   }
 }
 
 export function formatSummaryWithMode(text: string, mode: MessageFormatMode): string[] {
   if (!text || text.trim().length === 0) {
-    return [];
+    return []
   }
 
-  const parts = splitText(text, TELEGRAM_MESSAGE_LIMIT);
-  const formattedParts: string[] = [];
+  const parts = splitText(text, TELEGRAM_MESSAGE_LIMIT)
+  const formattedParts: string[] = []
 
   for (const part of parts) {
-    const trimmed = part.trim();
+    const trimmed = part.trim()
     if (!trimmed) {
-      continue;
+      continue
     }
 
     if (mode === "markdown") {
-      const converted = formatMarkdownForTelegram(trimmed);
-      const convertedParts = splitText(converted, TELEGRAM_MESSAGE_LIMIT);
+      const converted = formatMarkdownForTelegram(trimmed)
+      const convertedParts = splitText(converted, TELEGRAM_MESSAGE_LIMIT)
 
       for (const convertedPart of convertedParts) {
-        const normalizedPart = convertedPart.trim();
+        const normalizedPart = convertedPart.trim()
         if (normalizedPart) {
-          formattedParts.push(normalizedPart);
+          formattedParts.push(normalizedPart)
         }
       }
-      continue;
+      continue
     }
 
     if (parts.length > 1) {
-      formattedParts.push(`\`\`\`\n${trimmed}\n\`\`\``);
+      formattedParts.push(`\`\`\`\n${trimmed}\n\`\`\``)
     } else {
-      formattedParts.push(trimmed);
+      formattedParts.push(trimmed)
     }
   }
 
-  return formattedParts;
+  return formattedParts
 }
 
 function getToolDetails(tool: string, input?: { [key: string]: unknown }): string {
   if (!input) {
-    return "";
+    return ""
   }
 
   // First, check fields specific to known tools
@@ -236,196 +237,192 @@ function getToolDetails(tool: string, input?: { [key: string]: unknown }): strin
     case "edit":
     case "write":
     case "apply_patch":
-      const filePath = input.path || input.filePath;
-      if (typeof filePath === "string") return normalizePathForDisplay(filePath);
-      break;
+      const filePath = input.path || input.filePath
+      if (typeof filePath === "string") return normalizePathForDisplay(filePath)
+      break
     case "bash":
-      if (typeof input.command === "string") return input.command;
-      break;
+      if (typeof input.command === "string") return input.command
+      break
     case "grep":
     case "glob":
-      if (typeof input.pattern === "string") return input.pattern;
-      break;
+      if (typeof input.pattern === "string") return input.pattern
+      break
   }
 
   // Generic search for MCP and other tools
   // Look for common fields: query, url, name, prompt
-  const commonFields = ["query", "url", "name", "prompt", "text"];
+  const commonFields = ["query", "url", "name", "prompt", "text"]
   for (const field of commonFields) {
     if (typeof input[field] === "string") {
-      return input[field];
+      return input[field]
     }
   }
 
   // If nothing matched but string fields exist, take the first one (except description)
   for (const [key, value] of Object.entries(input)) {
     if (key !== "description" && typeof value === "string" && value.length > 0) {
-      return value;
+      return value
     }
   }
 
-  return "";
+  return ""
 }
 
 function getToolIcon(tool: string): string {
   switch (tool) {
     case "read":
-      return "📖";
+      return "📖"
     case "write":
-      return "✍️";
+      return "✍️"
     case "edit":
-      return "✏️";
+      return "✏️"
     case "apply_patch":
-      return "🩹";
+      return "🩹"
     case "bash":
-      return "💻";
+      return "💻"
     case "glob":
-      return "📁";
+      return "📁"
     case "grep":
-      return "🔍";
+      return "🔍"
     case "task":
-      return "🤖";
+      return "🤖"
     case "question":
-      return "❓";
+      return "❓"
     case "todoread":
-      return "📋";
+      return "📋"
     case "todowrite":
-      return "📝";
+      return "📝"
     case "webfetch":
-      return "🌐";
+      return "🌐"
     case "web-search_tavily_search":
-      return "🔎";
+      return "🔎"
     case "web-search_tavily_extract":
-      return "📄";
+      return "📄"
     case "skill":
-      return "🎓";
+      return "🎓"
     default:
-      return "🛠️";
+      return "🛠️"
   }
 }
 
 function formatTodos(todos: Array<{ id: string; content: string; status: string }>): string {
-  const MAX_TODOS = 20;
+  const MAX_TODOS = 20
 
   const statusToMarker: Record<string, string> = {
     completed: "✅",
     in_progress: "🔄",
     pending: "🔲",
-  };
+  }
 
-  const formattedTodos: string[] = [];
+  const formattedTodos: string[] = []
 
   for (let i = 0; i < Math.min(todos.length, MAX_TODOS); i++) {
-    const todo = todos[i];
-    const marker = statusToMarker[todo.status] ?? "🔲";
-    formattedTodos.push(`${marker} ${todo.content}`);
+    const todo = todos[i]
+    const marker = statusToMarker[todo.status] ?? "🔲"
+    formattedTodos.push(`${marker} ${todo.content}`)
   }
 
-  let result = formattedTodos.join("\n");
+  let result = formattedTodos.join("\n")
 
   if (todos.length > MAX_TODOS) {
-    result += `\n${t("tool.todo.overflow", { count: todos.length - MAX_TODOS })}`;
+    result += `\n${t("tool.todo.overflow", { count: todos.length - MAX_TODOS })}`
   }
 
-  return result;
+  return result
 }
 
 function formatDiffLineInfo(filediff: { additions?: number; deletions?: number }): string {
-  const parts = [];
-  if (filediff.additions && filediff.additions > 0) parts.push(`+${filediff.additions}`);
-  if (filediff.deletions && filediff.deletions > 0) parts.push(`-${filediff.deletions}`);
-  return parts.length > 0 ? ` (${parts.join(" ")})` : "";
+  const parts = []
+  if (filediff.additions && filediff.additions > 0) parts.push(`+${filediff.additions}`)
+  if (filediff.deletions && filediff.deletions > 0) parts.push(`-${filediff.deletions}`)
+  return parts.length > 0 ? ` (${parts.join(" ")})` : ""
 }
 
 function countDiffChangesFromText(text: string): { additions: number; deletions: number } {
-  let additions = 0;
-  let deletions = 0;
+  let additions = 0
+  let deletions = 0
 
   for (const line of text.split("\n")) {
     if (line.startsWith("+") && !line.startsWith("+++")) {
-      additions++;
-      continue;
+      additions++
+      continue
     }
 
     if (line.startsWith("-") && !line.startsWith("---")) {
-      deletions++;
+      deletions++
     }
   }
 
-  return { additions, deletions };
+  return { additions, deletions }
 }
 
 function extractFirstUpdatedFileFromTitle(title: string): string {
   for (const rawLine of title.split("\n")) {
-    const line = rawLine.trim();
+    const line = rawLine.trim()
     if (line.length >= 3 && line[1] === " " && /[AMDURC]/.test(line[0])) {
-      return line.slice(2).trim();
+      return line.slice(2).trim()
     }
   }
-  return "";
+  return ""
 }
 
 export function formatToolInfo(toolInfo: ToolInfo): string | null {
-  const { tool, input, title } = toolInfo;
+  const { tool, input, title } = toolInfo
   logger.debug(
     `[Formatter] formatToolInfo: tool=${tool}, hasMetadata=${!!toolInfo.metadata}, hasFilediff=${!!toolInfo.metadata?.filediff}`,
-  );
+  )
 
   if (tool === "todowrite" && toolInfo.metadata?.todos) {
     const todos = toolInfo.metadata.todos as Array<{
-      id: string;
-      content: string;
-      status: string;
-      priority?: string;
-    }>;
-    const toolIcon = getToolIcon(tool);
-    const todosList = formatTodos(todos);
-    return `${toolIcon} ${tool} (${todos.length})\n${todosList}`;
+      id: string
+      content: string
+      status: string
+      priority?: string
+    }>
+    const toolIcon = getToolIcon(tool)
+    const todosList = formatTodos(todos)
+    return `${toolIcon} ${tool} (${todos.length})\n${todosList}`
   }
 
-  let details = title || getToolDetails(tool, input);
-  const toolIcon = getToolIcon(tool);
+  let details = title || getToolDetails(tool, input)
+  const toolIcon = getToolIcon(tool)
 
-  let description = "";
+  let description = ""
   if (input && typeof input.description === "string") {
-    description = `${input.description}\n`;
+    description = `${input.description}\n`
   }
 
   if (tool === "bash" && input && typeof input.command === "string") {
-    details = input.command;
+    details = input.command
   }
 
   if (tool === "apply_patch") {
     const filediff =
       toolInfo.metadata && "filediff" in toolInfo.metadata
         ? (toolInfo.metadata.filediff as { file?: string })
-        : undefined;
+        : undefined
     if (filediff?.file) {
-      details = normalizePathForDisplay(filediff.file);
+      details = normalizePathForDisplay(filediff.file)
     } else if (title) {
-      const fileFromTitle = extractFirstUpdatedFileFromTitle(title);
+      const fileFromTitle = extractFirstUpdatedFileFromTitle(title)
       if (fileFromTitle) {
-        details = normalizePathForDisplay(fileFromTitle);
+        details = normalizePathForDisplay(fileFromTitle)
       }
     }
   }
 
-  const detailsStr = details ? ` ${details}` : "";
-  let lineInfo = "";
+  const detailsStr = details ? ` ${details}` : ""
+  let lineInfo = ""
 
   if (tool === "write" && input && "content" in input && typeof input.content === "string") {
-    const lines = countLines(input.content);
-    lineInfo = ` (+${lines})`;
+    const lines = countLines(input.content)
+    lineInfo = ` (+${lines})`
   }
 
-  if (
-    (tool === "edit" || tool === "apply_patch") &&
-    toolInfo.metadata &&
-    "filediff" in toolInfo.metadata
-  ) {
-    const filediff = toolInfo.metadata.filediff as { additions?: number; deletions?: number };
-    logger.debug("[Formatter] Diff metadata:", JSON.stringify(toolInfo.metadata, null, 2));
-    lineInfo = formatDiffLineInfo(filediff);
+  if ((tool === "edit" || tool === "apply_patch") && toolInfo.metadata && "filediff" in toolInfo.metadata) {
+    const filediff = toolInfo.metadata.filediff as { additions?: number; deletions?: number }
+    logger.debug("[Formatter] Diff metadata:", JSON.stringify(toolInfo.metadata, null, 2))
+    lineInfo = formatDiffLineInfo(filediff)
   }
 
   if (tool === "apply_patch" && !lineInfo) {
@@ -434,91 +431,87 @@ export function formatToolInfo(toolInfo: ToolInfo): string | null {
         ? toolInfo.metadata.diff
         : input && typeof input.patchText === "string"
           ? input.patchText
-          : "";
+          : ""
 
     if (diffText) {
-      lineInfo = formatDiffLineInfo(countDiffChangesFromText(diffText));
+      lineInfo = formatDiffLineInfo(countDiffChangesFromText(diffText))
     }
   }
 
-  return `${toolIcon} ${description}${tool}${detailsStr}${lineInfo}`;
+  return `${toolIcon} ${description}${tool}${detailsStr}${lineInfo}`
 }
 
 function countLines(text: string): number {
-  return text.split("\n").length;
+  return text.split("\n").length
 }
 
 export interface CodeFileData {
-  buffer: Buffer;
-  filename: string;
-  caption: string;
+  buffer: Buffer
+  filename: string
+  caption: string
 }
 
 function formatDiff(diff: string): string {
-  const lines = diff.split("\n");
-  const formattedLines: string[] = [];
+  const lines = diff.split("\n")
+  const formattedLines: string[] = []
 
   for (const line of lines) {
     if (line.startsWith("@@")) {
-      continue;
+      continue
     }
     if (line.startsWith("---") || line.startsWith("+++")) {
-      continue;
+      continue
     }
     if (line.startsWith("Index:")) {
-      continue;
+      continue
     }
     if (line.startsWith("===") && line.includes("=")) {
-      continue;
+      continue
     }
     if (line.startsWith("\\ No newline")) {
-      continue;
+      continue
     }
 
     if (line.startsWith(" ")) {
-      formattedLines.push(" " + line.slice(1));
+      formattedLines.push(" " + line.slice(1))
     } else if (line.startsWith("+")) {
-      formattedLines.push("+ " + line.slice(1));
+      formattedLines.push("+ " + line.slice(1))
     } else if (line.startsWith("-")) {
-      formattedLines.push("- " + line.slice(1));
+      formattedLines.push("- " + line.slice(1))
     } else {
-      formattedLines.push(line);
+      formattedLines.push(line)
     }
   }
 
-  return formattedLines.join("\n");
+  return formattedLines.join("\n")
 }
 
-export function prepareCodeFile(
-  content: string,
-  filePath: string,
-  operation: "write" | "edit",
-): CodeFileData | null {
-  const displayPath = normalizePathForDisplay(filePath);
-  let processedContent = content;
+export function prepareCodeFile(content: string, filePath: string, operation: "write" | "edit"): CodeFileData | null {
+  const displayPath = normalizePathForDisplay(filePath)
+  let processedContent = content
 
   if (operation === "edit") {
-    processedContent = formatDiff(content);
+    processedContent = formatDiff(content)
   }
 
-  const sizeKb = Buffer.byteLength(processedContent, "utf8") / 1024;
+  const sizeKb = Buffer.byteLength(processedContent, "utf8") / 1024
 
   if (sizeKb > config.files.maxFileSizeKb) {
     logger.debug(
       `[Formatter] File too large: ${displayPath} (${sizeKb.toFixed(2)} KB > ${config.files.maxFileSizeKb} KB)`,
-    );
-    return null;
+    )
+    return null
   }
 
   const header =
     operation === "write"
       ? t("tool.file_header.write", { path: displayPath })
-      : t("tool.file_header.edit", { path: displayPath });
-  const fullContent = header + processedContent;
+      : t("tool.file_header.edit", { path: displayPath })
+  const fullContent = header + processedContent
 
-  const buffer = Buffer.from(fullContent, "utf8");
-  const basename = path.basename(filePath);
-  const filename = `${operation}_${basename}.txt`;
+  const buffer = Buffer.from(fullContent, "utf8")
+  const basename = path.basename(filePath)
+  const filename = `${operation}_${basename}.txt`
 
-  return { buffer, filename, caption: "" };
+  return { buffer, filename, caption: "" }
 }

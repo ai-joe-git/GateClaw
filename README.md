@@ -664,7 +664,7 @@ GateClaw is a fork of OpenCode (MIT). We keep that spirit:
 | All AI providers | Bundled AI credits |
 | Telegram bot | Enterprise features |
 | TUI, CLI, Web UI | Priority support |
-| Voice (pocket-tts) | Premium voice packs |
+| Voice ([pocket-tts-server](https://github.com/ai-joe-git/pocket-tts-server)) | Premium voice packs |
 | AgentMon (Pokémon) | Teams & collaboration |
 
 **What you download today stays free.** We'll never move existing features behind a paywall.

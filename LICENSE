@@ -34,7 +34,7 @@ This project includes substantial modifications including:
 - SOUL.md personality architecture
 - Daemon orchestration layer
 - Multi-interface support (TUI, CLI, Telegram, Web, HTTP API)
-- Voice integration (pocket-tts-server)
+- Voice integration via [pocket-tts-server](https://github.com/ai-joe-git/pocket-tts-server) (Kyutai's Pocket-TTS)
 - Platform-specific configurations (Windows, Linux, macOS)
 
 ---

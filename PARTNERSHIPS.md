@@ -125,9 +125,10 @@ GateClaw already supports these providers with user-provided keys:
 
 Providers interested in integration partnerships, email:
 
-**business@yourcompany.com**
+gateclaw.ai@gmail.com
 
 Include:
+
 1. Provider name
 2. API offerings (models, pricing)
 3. Affiliate/commission structure

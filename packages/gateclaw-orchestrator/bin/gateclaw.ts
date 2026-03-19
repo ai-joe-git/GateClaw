@@ -115,6 +115,7 @@ function printHelp() {
   console.log(`  ${green}history    ${reset}View message history [session]`)
   console.log(`  ${green}models     ${reset}List AI models (interactive)`)
   console.log(`  ${green}providers  ${reset}Provider management (add|refresh)`)
+  console.log(`  ${green}signup     ${reset}Sign up for AI providers (affiliate links)`)
   console.log(`  ${green}export     ${reset}Export sessions to JSON/MD (interactive)`)
   console.log(`  ${green}agentmon   ${reset}Pokémon Red AI (register|start|act|status|save|load|stop)`)
   console.log()
@@ -128,6 +129,7 @@ function printHelp() {
   console.log(`  gateclaw telegram setup     # Interactive bot setup`)
   console.log(`  gateclaw telegram start     # Start Telegram bot`)
   console.log(`  gateclaw models             # List AI models`)
+  console.log(`  gateclaw signup             # Sign up for AI providers`)
   console.log(`  gateclaw export gateclaw    # Export session`)
   console.log(`  gateclaw fact store mykey "my value"`)
   console.log(`  gateclaw agentmon start     # Start Pokémon game`)
@@ -813,6 +815,12 @@ switch (cmd) {
     } else {
       console.log(`🔧 Provider Commands:\n  gateclaw providers add   - Interactive setup`)
     }
+    break
+  }
+
+  case "signup": {
+    const { signup } = await import("../src/commands/signup")
+    await signup()
     break
   }
 

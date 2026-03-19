@@ -211,7 +211,7 @@ async function ensureEventSubscription(directory: string): Promise<void> {
           const { synthesizeSpeech } = await import("../tts/client.js")
           const { getUserVoiceSettings } = await import("../voice/manager.js")
           const userSettings = getUserVoiceSettings(userId)
-          const cleanText = truncateForTts(messageText, 800)
+          const cleanText = truncateForTts(messageText, 16000) // Truncate to avoid very long TTS processing
           logger.info(
             `[Voice] Triggering TTS: userId=${userId}, voice=${userSettings.voice}, text length=${cleanText.length}`,
           )
@@ -930,12 +930,14 @@ export function createBot(): Bot<Context> {
  */
 function stripMarkdownForTts(text: string): string {
   return text
-    .replace(/```[\s\S]*?```/g, "") // remove code blocks entirely
-    .replace(/`[^`]*`/g, "") // remove inline code
-    .replace(/[*_#>\[\]]/g, "") // remove markdown symbols
-    .replace(/https?:\/\/\S+/g, "") // remove URLs
-    .replace(/\n{2,}/g, ". ") // collapse newlines
-    .replace(/•\s*/g, "") // remove bullet points
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`[^`]*`/g, "")
+    .replace(/[*_#>\[\]]/g, "")
+    .replace(/\\([!()\-.,:?@#+=~|\\])/g, "$1")
+    .replace(/\p{Emoji}/gu, "")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/\n{2,}/g, ". ")
+    .replace(/•\s*/g, "")
     .trim()
 }
 

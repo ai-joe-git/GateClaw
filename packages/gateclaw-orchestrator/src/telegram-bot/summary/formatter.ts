@@ -182,11 +182,28 @@ export function getAssistantParseMode(): "MarkdownV2" | undefined {
 function formatMarkdownForTelegram(text: string): string {
   try {
     const preprocessed = preprocessMarkdownForTelegram(text)
-    return convert(preprocessed, "keep")
+    const converted = convert(preprocessed, "keep")
+    return cleanTelegramMarkdownEscapes(converted)
   } catch (error) {
     logger.warn("[Formatter] Failed to convert markdown summary, falling back to raw text", error)
     return text
   }
+}
+
+function cleanTelegramMarkdownEscapes(text: string): string {
+  return text
+    .replace(/\\([!()])/g, "$1")
+    .replace(/\\([\-])/g, "$1")
+    .replace(/\\([.])/g, "$1")
+    .replace(/\\([,])/g, "$1")
+    .replace(/\\([:?])/g, "$1")
+    .replace(/\\([@])/g, "$1")
+    .replace(/\\([#])/g, "$1")
+    .replace(/\\([+])/g, "$1")
+    .replace(/\\([=])/g, "$1")
+    .replace(/\\([~])/g, "$1")
+    .replace(/\\([|])/g, "$1")
+    .replace(/\\([\\])/g, "$1")
 }
 
 export function formatSummaryWithMode(text: string, mode: MessageFormatMode): string[] {

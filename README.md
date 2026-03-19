@@ -188,15 +188,15 @@ GateClaw is **ONE resident AI entity** with multiple equal interfaces:
 │                    GateClaw Monorepo                        │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
-│  │  Orchestrator   │  │   OpenCode      │  │   Desktop   │ │
-│  │  (Daemon)       │  │   Fork (TUI)    │  │   (Web UI)  │ │
-│  │                 │  │                 │  │             │ │
-│  │  - HTTP API     │  │  - Terminal UI  │  │  - Browser  │ │
-│  │  - Telegram Bot │  │  - Model Picker │  │  Interface  │ │
-│  │  - CLI Commands │  │  - Sessions     │  │             │ │
-│  │  - Memory Mgmt  │  │  - Tools        │  │             │ │
-│  └────────┬────────┘  └────────┬────────┘  └─────────────┘ │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐  │
+│  │  Orchestrator   │  │   OpenCode      │  │   Desktop   │  │
+│  │  (Daemon)       │  │   Fork (TUI)    │  │   (Web UI)  │  │
+│  │                 │  │                 │  │             │  │
+│  │  - HTTP API     │  │  - Terminal UI  │  │  - Browser  │  │
+│  │  - Telegram Bot │  │  - Model Picker │  │  Interface  │  │
+│  │  - CLI Commands │  │  - Sessions     │  │             │  │
+│  │  - Memory Mgmt  │  │  - Tools        │  │             │  │
+│  └────────┬────────┘  └────────┬────────┘  └─────────────┘  │
 │           │                    │                            │
 │           └──────────┬─────────┘                            │
 │                      │                                      │
@@ -214,12 +214,12 @@ GateClaw is **ONE resident AI entity** with multiple equal interfaces:
                       │
                       ▼
          ┌────────────────────────┐
-         │   AI Providers        │
+         │   AI Providers         │
          │                        │
-         │  - llama-swap (:8888) │
-         │  - Ollama (:11434)    │
-         │  - LM Studio (:1234)  │
-         │  - Cloud APIs         │
+         │  - llama-swap (:8888)  │
+         │  - Ollama (:11434)     │
+         │  - LM Studio (:1234)   │
+         │  - Cloud APIs          │
          └────────────────────────┘
 ```
 
@@ -452,13 +452,13 @@ Enable all? [Y/n]: y
 Default model [qwen3.5:397b]: qwen3.5:397b
 
 ┌─────────────────────────────────────────┐
-│ Provider Configuration                │
+│ Provider Configuration                  │
 ├─────────────────────────────────────────┤
-│ Name: my-llama-swap                    │
-│ URL: http://localhost:8888/v1          │
-│ API Key: none                          │
-│ Models: 12 enabled                     │
-│ Default: qwen3.5:397b                  │
+│ Name: my-llama-swap                     │
+│ URL: http://localhost:8888/v1           │
+│ API Key: none                           │
+│ Models: 12 enabled                      │
+│ Default: qwen3.5:397b                   │
 └─────────────────────────────────────────┘
 
 Save? [Y/n]: y
@@ -640,9 +640,51 @@ $ gateclaw agentmon stop
 
 ---
 
-## 📜 License
+## 📜 License & Business Model
 
-MIT — See [LICENSE](LICENSE)
+### License: MIT (Forever)
+
+GateClaw is **MIT licensed** — free for any use, forever.
+
+- ✅ Commercial use allowed
+- ✅ Modifications allowed
+- ✅ Distribution allowed
+- ✅ Private use allowed
+- ✅ Sell services built on top
+
+**See [LICENSE](LICENSE) for full text.**
+
+### Why Free Forever?
+
+GateClaw is a fork of OpenCode (MIT). We keep that spirit:
+
+| What's Free (MIT) | What's Paid (Optional) |
+|-------------------|------------------------|
+| Self-hosted GateClaw | GateClaw Cloud (managed) |
+| All AI providers | Bundled AI credits |
+| Telegram bot | Enterprise features |
+| TUI, CLI, Web UI | Priority support |
+| Voice (pocket-tts) | Premium voice packs |
+| AgentMon (Pokémon) | Teams & collaboration |
+
+**What you download today stays free.** We'll never move existing features behind a paywall.
+
+### How We Sustain This
+
+We monetize through **optional services**:
+
+1. **GateClaw Cloud** — Managed hosting for those who don't want to self-host
+2. **Enterprise** — Teams, SSO, compliance, SLAs for businesses
+3. **Partner Affiliates** — Commission when new users sign up for AI providers through our links
+4. **Premium Add-ons** — Licensed voice packs, advanced integrations
+
+**Your self-hosted install remains 100% free.** We don't double-dip.
+
+See [PARTNERSHIPS.md](PARTNERSHIPS.md) for provider partnership details.
+
+### Attribution
+
+GateClaw is a heavily modified fork of [OpenCode](https://github.com/opencode-ai/opencode). Original MIT license preserved.
 
 ---
 

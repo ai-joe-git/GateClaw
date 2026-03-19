@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) 2025 opencode
+Copyright (c) 2025-2026 Romain Chanas (ai-joe-git)
+Copyright (c) 2024-2025 OpenCode Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +20,55 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+## Attribution
+
+GateClaw is a heavily modified fork of [OpenCode](https://github.com/opencode-ai/opencode).
+The original OpenCode project is released under the MIT License.
+
+This project includes substantial modifications including:
+- Telegram bot integration
+- Persistent memory system (SQLite)
+- SOUL.md personality architecture
+- Daemon orchestration layer
+- Multi-interface support (TUI, CLI, Telegram, Web, HTTP API)
+- Voice integration (pocket-tts-server)
+- Platform-specific configurations (Windows, Linux, macOS)
+
+---
+
+## What "MIT License" Means for You
+
+### You CAN:
+- ✅ Use GateClaw for any purpose (personal, commercial, internal)
+- ✅ Modify and create derivative works
+- ✅ Distribute copies to others
+- ✅ Use it in proprietary software
+- ✅ SELL services built on top of GateClaw
+- ✅ Self-host GateClaw without any fees
+
+### You MUST:
+- 📋 Include the LICENSE file in any distribution
+- 📋 Preserve the copyright notice
+
+### You CANNOT:
+- ❌ Hold the authors liable for damages
+- ❌ Use the GateClaw name/logo to endorse products without permission
+
+---
+
+## Monetization Transparency
+
+GateClaw is and will always be **free and open source** under MIT.
+
+We offer optional paid services:
+- **Cloud Hosting**: Managed GateClaw for those who don't want to self-host
+- **Enterprise Features**: Teams, SSO, compliance for businesses
+- **Premium Add-ons**: Voices, advanced integrations
+
+**The self-hosted version will NEVER be crippled or paywalled.**
+What's free today stays free forever.
+
+If you're a cloud/API provider and want to offer streamlined integration with GateClaw, contact us about partnership opportunities.

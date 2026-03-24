@@ -102,13 +102,16 @@ export async function synthesizeSpeech(text: string, voice?: string): Promise<Tt
   }
 
   const url = `${config.tts.apiUrl}/v1/audio/speech`
-  const selectedVoice = voice || config.tts.voice || "david-attenborough-original"
+  let selectedVoice = voice || config.tts.voice || "david-attenborough-original"
+  if (!selectedVoice.match(/\.\w+$/)) {
+    selectedVoice += ".wav"
+  }
 
   const body = {
     model: config.tts.model || "tts-1",
     input: text,
     voice: selectedVoice,
-    response_format: "mp3",
+    response_format: "wav",
     speed: config.tts.speed || 1.0,
   }
 
@@ -132,7 +135,7 @@ export async function synthesizeSpeech(text: string, voice?: string): Promise<Tt
       throw new Error(`TTS API returned HTTP ${response.status}: ${errorBody || response.statusText}`)
     }
 
-    const contentType = response.headers.get("content-type") || "audio/mp3"
+    const contentType = response.headers.get("content-type") || "audio/wav"
     const arrayBuffer = await response.arrayBuffer()
     const audioBuffer = Buffer.from(arrayBuffer)
 

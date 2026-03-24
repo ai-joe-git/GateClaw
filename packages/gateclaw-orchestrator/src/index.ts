@@ -91,7 +91,7 @@ const startOpenCodeServer = async () => {
   const gateclawConfigDir = getConfigDir()
   const gateclawRoot = path.resolve(__dirname, "../..")
   try {
-    const child = Bun.spawn(["bun", "run", "src/index.ts", "serve", "--port", "4100"], {
+    const child = Bun.spawn(["bun", "run", "src/index.ts", "serve", "--port", "4100", "--hostname", "0.0.0.0"], {
       cwd: opencodeDir,
       stdio: ["ignore", "ignore", "ignore"],
       detached: false,
@@ -126,99 +126,87 @@ const startOpenCodeServer = async () => {
   }
 }
 
-// Start TTS server on port 8000 if not already running
+// Check TTS server on port 8000 (external - managed by llama-swap)
 const startTtsServer = async () => {
   try {
     const res = await fetch("http://localhost:8000/health", { signal: AbortSignal.timeout(1000) })
     if (res.ok) {
-      console.log("[gateclaw] TTS server already running on port 8000")
+      console.log("[gateclaw] TTS server available on port 8000")
       return
     }
   } catch {
-    // Server not running, start it
+    // TTS not available - user manages via llama-swap
   }
-
-  try {
-    const ttsDir = path.resolve(__dirname, "../tts-server")
-    if (fs.existsSync(ttsDir)) {
-      const child = Bun.spawn(["bun", "run", "start"], {
-        cwd: ttsDir,
-        stdio: ["ignore", "ignore", "ignore"],
-        detached: false,
-        windowsHide: true,
-        env: {
-          ...process.env,
-        },
-      })
-      console.log(`[gateclaw] TTS server spawned (pid ${child.pid})`)
-
-      // Wait a bit and check if it started
-      for (let i = 0; i < 20; i++) {
-        await sleep(500)
-        try {
-          const res = await fetch("http://localhost:8000/health", { signal: AbortSignal.timeout(500) })
-          if (res.ok) {
-            console.log("[gateclaw] TTS server is ready on port 8000")
-            return
-          }
-        } catch {
-          // Still starting
-        }
-      }
-      console.log("[gateclaw] TTS server may have failed to start - check manually")
-    } else {
-      console.log("[gateclaw] TTS server directory not found, skipping spawn")
-    }
-  } catch (err) {
-    console.log("[gateclaw] Failed to spawn TTS server:", err)
-  }
+  console.log("[gateclaw] TTS server not available (managed externally)")
 }
 
-// Start STT server on port 7372 if not already running
+// Check STT server on port 7372 (external - managed by llama-swap)
 const startSttServer = async () => {
   try {
     const res = await fetch("http://localhost:7372/health", { signal: AbortSignal.timeout(1000) })
     if (res.ok) {
-      console.log("[gateclaw] STT server already running on port 7372")
+      console.log("[gateclaw] STT server available on port 7372")
       return
     }
   } catch {
-    // Server not running, start it
+    // STT not available - user manages via llama-swap
+  }
+  console.log("[gateclaw] STT server not available (managed externally)")
+}
+
+// Start Genesis memory watcher (Python process)
+const GENESIS_WATCHER_PID_FILE = path.join(getConfigDir(), "genesis-watcher.pid")
+const genesisWatcherPath = path.join(os.homedir(), "Desktop", "Sandbox", "GateClaw_Genesis", "genesis_watcher.py")
+
+function getGenesisWatcherPID(): number | null {
+  try {
+    if (fs.existsSync(GENESIS_WATCHER_PID_FILE)) {
+      return parseInt(fs.readFileSync(GENESIS_WATCHER_PID_FILE, "utf8").trim(), 10)
+    }
+  } catch {}
+  return null
+}
+
+function isGenesisWatcherAlive(): boolean {
+  const pid = getGenesisWatcherPID()
+  if (!pid) return false
+  try {
+    if (process.platform === "win32") {
+      execSync(`tasklist /FI "PID eq ${pid}" /NH`, { stdio: "ignore" })
+    } else {
+      process.kill(pid, 0)
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
+function startGenesisWatcher(): void {
+  // Check if already running
+  if (isGenesisWatcherAlive()) {
+    console.log("[gateclaw] Genesis watcher already running")
+    return
+  }
+
+  // Check if the script exists
+  if (!fs.existsSync(genesisWatcherPath)) {
+    console.log("[gateclaw] Genesis watcher not found (skipping)")
+    return
   }
 
   try {
-    const sttDir = path.resolve(__dirname, "../stt-server")
-    if (fs.existsSync(sttDir)) {
-      const child = Bun.spawn(["bun", "run", "start"], {
-        cwd: sttDir,
-        stdio: ["ignore", "ignore", "ignore"],
-        detached: false,
-        windowsHide: true,
-        env: {
-          ...process.env,
-        },
-      })
-      console.log(`[gateclaw] STT server spawned (pid ${child.pid})`)
-
-      // Wait a bit and check if it started
-      for (let i = 0; i < 20; i++) {
-        await sleep(500)
-        try {
-          const res = await fetch("http://localhost:7372/health", { signal: AbortSignal.timeout(500) })
-          if (res.ok) {
-            console.log("[gateclaw] STT server is ready on port 7372")
-            return
-          }
-        } catch {
-          // Still starting
-        }
-      }
-      console.log("[gateclaw] STT server may have failed to start - check manually")
-    } else {
-      console.log("[gateclaw] STT server directory not found, skipping spawn")
-    }
+    const proc = Bun.spawn(["python", genesisWatcherPath], {
+      cwd: path.dirname(genesisWatcherPath),
+      stdout: Bun.file(path.join(path.dirname(genesisWatcherPath), "watcher.log")),
+      stderr: Bun.file(path.join(path.dirname(genesisWatcherPath), "watcher_err.log")),
+      detached: true,
+    })
+    proc.unref()
+    fs.writeFileSync(GENESIS_WATCHER_PID_FILE, String(proc.pid))
+    console.log(`[gateclaw] Genesis watcher started (pid ${proc.pid})`)
   } catch (err) {
-    console.log("[gateclaw] Failed to spawn STT server:", err)
+    console.log("[gateclaw] Failed to start Genesis watcher:", err)
   }
 }
 
@@ -241,6 +229,9 @@ await startOpenCodeServer()
 // Start TTS and STT servers
 await startTtsServer()
 await startSttServer()
+
+// Start Genesis memory watcher
+startGenesisWatcher()
 
 // Start Telegram bot after 3 seconds delay
 console.log("[gateclaw] Starting Telegram bot in 3s...")

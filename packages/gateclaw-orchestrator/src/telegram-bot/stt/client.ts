@@ -80,7 +80,7 @@ export async function transcribeAudio(audioBuffer: Buffer, filename = "voice.ogg
   const formData = new FormData()
   const blob = new Blob([wavBuffer], { type: "audio/wav" })
   formData.append("file", blob, "audio.wav")
-  formData.append("model", "whisper-1")
+  formData.append("model", config.stt.model || "whisper-large-v3-turbo")
   formData.append("response_format", "text")
 
   if (config.stt.language) {

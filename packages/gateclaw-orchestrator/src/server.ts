@@ -23,6 +23,14 @@ import {
 
 import { sendTelegramMessage } from "./telegram-bot/utils/telegram-send.js"
 import { getSoulName, getSoulPrompt, getPIDPath, getLogPath, getConfigDir, getSOULPath } from "./soul"
+import {
+  preResponse,
+  postResponse,
+  shouldInitiate,
+  getInitiativeAction,
+  formatInitiativeMessage,
+  reloadSoul as reloadSoulEngine,
+} from "./soul-engine"
 import { TOOLS_PROMPT } from "./tools"
 import { broadcast, clients } from "./events"
 import fs from "node:fs"
@@ -103,11 +111,9 @@ app.get("/health", (c) => {
 app.post("/shutdown", async (c) => {
   logger.info("Shutdown requested via HTTP")
 
-  // Import and call cleanup from index.ts
   const { execSync } = await import("child_process")
   const { getConfigDir } = await import("./soul")
 
-  // Stop OpenCode server
   const opencodePidPath = path.join(getConfigDir(), "opencode-server.pid")
   try {
     if (fs.existsSync(opencodePidPath)) {
@@ -122,7 +128,10 @@ app.post("/shutdown", async (c) => {
     }
   } catch {}
 
-  setTimeout(() => process.exit(0), 100)
+  setTimeout(async () => {
+    logger.info("Daemon shutdown complete")
+    process.exit(0)
+  }, 500)
   return c.json({ ok: true })
 })
 
@@ -197,7 +206,8 @@ app.get("/sessions", async (c) => {
 app.post("/reload-soul", (c) => {
   // Force soul cache refresh - called when SOUL.md is edited
   import("./soul").then(({ reloadSoul }) => reloadSoul())
-  logger.info("SOUL.md reloaded")
+  reloadSoulEngine() // Also reload soul engine config
+  logger.info("SOUL.md and soul engine reloaded")
   return c.json({ ok: true })
 })
 
@@ -362,7 +372,11 @@ app.post("/process", async (c) => {
     })
 
     const completion = (await llmRes.json()) as { choices?: [{ message?: { content?: string } }] }
-    const reply = completion.choices?.[0]?.message?.content || "[GateClaw] No response"
+    let reply = completion.choices?.[0]?.message?.content || "[GateClaw] No response"
+
+    // Apply soul engine post-processing
+    const modifiers = preResponse({ source: parsed.source, session: parsed.session })
+    reply = postResponse(reply, modifiers)
 
     // 1. Emit session.status busy → triggers typing indicator in bot
     broadcastSseEvent("session.status", {

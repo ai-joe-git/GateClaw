@@ -1,22 +1,49 @@
 import fs from "fs/promises"
-import { xdgData, xdgCache, xdgConfig } from "xdg-basedir"
 import path from "path"
 import os from "os"
 import { Filesystem } from "../util/filesystem"
 
 const app = "gateclaw"
 
-const data = path.join(xdgData!, app)
-const cache = path.join(xdgCache!, app)
-const config = path.join(xdgConfig!, app)
+// Windows: use APPDATA\gateclaw
+// Linux/macOS: use XDG_CONFIG_HOME or ~/.config
+// Can be overridden via OPENCODE_CONFIG_DIR
+const getConfigPath = () => {
+  if (process.env.OPENCODE_CONFIG_DIR) {
+    return process.env.OPENCODE_CONFIG_DIR
+  }
+  if (process.platform === "win32") {
+    return path.join(process.env.APPDATA || os.homedir(), app)
+  }
+  return path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config"), app)
+}
+
+const getDataPath = () => {
+  if (process.platform === "win32") {
+    return path.join(process.env.LOCALAPPDATA || os.homedir(), app)
+  }
+  return path.join(process.env.XDG_DATA_HOME || path.join(os.homedir(), ".local", "share"), app)
+}
+
+const getCachePath = () => {
+  if (process.platform === "win32") {
+    return path.join(process.env.LOCALAPPDATA || os.homedir(), app, "cache")
+  }
+  return path.join(process.env.XDG_CACHE_HOME || path.join(os.homedir(), ".cache"), app)
+}
 
 // Windows: use LOCALAPPDATA\gateclaw (not ai.opencode.desktop\gateclaw - that's original OpenCode!)
 // Linux/macOS: use XDG_STATE_HOME or ~/.local/state
-const state = process.env.LOCALAPPDATA
-  ? path.join(process.env.LOCALAPPDATA, app)
-  : process.env.XDG_STATE_HOME
-    ? path.join(process.env.XDG_STATE_HOME, app)
-    : path.join(os.homedir(), ".local", "state", app)
+const state =
+  process.platform === "win32"
+    ? path.join(process.env.LOCALAPPDATA || os.homedir(), app)
+    : process.env.XDG_STATE_HOME
+      ? path.join(process.env.XDG_STATE_HOME, app)
+      : path.join(os.homedir(), ".local", "state", app)
+
+const data = getDataPath()
+const cache = getCachePath()
+const config = getConfigPath()
 
 export namespace Global {
   export const Path = {
@@ -43,7 +70,6 @@ await Promise.all([
 
 // Debug: log config path on startup
 console.log(`[gateclaw/opencode] Config path: ${Global.Path.config}`)
-console.log(`[gateclaw/opencode] xdgConfig value: ${xdgConfig}`)
 console.log(`[gateclaw/opencode] APPDATA env: ${process.env.APPDATA}`)
 console.log(`[gateclaw/opencode] OPENCODE_CONFIG_DIR env: ${process.env.OPENCODE_CONFIG_DIR}`)
 

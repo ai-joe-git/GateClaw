@@ -56,6 +56,21 @@ Telegram Bot
      - `OPENCODE_SERVER_PASSWORD=""` (CRITICAL - disables auth)
    - Starts Telegram bot after 3 second delay
 
+## Critical Configuration (.env)
+
+**Location:** `%APPDATA%/gateclaw/.env`
+
+```env
+# CRITICAL: Must point to OpenCode Server (4100), NOT Daemon (7371)
+OPENCODE_API_URL=http://localhost:4100
+
+# Voice services via llama-swap proxy (8888)
+STT_API_URL=http://localhost:8888
+TTS_API_URL=http://localhost:8888
+STT_MODEL=whisper-large-v3-turbo
+TTS_MODEL=pocket-tts
+```
+
 ## Critical Fixes Applied
 
 ### 1. OpenCode Server Auth (port 4100)

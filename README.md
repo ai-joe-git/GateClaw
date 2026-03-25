@@ -92,15 +92,16 @@ curl -fsSL https://raw.githubusercontent.com/ai-joe-git/GateClaw/dev/install | b
 
 **What you get (complete package):**
 
-1. ✅ **GateClaw Daemon** - Background service with HTTP API (port 7371)
-2. ✅ **Telegram Bot** - Chat interface with full model support
-3. ✅ **TUI** - Terminal UI (model picker, sessions, tools)
-4. ✅ **Web UI** - Browser interface (OpenCode fork)
-5. ✅ **CLI** - Management commands (start/stop/status/etc.)
-6. ✅ **OpenCode Fork** - Modified OpenCode with GateClaw integration
-7. ✅ **Auto-detects** your AI provider (llama-swap :8888, Ollama :11434, LM Studio :1234)
-8. ✅ **Creates** `SOUL.md` personality profile
-9. ✅ **Adds** `gateclaw` command to PATH
+1. GateClaw Daemon - Background service with HTTP API (port 7371)
+2. Telegram Bot - Chat interface with full model support
+3. TUI - Terminal UI (model picker, sessions, tools)
+4. Web UI - Browser interface (OpenCode fork)
+5. CLI - Management commands (start/stop/status/etc.)
+6. OpenCode Fork - Modified OpenCode with GateClaw integration
+7. Browser Automation - Chrome/Edge/Brave control for Twitter, scraping, automation
+8. Auto-detects your AI provider (llama-swap :8888, Ollama :11434, LM Studio :1234)
+9. Creates `SOUL.md` personality profile
+10. Adds `gateclaw` command to PATH
 
 **Then run:**
 
@@ -162,22 +163,24 @@ _GateClaw TUI — Model picker, session manager, tool palette, real-time streami
 
 GateClaw is **ONE resident AI entity** with multiple equal interfaces:
 
-| Interface    | Purpose                  | Primary? | Latency    |
-| ------------ | ------------------------ | -------- | ---------- |
-| **Telegram** | Chat-native, mobile      | ✅ Yes   | < 1 second |
-| **TUI**      | Terminal interactive     | ✅ Equal | Real-time  |
-| **CLI**      | Scripting/automation     | ✅ Equal | Immediate  |
-| **HTTP API** | Programmatic (port 7371) | ✅ Equal | < 100ms    |
+| Interface      | Purpose                  | Primary? | Latency    |
+| -------------- | ------------------------ | -------- | ---------- |
+| **Telegram**   | Chat-native, mobile      | Yes      | < 1 second |
+| **TUI**        | Terminal interactive     | Equal    | Real-time  |
+| **CLI**        | Scripting/automation     | Equal    | Immediate  |
+| **HTTP API**   | Programmatic (port 7371) | Equal    | < 100ms    |
+| **Browser**    | Web automation           | Equal    | Real-time  |
 
 ### What Makes It Unique
 
-- ✅ **Resident daemon** - Lives on your machine as a background service
-- ✅ **Persistent memory** - SQLite facts & message history survive restarts
-- ✅ **Soul identity** - Customizable personality via `SOUL.md`
-- ✅ **Multi-interface** - All interfaces are equal, same entity
-- ✅ **Full system access** - Shell, filesystem, HTTP, memory operations
-- ✅ **Provider agnostic** - Works with any OpenAI-compatible API
-- ✅ **Local-first** - Recommended: llama-swap, Ollama, LM Studio (zero cost, private)
+- **Resident daemon** - Lives on your machine as a background service
+- **Persistent memory** - SQLite facts & message history survive restarts
+- **Soul identity** - Customizable personality via `SOUL.md`
+- **Multi-interface** - All interfaces are equal, same entity
+- **Full system access** - Shell, filesystem, HTTP, memory operations
+- **Provider agnostic** - Works with any OpenAI-compatible API
+- **Local-first** - Recommended: llama-swap, Ollama, LM Studio (zero cost, private)
+- **Browser automation** - Control Chrome/Edge/Brave programmatically (Twitter management, scraping, form filling)
 
 ---
 
@@ -193,8 +196,8 @@ GateClaw is **ONE resident AI entity** with multiple equal interfaces:
 │  │  (Daemon)       │  │   Fork (TUI)    │  │   (Web UI)  │  │
 │  │                 │  │                 │  │             │  │
 │  │  - HTTP API     │  │  - Terminal UI  │  │  - Browser  │  │
-│  │  - Telegram Bot │  │  - Model Picker │  │  Interface  │  │
-│  │  - CLI Commands │  │  - Sessions     │  │             │  │
+│  │  - Telegram Bot │  │  - Model Picker │  │   Interface │  │
+│  │  - CLI Commands │  │  - Sessions      │  │             │  │
 │  │  - Memory Mgmt  │  │  - Tools        │  │             │  │
 │  └────────┬────────┘  └────────┬────────┘  └─────────────┘  │
 │           │                    │                            │
@@ -209,6 +212,14 @@ GateClaw is **ONE resident AI entity** with multiple equal interfaces:
 │              │  - History     │                             │
 │              │  - Soul        │                             │
 │              └────────────────┘                             │
+│                                                             │
+│              ┌──────────────────────┐                       │
+│              │  Browser Automation  │                       │
+│              │  (Chrome/Edge/Brave) │                       │
+│              │  - Twitter bots      │                       │
+│              │  - Web scraping      │                       │
+│              │  - Form automation  │                       │
+│              └──────────────────────┘                       │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
                       │
@@ -546,6 +557,71 @@ Use pocket-tts-server to:
 
 ---
 
+## 🌐 Browser Automation
+
+GateClaw controls a real Chrome/Edge/Brave browser programmatically - the same browser you use manually. This is powered by [opencode-browser](https://github.com/different-ai/opencode-browser).
+
+### What It Does
+
+- Navigate websites, click elements, fill forms
+- Screenshot any page
+- Scrape dynamic JavaScript content
+- Manage Twitter/X accounts autonomously
+- Automate web testing and workflows
+
+### Installation
+
+```bash
+# From the GateClaw repo directory
+cd Desktop/Sandbox/GateClaw
+bunx @different-ai/opencode-browser@latest install
+```
+
+The installer will:
+1. Copy the browser extension to `~/.opencode-browser/extension/`
+2. Guide you to load it in `chrome://extensions` (or brave://extensions)
+3. Install Native Messaging Host for secure browser-AI communication
+4. Auto-configure your GateClaw plugin settings
+
+### Browser Tools
+
+| Tool | Description |
+|------|-------------|
+| `browser_navigate` | Go to URL |
+| `browser_screenshot` | Take a screenshot |
+| `browser_click` | Click an element |
+| `browser_type` | Type into input |
+| `browser_query` | Extract content (text, values, page_text) |
+| `browser_snapshot` | Full page accessibility tree |
+| `browser_open_tab` | Open new tab |
+| `browser_close_tab` | Close tab |
+| `browser_get_tabs` | List all tabs |
+
+### Example: Checking Twitter
+
+```javascript
+// Navigate to Twitter
+browser_navigate("https://x.com/FromEarendel")
+
+// Take screenshot
+browser_screenshot()
+
+// Get page content
+browser_snapshot()
+
+// Click on Posts tab
+browser_click("text:Posts")
+```
+
+### Security Notes
+
+- Browser automation requires the extension to be loaded and pinned
+- Native Messaging Host communicates directly with the browser
+- Session isolation prevents tabs from being shared between sessions
+- Close browser tabs when done to free resources
+
+---
+
 ## 🧑‍ Development
 
 **Default branch:** `dev`
@@ -704,8 +780,9 @@ GateClaw is a heavily modified fork of [OpenCode](https://github.com/opencode-ai
 **Key innovations:**
 
 - **SOUL.md architecture** - Persistent AI identity
-- ️ **SQLite memory** - Facts & conversation history survive restarts
-- 🔄 **Multi-interface** - Telegram, TUI, CLI, Web (unified session)
-- 🎮 **AgentMon integration** - AI plays Pokémon Red autonomously
-- 🎨 **Production CLI** - 30 commands with interactive wizards
-- 🔌 **Provider agnostic** - Works with any OpenAI-compatible API
+- **SQLite memory** - Facts & conversation history survive restarts
+- **Multi-interface** - Telegram, TUI, CLI, Web (unified session)
+- **Browser automation** - Autonomous Chrome/Edge/Brave control for Twitter bots, scraping, form filling
+- **AgentMon integration** - AI plays Pokemon Red autonomously
+- **Production CLI** - 30 commands with interactive wizards
+- **Provider agnostic** - Works with any OpenAI-compatible API

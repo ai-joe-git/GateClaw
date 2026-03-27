@@ -33,10 +33,10 @@ gateclaw telegram setup
 
 ### Interfaces
 
-| Command        | Description                             |
-| -------------- | --------------------------------------- |
-| `gateclaw web` | Open browser UI (auto-starts daemon)    |
-| `gateclaw tui` | Launch terminal UI (auto-starts daemon) |
+| Command              | Description                                       |
+| -------------------- | ------------------------------------------------- |
+| `gateclaw web`       | Open WebUI at http://localhost:4100               |
+| `gateclaw dashboard` | Open dashboard at http://localhost:7371/dashboard |
 
 ### Updates
 

@@ -1,0 +1,2181 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GateClaw Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-track {
+        background: #27272a;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #52525b;
+        border-radius: 3px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background: #71717a;
+      }
+      .log-live {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+      .toggle-switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+      }
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background-color: #3f3f46;
+        border-radius: 24px;
+        transition: 0.3s;
+      }
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        border-radius: 50%;
+        transition: 0.3s;
+      }
+      input:checked + .toggle-slider {
+        background-color: #10b981;
+      }
+      input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+      }
+      .light-mode {
+        background: #f4f4f5 !important;
+        color: #18181b !important;
+      }
+      .light-mode .bg-zinc-900 {
+        background: #e4e4e7 !important;
+      }
+      .light-mode .bg-zinc-950 {
+        background: #f4f4f5 !important;
+      }
+      .light-mode .border-zinc-800 {
+        border-color: #d4d4d8 !important;
+      }
+      .light-mode .text-zinc-100 {
+        color: #18181b !important;
+      }
+      .light-mode .text-zinc-400 {
+        color: #52525b !important;
+      }
+      .light-mode .text-zinc-500 {
+        color: #71717a !important;
+      }
+      @media (max-width: 768px) {
+        .mobile-tabs {
+          display: none;
+        }
+        .mobile-menu {
+          display: block !important;
+        }
+      }
+      @media (min-width: 769px) {
+        .mobile-menu {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-zinc-950 text-zinc-100 min-h-screen" id="body">
+    <div id="app">
+      <div class="flex items-center justify-center h-screen">
+        <div class="text-zinc-500">Loading GateClaw Dashboard...</div>
+      </div>
+    </div>
+
+    <script>
+      const GC_API = ""
+
+      // Icons
+      const icons = {
+        server:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="14" height="6" rx="1"/><rect x="3" y="12" width="14" height="6" rx="1"/><circle cx="10" cy="15" r="1" fill="currentColor"/></svg>',
+        brain:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v14M5 7c-2 0-3.5 1.5-3.5 3.5S3 14 5 14M15 7c2 0 3.5 1.5 3.5 3.5S17 14 15 14M5 17c1.5 1 3.5 1.5 5 1.5s3.5-.5 5-1.5"/></svg>',
+        settings:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="3"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.2 4.2l1.4 1.4M14.4 14.4l1.4 1.4M4.2 15.8l1.4-1.4M14.4 5.6l1.4-1.4"/></svg>',
+        link: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 12l-2 2a3 3 0 004.24 4.24l4-4a3 3 0 000-4.24l-2.5-2.5M12 8l2-2a3 3 0 00-4.24-4.24l-4 4a3 3 0 000 4.24l2.5 2.5"/></svg>',
+        x: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5l10 10M15 5L5 15"/></svg>',
+        plus: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 5v10M5 10h10"/></svg>',
+        refresh:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 10a6 6 0 0110.83-2H17M16 10a6 6 0 01-10.83 2H3"/></svg>',
+        activity:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10h3l2-4 3 8 2-4h6"/></svg>',
+        file: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h8l4 4v12H4V2zM12 2v4h4"/></svg>',
+        message:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h14v10H9l-4 3v-3H3V4z"/></svg>',
+        check:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 11l3 3 7-7"/></svg>',
+        xCircle:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M7 7l6 6M13 7l-6 6"/></svg>',
+        download:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v10M6 9l4 4 4-4M3 17h14"/></svg>',
+        trash:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5h12v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zM7 5V3h6v2"/></svg>',
+        plugin:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 2v4H3v3h4v4h3v-4h4V6h-4V2H7zM13 10v4h4v-4h-4z"/></svg>',
+        mic: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2a3 3 0 00-3 3v5a3 3 0 006 0V5a3 3 0 00-3-3zM5 10v1a5 5 0 0010 0v-1M10 16v2"/></svg>',
+        speaker:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3L5 7H2v6h3l4 4V3zM15 8a3 3 0 010 4M17 5a6 6 0 010 10"/></svg>',
+        telegram:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="currentColor"><path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm4.57 6.64l-1.52 7.17c-.11.5-.41.62-.83.39l-2.3-1.7-1.11 1.07c-.12.12-.23.23-.47.23l.17-2.35 4.27-3.86c.18-.16-.04-.25-.28-.09l-5.28 3.32-2.27-.71c-.49-.15-.5-.49.1-.73l8.87-3.42c.41-.15.77.1.64.73z"/></svg>',
+        play: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M6 4l10 6-10 6V4z"/></svg>',
+        pause:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4h4v12H5zM11 4h4v12h-4z"/></svg>',
+        edit: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2l4 4-8 8H6v-4l8-8zM12 4l4 4"/></svg>',
+        save: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 3v14H3V5l2-2h9l3 3v-3zM6 3v4h8V3M5 12h10"/></svg>',
+        session:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8h14M8 3v14"/></svg>',
+        error:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3l7 12H3L10 3zM10 8v4M10 14h.01"/></svg>',
+        export:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 17V7l6-4 6 4v10H4zM10 3v8M7 8l3 3 3-3"/></svg>',
+        help: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><path d="M7 7a3 3 0 015.83 1c0 2-3 3-3 3M10 15h.01"/></svg>',
+        search:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="6"/><path d="M14 14l4 4"/></svg>',
+        chat: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h14v10H9l-4 3v-3H3V3z"/></svg>',
+        copy: '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="8" width="10" height="10" rx="1"/><path d="M4 12V4a1 1 0 00-1-1H4"/></svg>',
+      }
+
+      // State
+      let health = null
+      let telegramStatus = null
+      let facts = []
+      let healthChecks = null
+      let systemStats = null
+      let logs = []
+      let messages = []
+      let config = {}
+      let activeTab = "overview"
+      let plugins = []
+      let voiceStatus = null
+      let settings = null
+      let soulPresets = []
+      let telegramLogs = []
+      let editingConfig = null
+      let configContent = ""
+      let liveLogEnabled = false
+      let liveLogInterval = null
+      let sessions = []
+      let metrics = null
+      let recentErrors = []
+      let activities = []
+      let models = { favorites: [], recent: [], all: [] }
+      let providers = []
+      let memorySearch = ""
+      let memoryFilter = ""
+      let chatMessages = []
+      let chatLoading = false
+      let chatInput = ""
+      let selectedChatModel = ""
+      let selectedChatProvider = ""
+      let selectedAgent = "default"
+      let chatError = null
+      let chatSession = null
+      let chatSessions = []
+      let chatAgents = []
+      let chatSttEnabled = false
+      let chatRecognition = null
+
+      let loading = {
+        health: true,
+        facts: true,
+        telegram: true,
+        checks: true,
+        stats: true,
+        logs: false,
+        messages: false,
+        chat: false,
+        config: false,
+        plugins: false,
+        voice: false,
+        settings: false,
+        soulPresets: false,
+        telegramLogs: false,
+        sessions: false,
+        metrics: false,
+        errors: false,
+        activities: false,
+        models: false,
+        providers: false,
+      }
+
+      // Utils
+      function formatUptime(ms) {
+        const seconds = Math.floor(ms / 1000)
+        const minutes = Math.floor(seconds / 60)
+        const hours = Math.floor(minutes / 60)
+        const days = Math.floor(hours / 24)
+        if (days > 0) return days + "d " + (hours % 24) + "h"
+        if (hours > 0) return hours + "h " + (minutes % 60) + "m"
+        if (minutes > 0) return minutes + "m " + (seconds % 60) + "s"
+        return seconds + "s"
+      }
+
+      function formatDate(ts) {
+        return new Date(ts).toLocaleString()
+      }
+      function formatRelativeTime(ts) {
+        const now = Date.now()
+        const diff = now - ts
+        const minutes = Math.floor(diff / 60000)
+        const hours = Math.floor(diff / 3600000)
+        const days = Math.floor(diff / 86400000)
+        if (days > 0) return days + " days ago"
+        if (hours > 0) return hours + "h ago"
+        if (minutes > 0) return minutes + "m ago"
+        return "just now"
+      }
+      function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B"
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
+        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + " MB"
+        return (bytes / (1024 * 1024 * 1024)).toFixed(1) + " GB"
+      }
+      function escapeHtml(str) {
+        const div = document.createElement("div")
+        div.textContent = str
+        return div.innerHTML
+      }
+
+      // Theme toggle
+      function toggleTheme() {
+        const body = document.getElementById("body")
+        body.classList.toggle("light-mode")
+        const isLight = body.classList.contains("light-mode")
+        saveSettings({ ...settings, theme: isLight ? "light" : "dark" })
+      }
+
+      function applyTheme() {
+        const body = document.getElementById("body")
+        if (settings?.theme === "light") {
+          body.classList.add("light-mode")
+        } else {
+          body.classList.remove("light-mode")
+        }
+      }
+
+      // Keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return
+        const tabs = [
+          "overview",
+          "health",
+          "chat",
+          "memory",
+          "logs",
+          "telegram",
+          "sessions",
+          "plugins",
+          "voice",
+          "config",
+          "soul",
+          "settings",
+          "activity",
+        ]
+        if (e.key === "j") {
+          const idx = tabs.indexOf(activeTab)
+          if (idx < tabs.length - 1) switchTab(tabs[idx + 1])
+        }
+        if (e.key === "k") {
+          const idx = tabs.indexOf(activeTab)
+          if (idx > 0) switchTab(tabs[idx - 1])
+        }
+        if (e.key === "r") {
+          if (activeTab === "overview") {
+            fetchHealth()
+            fetchMetrics()
+            fetchRecentErrors()
+          }
+          if (activeTab === "health") {
+            fetchHealthChecks()
+            fetchSystemStats()
+          }
+          if (activeTab === "chat") {
+            fetchChatHistory()
+          }
+          if (activeTab === "memory") fetchFacts()
+          if (activeTab === "logs") fetchLogs()
+          if (activeTab === "telegram") fetchTelegramLogs()
+          if (activeTab === "sessions") fetchSessions()
+          if (activeTab === "activity") fetchActivities()
+        }
+        if (e.key === "/") {
+          e.preventDefault()
+          const searchInput = document.getElementById("memorySearch")
+          if (searchInput) searchInput.focus()
+        }
+      })
+
+      // API calls
+      async function fetchHealth() {
+        loading.health = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/health")
+          health = await res.json()
+        } catch (e) {
+          health = { status: "error", error: e.message }
+        }
+        loading.health = false
+        render()
+      }
+
+      async function fetchTelegramStatus() {
+        loading.telegram = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/telegram/status")
+          telegramStatus = await res.json()
+        } catch (e) {
+          telegramStatus = { configured: false, running: false }
+        }
+        loading.telegram = false
+        render()
+      }
+
+      async function fetchFacts() {
+        loading.facts = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/facts")
+          facts = await res.json()
+        } catch (e) {
+          facts = []
+        }
+        loading.facts = false
+        render()
+      }
+
+      async function fetchHealthChecks() {
+        loading.checks = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/health/checks")
+          healthChecks = await res.json()
+        } catch (e) {
+          healthChecks = { error: e.message }
+        }
+        loading.checks = false
+        render()
+      }
+
+      async function fetchSystemStats() {
+        loading.stats = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/system/stats")
+          systemStats = await res.json()
+        } catch (e) {
+          systemStats = { error: e.message }
+        }
+        loading.stats = false
+        render()
+      }
+
+      async function fetchLogs(limit = 100) {
+        loading.logs = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/logs?limit=" + limit)
+          const data = await res.json()
+          logs = data.lines || []
+        } catch (e) {
+          logs = ["Error loading logs: " + e.message]
+        }
+        loading.logs = false
+        render()
+      }
+
+      async function fetchMessages(limit = 50) {
+        loading.messages = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/messages?limit=" + limit)
+          const data = await res.json()
+          messages = data.messages || []
+        } catch (e) {
+          messages = []
+        }
+        loading.messages = false
+        render()
+      }
+
+      async function fetchConfig(file) {
+        loading.config = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/config/" + encodeURIComponent(file))
+          config[file] = await res.json()
+        } catch (e) {
+          config[file] = { error: e.message }
+        }
+        loading.config = false
+        render()
+      }
+
+      async function saveFact(key, value) {
+        await fetch(GC_API + "/fact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key, value }),
+        })
+        await fetchFacts()
+      }
+
+      async function deleteFact(key) {
+        if (!confirm('Delete fact "' + key + '"?')) return
+        await fetch(GC_API + "/fact/" + encodeURIComponent(key), { method: "DELETE" })
+        await fetchFacts()
+      }
+
+      async function clearHistory() {
+        if (!confirm("Clear all conversation history? This cannot be undone.")) return
+        await fetch(GC_API + "/messages", { method: "DELETE" })
+        await fetchMessages()
+      }
+
+      async function reloadSoul() {
+        try {
+          const res = await fetch(GC_API + "/soul/reload", { method: "POST" })
+          const data = await res.json()
+          alert(data.success ? "Soul reloaded!" : "Error: " + data.error)
+        } catch (e) {
+          alert("Error: " + e.message)
+        }
+      }
+
+      async function fetchPlugins() {
+        loading.plugins = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/plugins")
+          const data = await res.json()
+          plugins = data.plugins || []
+        } catch (e) {
+          plugins = []
+        }
+        loading.plugins = false
+        render()
+      }
+
+      async function togglePlugin(id, enable) {
+        await fetch(GC_API + "/plugins/" + id + "/" + (enable ? "enable" : "disable"), { method: "POST" })
+        await fetchPlugins()
+      }
+
+      async function fetchVoiceStatus() {
+        loading.voice = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/voice/status")
+          voiceStatus = await res.json()
+        } catch (e) {
+          voiceStatus = { error: e.message }
+        }
+        loading.voice = false
+        render()
+      }
+
+      async function fetchSettings() {
+        loading.settings = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/settings")
+          settings = await res.json()
+          applyTheme()
+        } catch (e) {
+          settings = {}
+        }
+        loading.settings = false
+        render()
+      }
+
+      async function saveSettings(newSettings) {
+        try {
+          const res = await fetch(GC_API + "/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newSettings),
+          })
+          settings = await res.json()
+          applyTheme()
+          render()
+        } catch (e) {
+          alert("Error saving settings: " + e.message)
+        }
+      }
+
+      async function fetchSoulPresets() {
+        loading.soulPresets = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/soul/presets")
+          const data = await res.json()
+          soulPresets = data.presets || []
+        } catch (e) {
+          soulPresets = []
+        }
+        loading.soulPresets = false
+        render()
+      }
+
+      async function setSoulPreset(id) {
+        try {
+          await fetch(GC_API + "/soul/preset/" + id, { method: "POST" })
+          await reloadSoul()
+        } catch (e) {
+          alert("Error: " + e.message)
+        }
+      }
+
+      async function fetchTelegramLogs(limit = 100) {
+        const container = document.getElementById("telegramLogContainer")
+        const wasAtBottom = container
+          ? container.scrollHeight - container.scrollTop <= container.clientHeight + 50
+          : true
+
+        loading.telegramLogs = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/telegram/logs?limit=" + limit)
+          const data = await res.json()
+          telegramLogs = data.logs || []
+        } catch (e) {
+          telegramLogs = []
+        }
+        loading.telegramLogs = false
+        render()
+
+        if (wasAtBottom) {
+          setTimeout(() => {
+            const newContainer = document.getElementById("telegramLogContainer")
+            if (newContainer) newContainer.scrollTop = newContainer.scrollHeight
+          }, 10)
+        }
+      }
+
+      async function clearTelegramLogs() {
+        if (!confirm("Clear all Telegram logs?")) return
+        await fetch(GC_API + "/telegram/logs", { method: "DELETE" })
+        telegramLogs = []
+        render()
+      }
+
+      async function saveConfigFile(file) {
+        try {
+          await fetch(GC_API + "/config/" + encodeURIComponent(file), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: configContent }),
+          })
+          editingConfig = null
+          await fetchConfig(file)
+          alert("Config saved!")
+        } catch (e) {
+          alert("Error saving: " + e.message)
+        }
+      }
+
+      async function startTelegramBot() {
+        await fetch(GC_API + "/telegram/start", { method: "POST" })
+        await fetchTelegramStatus()
+        startTelegramLiveLogs()
+      }
+
+      async function stopTelegramBot() {
+        await fetch(GC_API + "/telegram/stop", { method: "POST" })
+        await fetchTelegramStatus()
+        stopTelegramLiveLogs()
+      }
+
+      let telegramLiveInterval = null
+
+      function startTelegramLiveLogs() {
+        if (telegramLiveInterval) return
+        telegramLiveInterval = setInterval(() => {
+          if (activeTab === "telegram") fetchTelegramLogs()
+        }, 3000)
+      }
+
+      function stopTelegramLiveLogs() {
+        if (telegramLiveInterval) {
+          clearInterval(telegramLiveInterval)
+          telegramLiveInterval = null
+        }
+      }
+
+      function startLiveLogs() {
+        if (liveLogEnabled) return
+        liveLogEnabled = true
+        liveLogInterval = setInterval(() => fetchLogs(50), 2000)
+        render()
+      }
+
+      function stopLiveLogs() {
+        liveLogEnabled = false
+        if (liveLogInterval) {
+          clearInterval(liveLogInterval)
+          liveLogInterval = null
+        }
+        render()
+      }
+
+      // New API calls
+      async function fetchSessions() {
+        loading.sessions = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/sessions/detailed")
+          const data = await res.json()
+          sessions = data.sessions || []
+        } catch (e) {
+          sessions = []
+        }
+        loading.sessions = false
+        render()
+      }
+
+      async function fetchMetrics() {
+        loading.metrics = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/metrics")
+          metrics = await res.json()
+        } catch (e) {
+          metrics = { error: e.message }
+        }
+        loading.metrics = false
+        render()
+      }
+
+      async function fetchRecentErrors() {
+        loading.errors = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/errors?limit=10")
+          const data = await res.json()
+          recentErrors = data.errors || []
+        } catch (e) {
+          recentErrors = []
+        }
+        loading.errors = false
+        render()
+      }
+
+      async function fetchActivities() {
+        loading.activities = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/activity?limit=50")
+          const data = await res.json()
+          activities = data.activities || []
+        } catch (e) {
+          activities = []
+        }
+        loading.activities = false
+        render()
+      }
+
+      async function fetchModels() {
+        loading.models = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/models/favorites")
+          models = await res.json()
+        } catch (e) {
+          models = { favorites: [], recent: [], all: [] }
+        }
+        loading.models = false
+        render()
+      }
+
+      async function fetchProviders() {
+        loading.providers = true
+        render()
+        try {
+          const res = await fetch(GC_API + "/providers/list")
+          const data = await res.json()
+          providers = data.providers || []
+        } catch (e) {
+          providers = []
+        }
+        loading.providers = false
+        render()
+      }
+
+      async function fetchChatSession() {
+        try {
+          const res = await fetch(GC_API + "/chat/session")
+          const data = await res.json()
+          chatSession = data.session
+        } catch (e) {
+          console.error("Failed to get chat session:", e)
+        }
+      }
+
+      async function fetchChatAgents() {
+        try {
+          const res = await fetch(GC_API + "/chat/agents")
+          const data = await res.json()
+          chatAgents = data.agents || []
+        } catch (e) {
+          chatAgents = [
+            { id: "default", name: "Default" },
+            { id: "code", name: "Code" },
+          ]
+        }
+      }
+
+      async function fetchOpenCodeModels() {
+        try {
+          const res = await fetch(GC_API + "/chat/models")
+          const data = await res.json()
+          models.all = data.models || []
+        } catch (e) {
+          console.error("Failed to fetch models:", e)
+        }
+      }
+
+      async function fetchOpenCodeSessions() {
+        try {
+          const res = await fetch(GC_API + "/chat/sessions")
+          const data = await res.json()
+          return data.sessions || []
+        } catch (e) {
+          console.error("Failed to fetch sessions:", e)
+          return []
+        }
+      }
+
+      async function createOpenCodeSession() {
+        try {
+          const res = await fetch(GC_API + "/chat/session/create", { method: "POST" })
+          const data = await res.json()
+          return data.session
+        } catch (e) {
+          console.error("Failed to create session:", e)
+          return null
+        }
+      }
+
+      let chatOpencodeStatus = null
+
+      async function checkAndStartOpenCode() {
+        try {
+          const res = await fetch(GC_API + "/opencode/status")
+          const data = await res.json()
+          chatOpencodeStatus = data
+          if (!data.running) {
+            // Try to start OpenCode server
+            await fetch(GC_API + "/opencode/start", { method: "POST" })
+          }
+        } catch (e) {
+          console.error("Failed to check OpenCode status:", e)
+        }
+      }
+
+      async function fetchChatHistory() {
+        loading.chat = true
+        render()
+        try {
+          await fetchChatSession()
+          if (!chatSession) {
+            chatMessages = []
+            loading.chat = false
+            render()
+            return
+          }
+          const res = await fetch(GC_API + "/chat/messages?sessionId=" + chatSession.id)
+          const data = await res.json()
+          if (data.messages && Array.isArray(data.messages)) {
+            chatMessages = data.messages
+              .filter((m) => m.role === "user" || m.role === "assistant")
+              .map((m) => ({
+                role: m.role,
+                content: m.content || m.parts?.[0]?.text || "",
+                timestamp: m.time?.created || Date.now(),
+              }))
+          }
+        } catch (e) {
+          // Fallback to legacy endpoint
+          const res = await fetch(GC_API + "/messages?limit=50")
+          const data = await res.json()
+          chatMessages = (data.messages || []).slice().reverse()
+        }
+        loading.chat = false
+        render()
+      }
+
+      async function selectChatSession(sessionId) {
+        if (!sessionId) return
+        try {
+          const res = await fetch(GC_API + "/chat/session?sessionId=" + sessionId)
+          const data = await res.json()
+          chatSession = data.session
+          await fetchChatHistory()
+        } catch (e) {
+          console.error("Failed to select session:", e)
+        }
+      }
+
+      async function createNewChatSession() {
+        try {
+          const res = await fetch(GC_API + "/chat/session/create", { method: "POST" })
+          const data = await res.json()
+          if (data.session) {
+            chatSession = data.session
+            chatMessages = []
+            await fetchChatHistory()
+          }
+        } catch (e) {
+          console.error("Failed to create session:", e)
+        }
+      }
+
+      function stopChatGeneration() {
+        chatLoading = false
+        chatError = "Generation stopped by user"
+        render()
+        fetch(GC_API + "/chat/stop", { method: "POST" }).catch(() => {})
+      }
+
+      async function populateSessionDropdown() {
+        const select = document.getElementById("chatSessionSelect")
+        if (!select) return
+        try {
+          const res = await fetch(GC_API + "/chat/sessions")
+          const data = await res.json()
+          chatSessions = data.sessions || []
+          select.innerHTML =
+            chatSessions.length === 0
+              ? '<option value="">No sessions</option>'
+              : chatSessions
+                  .map(
+                    (s) =>
+                      `<option value="${s.id}" ${chatSession?.id === s.id ? "selected" : ""}>${s.title || s.id.slice(0, 16)}</option>`,
+                  )
+                  .join("")
+        } catch (e) {
+          select.innerHTML = '<option value="">Error loading</option>'
+        }
+      }
+
+      async function populateModelDropdown() {
+        const select = document.getElementById("chatModelSelect")
+        if (!select) return
+        try {
+          const res = await fetch(GC_API + "/chat/models")
+          const data = await res.json()
+          const allModels = data.models || []
+          // Group by provider
+          const byProvider = {}
+          allModels.forEach((m) => {
+            if (!byProvider[m.provider]) byProvider[m.provider] = []
+            byProvider[m.provider].push(m)
+          })
+          // Build grouped options
+          let html = '<option value="">Default</option>'
+          Object.keys(byProvider)
+            .sort()
+            .forEach((provider) => {
+              html += `<optgroup label="${provider}">`
+              byProvider[provider].forEach((m) => {
+                html += `<option value="${m.id}" data-provider="${provider}" ${selectedChatModel === m.id ? "selected" : ""}>${m.name}</option>`
+              })
+              html += "</optgroup>"
+            })
+          select.innerHTML = html
+        } catch (e) {
+          select.innerHTML = '<option value="">Error loading</option>'
+        }
+      }
+
+      function onModelChange(select) {
+        const opt = select.options[select.selectedIndex]
+        selectedChatModel = select.value
+        selectedChatProvider = opt?.dataset?.provider || ""
+      }
+
+      async function populateVoiceDropdown() {
+        const select = document.getElementById("chatTtsVoice")
+        if (!select) return
+        try {
+          const res = await fetch(GC_API + "/voice/voices")
+          const data = await res.json()
+          const voices = data.data || []
+          select.innerHTML =
+            '<option value="">Off</option>' +
+            voices.map((v) => `<option value="${v.id || v}">${v.name || v.id || v}</option>`).join("")
+        } catch (e) {
+          select.innerHTML = '<option value="">Off</option>'
+        }
+      }
+
+      let eventSource = null
+
+      function toggleStt() {
+        const checkbox = document.getElementById("chatSttEnabled")
+        if (!checkbox) return
+        chatSttEnabled = checkbox.checked
+        if (chatSttEnabled) {
+          startStt()
+        } else {
+          stopStt()
+        }
+      }
+
+      function startStt() {
+        if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
+          chatError = "Speech recognition not supported in this browser"
+          render()
+          return
+        }
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+        chatRecognition = new SpeechRecognition()
+        chatRecognition.continuous = true
+        chatRecognition.interimResults = true
+        chatRecognition.onresult = (event) => {
+          let finalTranscript = ""
+          let interimTranscript = ""
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript
+            } else {
+              interimTranscript += transcript
+            }
+          }
+          const input = document.getElementById("chatInput")
+          if (input) {
+            input.value = chatInput + finalTranscript + interimTranscript
+            chatInput = input.value
+          }
+        }
+        chatRecognition.onerror = (event) => {
+          if (event.error !== "no-speech") {
+            chatError = "STT error: " + event.error
+            render()
+          }
+        }
+        chatRecognition.onend = () => {
+          if (chatSttEnabled && chatRecognition) {
+            try {
+              chatRecognition.start()
+            } catch (e) {}
+          }
+        }
+        try {
+          chatRecognition.start()
+        } catch (e) {
+          chatError = "Failed to start STT: " + e.message
+          render()
+        }
+      }
+
+      function stopStt() {
+        if (chatRecognition) {
+          try {
+            chatRecognition.stop()
+          } catch (e) {}
+          chatRecognition = null
+        }
+      }
+
+      function stopChatGeneration() {
+        chatLoading = false
+        chatError = "Generation stopped by user"
+        if (eventSource) {
+          eventSource.close()
+          eventSource = null
+        }
+        stopStt()
+        render()
+        fetch(GC_API + "/chat/stop", { method: "POST" }).catch(() => {})
+      }
+
+      async function sendChatMessage() {
+        if (!chatInput.trim() || chatLoading) return
+        const text = chatInput
+        chatInput = ""
+        chatLoading = true
+        chatError = null
+        render()
+
+        // Add user message immediately
+        chatMessages.push({ role: "user", content: text, timestamp: Date.now() })
+        render()
+
+        try {
+          // Ensure session exists
+          if (!chatSession) {
+            await fetchChatSession()
+          }
+
+          if (!chatSession) {
+            throw new Error("No session available")
+          }
+
+          // Send message
+          const sendRes = await fetch(GC_API + "/chat/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId: chatSession.id,
+              text,
+              agent: selectedAgent || "default",
+              provider: selectedChatProvider || undefined,
+              model: selectedChatModel || undefined,
+            }),
+          })
+          const sendData = await sendRes.json()
+          if (sendData.error) {
+            chatError = typeof sendData.error === "object" ? JSON.stringify(sendData.error) : sendData.error
+            chatLoading = false
+            render()
+            return
+          }
+
+          // Listen for SSE events for streaming response
+          eventSource = new EventSource(GC_API + "/chat/events")
+
+          eventSource.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data)
+              if (data.type === "error") {
+                chatError = data.error
+                chatLoading = false
+                eventSource.close()
+                eventSource = null
+                render()
+              }
+              // Handle streaming message parts
+              if (data.type === "message" || data.type === "content" || data.type === "text") {
+                // Update last assistant message or add new one
+                const lastMsg = chatMessages[chatMessages.length - 1]
+                if (lastMsg && lastMsg.role === "assistant") {
+                  lastMsg.content += data.content || data.text || ""
+                } else {
+                  chatMessages.push({
+                    role: "assistant",
+                    content: data.content || data.text || "",
+                    timestamp: Date.now(),
+                  })
+                }
+                render()
+              }
+              // Message complete
+              if (data.type === "done" || data.type === "complete") {
+                chatLoading = false
+                eventSource.close()
+                eventSource = null
+                render()
+              }
+            } catch (e) {
+              // Ignore parse errors
+            }
+          }
+
+          eventSource.onerror = () => {
+            // SSE connection closed - check final state
+            chatLoading = false
+            if (eventSource) {
+              eventSource.close()
+              eventSource = null
+            }
+            // Refresh messages to get final state
+            fetchChatHistory()
+            render()
+          }
+
+          // Timeout after 2 minutes
+          setTimeout(() => {
+            if (chatLoading && eventSource) {
+              chatError = "Response timeout"
+              chatLoading = false
+              eventSource.close()
+              eventSource = null
+              render()
+            }
+          }, 120000)
+        } catch (e) {
+          chatError = e.message
+          chatLoading = false
+          render()
+        }
+      }
+
+      async function pollForResponse() {
+        // Poll for new messages after sending
+        const startTime = Date.now()
+        const timeout = 60000 // 1 minute
+        const pollInterval = 1000 // 1 second
+
+        while (Date.now() - startTime < timeout) {
+          try {
+            const res = await fetch(GC_API + "/chat/messages?sessionId=" + chatSession.id)
+            const data = await res.json()
+            if (data.messages && Array.isArray(data.messages)) {
+              const newMessages = data.messages
+                .filter((m) => m.role === "user" || m.role === "assistant")
+                .map((m) => ({
+                  role: m.role,
+                  content: m.content || m.parts?.[0]?.text || "",
+                  timestamp: m.time?.created || Date.now(),
+                }))
+
+              // Check if there's a new assistant message
+              if (newMessages.length > chatMessages.length) {
+                chatMessages = newMessages
+                render()
+                break
+              }
+            }
+          } catch (e) {
+            // Ignore polling errors
+          }
+          await new Promise((r) => setTimeout(r, pollInterval))
+        }
+      }
+
+      function copyChatMessage(content) {
+        navigator.clipboard.writeText(content)
+      }
+
+      async function setModel(model, provider) {
+        try {
+          await fetch(GC_API + "/model/set", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ model, provider }),
+          })
+          alert(`Model set to ${provider}/${model}`)
+        } catch (e) {
+          alert("Error: " + e.message)
+        }
+      }
+
+      async function testVoice() {
+        try {
+          const res = await fetch(GC_API + "/voice/test", { method: "POST" })
+          const data = await res.json()
+          alert(data.message || (data.success ? "Voice test passed!" : "Voice test failed"))
+        } catch (e) {
+          alert("Error: " + e.message)
+        }
+      }
+
+      async function clearSession() {
+        if (!confirm("Clear current session history?")) return
+        await fetch(GC_API + "/session/clear", { method: "POST" })
+        await fetchMessages()
+      }
+
+      async function restartDaemon() {
+        if (!confirm("Restart GateClaw daemon?")) return
+        await fetch(GC_API + "/daemon/restart", { method: "POST" })
+        alert("Restart requested. The daemon will restart shortly.")
+      }
+
+      async function deleteSession(id) {
+        if (!confirm("Delete this session?")) return
+        await fetch(GC_API + "/session/" + id, { method: "DELETE" })
+        await fetchSessions()
+      }
+
+      async function exportData(type) {
+        try {
+          const res = await fetch(GC_API + "/export/" + type)
+          const data = await res.json()
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement("a")
+          a.href = url
+          a.download = `gateclaw-${type}-export-${new Date().toISOString().split("T")[0]}.json`
+          a.click()
+          URL.revokeObjectURL(url)
+        } catch (e) {
+          alert("Error exporting: " + e.message)
+        }
+      }
+
+      function refreshWebUI() {
+        const iframe = document.getElementById("webuiFrame")
+        if (iframe) iframe.src = "http://localhost:4100/"
+      }
+
+      function onWebUILoad() {
+        // WebUI loaded
+      }
+
+      function switchTab(tab) {
+        activeTab = tab
+
+        // Set content BEFORE render for tabs that need custom handling
+        if (tab === "chat") {
+          // Show OpenCode WebUI in iframe - extends into padding areas for seamless look
+          const webuiUrl = "http://localhost:4100/"
+          content = `
+<div style="margin: 0 -24px;">
+  <iframe id="webuiFrame" src="${webuiUrl}" style="width: 100%; height: calc(100vh - 132px); border: 0; display: block;" onload="onWebUILoad()"></iframe>
+</div>
+`
+          // Refresh iframe after render
+          setTimeout(() => {
+            const iframe = document.getElementById("webuiFrame")
+            if (iframe) iframe.src = webuiUrl
+          }, 100)
+        } else {
+          // Let render() build content for other tabs
+          content = ""
+        }
+
+        render()
+        if (tab === "memory" && facts.length === 0) fetchFacts()
+        if (tab === "health") {
+          fetchHealthChecks()
+          fetchSystemStats()
+        }
+        if (tab === "logs") fetchLogs()
+        if (tab === "config") {
+          fetchConfig(".env")
+          fetchConfig("gateclaw.jsonc")
+          fetchConfig("SOUL.md")
+        }
+        if (tab === "soul") {
+          fetchConfig("SOUL.md")
+          fetchSoulPresets()
+        }
+        if (tab === "plugins") fetchPlugins()
+        if (tab === "voice") fetchVoiceStatus()
+        if (tab === "settings") {
+          fetchSettings()
+          fetchProviders()
+        }
+        if (tab === "telegram") fetchTelegramLogs()
+        if (tab === "sessions") fetchSessions()
+        if (tab === "activity") fetchActivities()
+      }
+
+      function checkStatus(status) {
+        if (status === "ok" || status === "configured")
+          return '<span class="text-emerald-500">' + icons.check + " OK</span>"
+        if (status === "offline") return '<span class="text-red-500">' + icons.xCircle + " Offline</span>"
+        return '<span class="text-yellow-500">' + icons.xCircle + " " + status + "</span>"
+      }
+
+      function render() {
+        const app = document.getElementById("app")
+
+        const tabs = [
+          { id: "overview", label: "Overview" },
+          { id: "health", label: "Health" },
+          { id: "chat", label: "Chat" },
+          { id: "memory", label: "Memory" },
+          { id: "logs", label: "Logs" },
+          { id: "telegram", label: "Telegram" },
+          { id: "sessions", label: "Sessions" },
+          { id: "activity", label: "Activity" },
+          { id: "plugins", label: "Plugins" },
+          { id: "voice", label: "Voice" },
+          { id: "config", label: "Config" },
+          { id: "soul", label: "Soul" },
+          { id: "settings", label: "Settings" },
+        ]
+
+        const statusColor = health?.status === "ok" ? "bg-emerald-500" : "bg-red-500"
+        const configPath = navigator.platform.includes("Win") ? "%APPDATA%/gateclaw/" : "~/.config/gateclaw/"
+
+        // Note: content is set by switchTab() before render() is called for custom tabs
+        // For standard tabs, content is built below
+
+        // OVERVIEW TAB
+        if (activeTab === "overview") {
+          const filteredFacts = facts.filter((f) => {
+            if (!memorySearch && !memoryFilter) return true
+            const matchesSearch =
+              !memorySearch ||
+              f.key.toLowerCase().includes(memorySearch.toLowerCase()) ||
+              f.value.toLowerCase().includes(memorySearch.toLowerCase())
+            const matchesFilter = !memoryFilter || f.key.startsWith(memoryFilter)
+            return matchesSearch && matchesFilter
+          })
+
+          content = `
+      <div class="space-y-6">
+      <!-- Quick Actions -->
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-3">Quick Actions</div>
+      <div class="flex flex-wrap gap-2">
+      <button onclick="testVoice()" class="px-3 py-2 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center gap-1">${icons.speaker} Test Voice</button>
+      <button onclick="clearSession()" class="px-3 py-2 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center gap-1">${icons.trash} Clear Session</button>
+      <button onclick="reloadSoul()" class="px-3 py-2 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center gap-1">${icons.refresh} Reload Soul</button>
+      <button onclick="restartDaemon()" class="px-3 py-2 text-xs rounded-lg bg-red-600 hover:bg-red-700 transition-colors flex items-center gap-1">${icons.server} Restart Daemon</button>
+      </div>
+      </div>
+
+      <!-- Status Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center gap-3">
+      <div class="w-3 h-3 rounded-full ${statusColor}"></div>
+      <div>
+      <div class="text-xs text-zinc-500 uppercase tracking-wide">Daemon Status</div>
+      <div class="text-lg font-semibold mt-1">${loading.health ? "Loading..." : health?.status === "ok" ? "Running" : "Error"}</div>
+      </div>
+      </div>
+      </div>
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center gap-3">
+      <div class="text-zinc-400">${icons.server}</div>
+      <div>
+      <div class="text-xs text-zinc-500 uppercase tracking-wide">Uptime</div>
+      <div class="text-lg font-semibold font-mono mt-1">${loading.health ? "..." : formatUptime(health?.uptime_ms || 0)}</div>
+      </div>
+      </div>
+      </div>
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center gap-3">
+      <div class="text-zinc-400">${icons.message}</div>
+      <div>
+      <div class="text-xs text-zinc-500 uppercase tracking-wide">Messages</div>
+      <div class="text-lg font-semibold mt-1">${loading.metrics ? "..." : (metrics?.messages?.today || 0) + " today"}</div>
+      </div>
+      </div>
+      </div>
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center gap-3">
+      <div class="text-zinc-400">${icons.brain}</div>
+      <div>
+      <div class="text-xs text-zinc-500 uppercase tracking-wide">Memory</div>
+      <div class="text-lg font-semibold mt-1">${loading.metrics ? "..." : (metrics?.memory?.totalFacts || 0) + " facts"}</div>
+      </div>
+      </div>
+      </div>
+      </div>
+
+      <!-- Recent Errors -->
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium flex items-center gap-2">${icons.error} Recent Errors</div>
+      <button onclick="fetchRecentErrors()" class="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      </div>
+      ${
+        loading.errors
+          ? '<div class="text-zinc-500">Loading...</div>'
+          : recentErrors.length === 0
+            ? '<div class="text-emerald-500 text-sm">No recent errors</div>'
+            : `
+      <div class="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
+      ${recentErrors
+        .map(
+          (e) => `
+      <div class="p-2 rounded bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-red-400 font-mono truncate">${escapeHtml(e.message.substring(0, 150))}</div>
+      <div class="text-xs text-zinc-600 mt-1">${e.timestamp}</div>
+      </div>
+      `,
+        )
+        .join("")}
+      </div>
+      `
+      }
+      </div>
+
+      <!-- Usage Metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-2">Messages Today</div>
+      <div class="text-2xl font-semibold">${loading.metrics ? "..." : metrics?.messages?.today || 0}</div>
+      <div class="text-xs text-zinc-500 mt-1">${loading.metrics ? "..." : (metrics?.messages?.thisWeek || 0) + " this week"}</div>
+      </div>
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-2">Errors Today</div>
+      <div class="text-2xl font-semibold ${loading.metrics ? "" : (metrics?.errors?.today || 0) > 0 ? "text-red-400" : "text-emerald-400"}">${loading.metrics ? "..." : metrics?.errors?.today || 0}</div>
+      </div>
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-2">Active Plugins</div>
+      <div class="text-2xl font-semibold">${plugins.filter((p) => p.enabled).length}</div>
+      <div class="text-xs text-zinc-500 mt-1">${plugins.length} total</div>
+      </div>
+      </div>
+
+      <!-- Telegram Status -->
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+      <div class="text-zinc-400">${icons.telegram}</div>
+      <div>
+      <div class="text-sm font-medium">Telegram Integration</div>
+      <div class="text-xs text-zinc-500 mt-1">
+      ${loading.telegram ? "..." : telegramStatus?.configured ? '<span class="text-emerald-500">● Configured</span>' : '<span class="text-red-500">● Not configured</span>'}
+      ${!loading.telegram && telegramStatus?.running ? ' · <span class="text-emerald-500">Running</span>' : " · <span>Stopped</span>"}
+      </div>
+      </div>
+      </div>
+      <div class="flex gap-2">
+      <button onclick="stopTelegramBot()" class="px-3 py-1.5 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors">Stop</button>
+      <button onclick="startTelegramBot()" class="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors">Start</button>
+      </div>
+      </div>
+      </div>
+      </div>
+      `
+        }
+
+        // HEALTH TAB
+        else if (activeTab === "health") {
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">Service Health</div>
+      <button onclick="fetchHealthChecks()" class="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      </div>
+      ${
+        loading.checks
+          ? '<div class="text-zinc-500">Loading...</div>'
+          : `
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-1">Daemon</div>
+      <div class="flex items-center gap-2">${healthChecks?.daemon?.status === "ok" ? '<span class="text-emerald-500">' + icons.check + " OK</span>" : '<span class="text-red-500">' + icons.xCircle + " Error</span>"}</div>
+      ${healthChecks?.daemon?.latency !== null ? '<div class="text-xs text-zinc-600 mt-1">' + healthChecks.daemon.latency + "ms</div>" : ""}
+      </div>
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-1">OpenCode Server</div>
+      <div class="flex items-center gap-2">${healthChecks?.opencode ? checkStatus(healthChecks.opencode.status) : "Loading..."}</div>
+      ${healthChecks?.opencode?.latency !== null ? '<div class="text-xs text-zinc-600 mt-1">' + healthChecks.opencode.latency + "ms</div>" : ""}
+      </div>
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-1">STT Server</div>
+      <div class="flex items-center gap-2">${healthChecks?.stt ? checkStatus(healthChecks.stt.status) : "Loading..."}</div>
+      ${healthChecks?.stt?.latency !== null ? '<div class="text-xs text-zinc-600 mt-1">' + healthChecks.stt.latency + "ms</div>" : ""}
+      </div>
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-1">TTS Server</div>
+      <div class="flex items-center gap-2">${healthChecks?.tts ? checkStatus(healthChecks.tts.status) : "Loading..."}</div>
+      ${healthChecks?.tts?.latency !== null ? '<div class="text-xs text-zinc-600 mt-1">' + healthChecks.tts.latency + "ms</div>" : ""}
+      </div>
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-1">Telegram Bot</div>
+      <div class="flex items-center gap-2">${healthChecks?.telegram ? checkStatus(healthChecks.telegram.status) : "Loading..."}</div>
+      </div>
+      </div>
+      `
+      }
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">System Stats</div>
+      <button onclick="fetchSystemStats()" class="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      </div>
+      ${
+        loading.stats
+          ? '<div class="text-zinc-500">Loading...</div>'
+          : systemStats?.error
+            ? '<div class="text-red-500">Error: ' + systemStats.error + "</div>"
+            : `
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-1">Memory (RSS)</div>
+      <div class="text-lg font-semibold">${formatBytes(systemStats?.memory?.rss || 0)}</div>
+      </div>
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-1">Heap Used</div>
+      <div class="text-lg font-semibold">${formatBytes(systemStats?.memory?.heapUsed || 0)}</div>
+      </div>
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-1">DB Size</div>
+      <div class="text-lg font-semibold">${formatBytes(systemStats?.dbSize || 0)}</div>
+      </div>
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="text-xs text-zinc-500 mb-1">Platform</div>
+      <div class="text-lg font-semibold">${systemStats?.platform || "-"} ${systemStats?.arch || ""}</div>
+      </div>
+      </div>
+      <div class="mt-3 text-xs text-zinc-500">
+      Free Memory: ${formatBytes(systemStats?.freeMem || 0)} / ${formatBytes(systemStats?.totalMem || 0)} · CPUs: ${systemStats?.cpus || "-"}
+      </div>
+      `
+      }
+      </div>
+      </div>
+      `
+        }
+
+        // MEMORY TAB
+        else if (activeTab === "memory") {
+          const filteredFacts = facts.filter((f) => {
+            if (!memorySearch && !memoryFilter) return true
+            const matchesSearch =
+              !memorySearch ||
+              f.key.toLowerCase().includes(memorySearch.toLowerCase()) ||
+              f.value.toLowerCase().includes(memorySearch.toLowerCase())
+            const matchesFilter = !memoryFilter || f.key.startsWith(memoryFilter)
+            return matchesSearch && matchesFilter
+          })
+
+          let factsHtml = loading.facts
+            ? '<div class="text-center py-8 text-zinc-500">Loading...</div>'
+            : filteredFacts.length === 0
+              ? '<div class="text-center py-8 text-zinc-500">No facts found</div>'
+              : filteredFacts
+                  .map(
+                    (f) => `
+      <div class="flex items-start gap-3 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors">
+      <div class="flex-1 min-w-0">
+      <div class="text-sm font-mono text-emerald-400">${escapeHtml(f.key)}</div>
+      <div class="text-xs text-zinc-500 mt-1 truncate">${escapeHtml(f.value)}</div>
+      <div class="text-xs text-zinc-600 mt-1" title="${formatDate(f.time_updated)}">${formatRelativeTime(f.time_updated)}</div>
+      </div>
+      <button onclick="deleteFact('${escapeHtml(f.key).replace(/'/g, "\\'")}')" class="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition-colors">${icons.x}</button>
+      </div>
+      `,
+                  )
+                  .join("")
+
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-3">Add New Fact</div>
+      <form onsubmit="event.preventDefault(); var k=this.key.value.trim(); var v=this.value.value.trim(); if(k&&v){saveFact(k,v);this.key.value='';this.value.value=''}" class="flex gap-3 flex-wrap">
+      <input name="key" placeholder="key (e.g., user_name)" class="px-4 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm flex-1 min-w-32 focus:outline-none focus:border-emerald-500">
+      <input name="value" placeholder="value" class="px-4 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm flex-1 min-w-64 focus:outline-none focus:border-emerald-500">
+      <button type="submit" class="px-4 py-2 text-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center gap-2">${icons.plus} Add Fact</button>
+      </form>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">Persistent Memory <span class="text-zinc-500">(${filteredFacts.length}/${facts.length} facts)</span></div>
+      <button onclick="fetchFacts()" class="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      </div>
+
+      <!-- Search and Filter -->
+      <div class="flex gap-3 mb-4">
+      <div class="flex-1 relative">
+      ${icons.search}
+      <input id="memorySearch" type="text" placeholder="Search facts..." value="${memorySearch}" oninput="memorySearch=this.value;render()" class="w-full pl-10 pr-4 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm focus:outline-none focus:border-emerald-500">
+      </div>
+      <select onchange="memoryFilter=this.value;render()" class="px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm">
+      <option value="">All prefixes</option>
+      <option value="user_" ${memoryFilter === "user_" ? "selected" : ""}>user_*</option>
+      <option value="project_" ${memoryFilter === "project_" ? "selected" : ""}>project_*</option>
+      <option value="pref_" ${memoryFilter === "pref_" ? "selected" : ""}>pref_*</option>
+      <option value="sys_" ${memoryFilter === "sys_" ? "selected" : ""}>sys_*</option>
+      </select>
+      </div>
+
+      <div class="space-y-2 max-h-96 overflow-y-auto scrollbar-thin">${factsHtml}</div>
+      </div>
+      </div>
+      `
+        }
+
+        // LOGS TAB
+        else if (activeTab === "logs") {
+          let logsHtml = loading.logs
+            ? '<div class="text-center py-8 text-zinc-500">Loading...</div>'
+            : logs.length === 0
+              ? '<div class="text-center py-8 text-zinc-500">No logs available</div>'
+              : logs
+                  .map((l) => {
+                    const isError = l.toLowerCase().includes("error") || l.toLowerCase().includes("warn")
+                    return `<div class="text-xs font-mono ${isError ? "text-red-400" : "text-zinc-400"}">${escapeHtml(l)}</div>`
+                  })
+                  .join("")
+
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">Daemon Logs <span class="text-zinc-500">(${logs.length} lines)</span></div>
+      <div class="flex gap-2">
+      ${liveLogEnabled ? `<button onclick="stopLiveLogs()" class="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1">${icons.pause} Stop Live</button>` : `<button onclick="startLiveLogs()" class="text-xs text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1">${icons.play} Live</button>`}
+      <button onclick="fetchLogs()" class="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      </div>
+      </div>
+      <div class="flex items-center gap-2 mb-3">
+      <input type="number" id="logLimit" value="100" min="1" max="1000" class="w-20 px-2 py-1 rounded bg-zinc-950 border border-zinc-700 text-xs">
+      <button onclick="fetchLogs(document.getElementById('logLimit').value)" class="px-3 py-1 text-xs rounded bg-zinc-800 hover:bg-zinc-700 transition-colors">Load</button>
+      </div>
+      <div class="bg-zinc-950 rounded-lg p-4 max-h-[60vh] overflow-y-auto scrollbar-thin ${liveLogEnabled ? "log-live" : ""}">${logsHtml}</div>
+      </div>
+      </div>
+      `
+        }
+
+        // TELEGRAM TAB
+        else if (activeTab === "telegram") {
+          let logsHtml = loading.telegramLogs
+            ? '<div class="text-center py-8 text-zinc-500">Loading...</div>'
+            : telegramLogs.length === 0
+              ? '<div class="text-center py-8 text-zinc-500">No Telegram logs yet. Start the bot to see logs.</div>'
+              : telegramLogs
+                  .map((l) => {
+                    const isError = l.toLowerCase().includes("error") || l.toLowerCase().includes("warn")
+                    return `<div class="text-xs font-mono ${isError ? "text-red-400" : "text-zinc-400"}">${escapeHtml(l)}</div>`
+                  })
+                  .join("")
+
+          const isRunning = telegramStatus?.running === true
+
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+      <div class="text-zinc-400">${icons.telegram}</div>
+      <div>
+      <div class="text-sm font-medium">Telegram Bot</div>
+      <div class="text-xs text-zinc-500 mt-1">
+      ${loading.telegram ? "..." : telegramStatus?.configured ? '<span class="text-emerald-500">● Configured</span>' : '<span class="text-red-500">● Not configured</span>'}
+      ${!loading.telegram && isRunning ? ' · <span class="text-emerald-500">Running</span>' : " · <span>Stopped</span>"}
+      </div>
+      </div>
+      </div>
+      <div class="flex gap-2">
+      <button onclick="stopTelegramBot()" class="px-3 py-1.5 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center gap-1">${icons.pause} Stop</button>
+      <button onclick="startTelegramBot()" class="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors flex items-center gap-1">${icons.play} Start</button>
+      </div>
+      </div>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">Telegram Logs <span class="text-zinc-500">(${telegramLogs.length} lines)</span></div>
+      <div class="flex gap-2">
+      ${isRunning ? `<span class="text-xs text-emerald-500 flex items-center gap-1">${icons.activity} Live</span>` : ""}
+      <button onclick="fetchTelegramLogs()" class="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      <button onclick="clearTelegramLogs()" class="text-xs text-red-400 hover:text-red-300 transition-colors flex items-center gap-1">${icons.trash} Clear</button>
+      </div>
+      </div>
+      <div id="telegramLogContainer" class="bg-zinc-950 rounded-lg p-4 max-h-[50vh] overflow-y-auto scrollbar-thin ${isRunning ? "log-live" : ""}">${logsHtml}</div>
+      </div>
+      </div>
+      `
+        }
+
+        // SESSIONS TAB
+        else if (activeTab === "sessions") {
+          let sessionsHtml = loading.sessions
+            ? '<div class="text-center py-8 text-zinc-500">Loading...</div>'
+            : sessions.length === 0
+              ? '<div class="text-center py-8 text-zinc-500">No sessions found</div>'
+              : sessions
+                  .map(
+                    (s) => `
+      <div class="p-4 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm font-mono text-emerald-400">${escapeHtml(s.id)}</div>
+      <div class="text-xs text-zinc-500 mt-1">${s.name || "Unnamed"} · ${s.messageCount || 0} messages</div>
+      <div class="text-xs text-zinc-600 mt-1" title="${formatDate(s.lastActivity)}">Last activity: ${formatRelativeTime(s.lastActivity)}</div>
+      </div>
+      <button onclick="deleteSession('${escapeHtml(s.id)}')" class="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-zinc-800 rounded transition-colors">${icons.trash}</button>
+      </div>
+      </div>
+      `,
+                  )
+                  .join("")
+
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">Sessions <span class="text-zinc-500">(${sessions.length} total)</span></div>
+      <button onclick="fetchSessions()" class="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      </div>
+      <div class="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin">${sessionsHtml}</div>
+      </div>
+      </div>
+      `
+        }
+
+        // ACTIVITY TAB
+        else if (activeTab === "activity") {
+          let activityHtml = loading.activities
+            ? '<div class="text-center py-8 text-zinc-500">Loading...</div>'
+            : activities.length === 0
+              ? '<div class="text-center py-8 text-zinc-500">No recent activity</div>'
+              : activities
+                  .slice()
+                  .reverse()
+                  .map(
+                    (a) => `
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div class="flex items-center gap-2">
+      <span class="text-xs font-mono ${a.type === "error" ? "text-red-400" : a.type === "memory" ? "text-blue-400" : "text-emerald-400"}">[${a.type}]</span>
+      <span class="text-xs text-zinc-600" title="${formatDate(a.timestamp)}">${formatRelativeTime(a.timestamp)}</span>
+      </div>
+      <div class="text-sm text-zinc-300 mt-1">${escapeHtml(a.message)}</div>
+      </div>
+      `,
+                  )
+                  .join("")
+
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">Activity Feed <span class="text-zinc-500">(${activities.length} events)</span></div>
+      <button onclick="fetchActivities()" class="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      </div>
+      <div class="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin">${activityHtml}</div>
+      </div>
+      </div>
+      `
+        }
+
+        // PLUGINS TAB
+        else if (activeTab === "plugins") {
+          let pluginsHtml = loading.plugins
+            ? '<div class="text-center py-8 text-zinc-500">Loading...</div>'
+            : plugins.length === 0
+              ? '<div class="text-center py-8 text-zinc-500">No plugins configured</div>'
+              : plugins
+                  .map(
+                    (p) => `
+      <div class="flex items-center justify-between p-4 rounded-lg bg-zinc-950 border border-zinc-800">
+      <div>
+      <div class="text-sm font-medium">${escapeHtml(p.name)}</div>
+      <div class="text-xs text-zinc-500 mt-1">${escapeHtml(p.id)}</div>
+      ${p.description ? '<div class="text-xs text-zinc-600 mt-1">' + escapeHtml(p.description) + "</div>" : ""}
+      </div>
+      <label class="toggle-switch">
+      <input type="checkbox" ${p.enabled ? "checked" : ""} onchange="togglePlugin('${escapeHtml(p.id)}', this.checked)">
+      <span class="toggle-slider"></span>
+      </label>
+      </div>
+      `,
+                  )
+                  .join("")
+
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">Plugins <span class="text-zinc-500">(${plugins.filter((p) => p.enabled).length}/${plugins.length} enabled)</span></div>
+      <button onclick="fetchPlugins()" class="text-xs text-zinc-500 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      </div>
+      <div class="space-y-2">${pluginsHtml}</div>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-3">Add Plugin</div>
+      <div class="text-xs text-zinc-500 mb-3">Enter the npm package name of a plugin to add it to GateClaw.</div>
+      <form onsubmit="event.preventDefault(); var pkg=this.package.value.trim(); if(pkg){togglePlugin(pkg, true); this.package.value=''}" class="flex gap-3">
+      <input name="package" placeholder="@scope/package-name" class="px-4 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm flex-1 focus:outline-none focus:border-emerald-500">
+      <button type="submit" class="px-4 py-2 text-sm rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors">${icons.plus} Add</button>
+      </form>
+      </div>
+      </div>
+      `
+        }
+
+        // VOICE TAB
+        else if (activeTab === "voice") {
+          content = `
+      <div class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center gap-3 mb-4">
+      <div class="text-zinc-400">${icons.mic}</div>
+      <div class="text-sm font-medium">Speech-to-Text (STT)</div>
+      </div>
+      ${
+        loading.voice
+          ? '<div class="text-zinc-500">Loading...</div>'
+          : `
+      <div class="space-y-2">
+      <div class="flex justify-between text-xs"><span class="text-zinc-500">Status</span><span class="${voiceStatus?.stt?.status === "ok" ? "text-emerald-500" : "text-red-500"}">${voiceStatus?.stt?.status || "Unknown"}</span></div>
+      <div class="flex justify-between text-xs"><span class="text-zinc-500">Configured</span><span>${voiceStatus?.stt?.configured ? "Yes" : "No"}</span></div>
+      <div class="flex justify-between text-xs"><span class="text-zinc-500">Model</span><span class="font-mono">${voiceStatus?.stt?.model || "-"}</span></div>
+      <div class="flex justify-between text-xs"><span class="text-zinc-500">URL</span><span class="font-mono text-zinc-600 truncate max-w-48">${voiceStatus?.stt?.url || "-"}</span></div>
+      ${voiceStatus?.stt?.latency ? '<div class="flex justify-between text-xs"><span class="text-zinc-500">Latency</span><span>' + voiceStatus.stt.latency + "ms</span></div>" : ""}
+      </div>
+      `
+      }
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center gap-3 mb-4">
+      <div class="text-zinc-400">${icons.speaker}</div>
+      <div class="text-sm font-medium">Text-to-Speech (TTS)</div>
+      </div>
+      ${
+        loading.voice
+          ? '<div class="text-zinc-500">Loading...</div>'
+          : `
+      <div class="space-y-2">
+      <div class="flex justify-between text-xs"><span class="text-zinc-500">Status</span><span class="${voiceStatus?.tts?.status === "ok" ? "text-emerald-500" : "text-red-500"}">${voiceStatus?.tts?.status || "Unknown"}</span></div>
+      <div class="flex justify-between text-xs"><span class="text-zinc-500">Configured</span><span>${voiceStatus?.tts?.configured ? "Yes" : "No"}</span></div>
+      <div class="flex justify-between text-xs"><span class="text-zinc-500">Model</span><span class="font-mono">${voiceStatus?.tts?.model || "-"}</span></div>
+      <div class="flex justify-between text-xs"><span class="text-zinc-500">Default Voice</span><span class="font-mono">${voiceStatus?.tts?.defaultVoice || "-"}</span></div>
+      <div class="flex justify-between text-xs"><span class="text-zinc-500">URL</span><span class="font-mono text-zinc-600 truncate max-w-48">${voiceStatus?.tts?.url || "-"}</span></div>
+      ${voiceStatus?.tts?.latency ? '<div class="flex justify-between text-xs"><span class="text-zinc-500">Latency</span><span>' + voiceStatus.tts.latency + "ms</span></div>" : ""}
+      </div>
+      `
+      }
+      </div>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">Available TTS Voices</div>
+      <button onclick="testVoice()" class="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 hover:bg-emerald-700 transition-colors">Test Voice</button>
+      </div>
+      ${
+        loading.voice
+          ? '<div class="text-zinc-500">Loading...</div>'
+          : `
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+      ${(voiceStatus?.tts?.voices || [])
+        .map(
+          (v) => `
+      <div class="p-2 rounded bg-zinc-950 border border-zinc-800 text-xs">
+      <div class="font-medium truncate">${escapeHtml(v.name)}</div>
+      <div class="text-zinc-600 truncate">${escapeHtml(v.id)}</div>
+      </div>
+      `,
+        )
+        .join("")}
+      </div>
+      `
+      }
+      </div>
+      </div>
+      `
+        }
+
+        // CONFIG TAB
+        else if (activeTab === "config") {
+          const envContent = config[".env"]?.content || "# Loading..."
+          const gateclawContent = config["gateclaw.jsonc"]?.content || "// Loading..."
+
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">.env</div>
+      <div class="flex gap-2">
+      <span class="text-xs text-zinc-500 font-mono">${configPath}.env</span>
+      ${editingConfig === ".env" ? `<button onclick="saveConfigFile('.env')" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1">${icons.save} Save</button>` : `<button onclick="editingConfig='.env'; configContent=config['.env']?.content||''; render()" class="text-xs text-zinc-500 hover:text-white flex items-center gap-1">${icons.edit} Edit</button>`}
+      </div>
+      </div>
+      ${
+        editingConfig === ".env"
+          ? `
+      <textarea id="configEditor" class="w-full h-64 bg-zinc-950 border border-zinc-700 rounded-lg p-4 text-xs font-mono text-zinc-400 focus:outline-none focus:border-emerald-500">${escapeHtml(configContent)}</textarea>
+      `
+          : `
+      <pre class="text-xs font-mono bg-zinc-950 p-4 rounded-lg overflow-auto max-h-64 scrollbar-thin whitespace-pre-wrap text-zinc-400">${escapeHtml(envContent)}</pre>
+      `
+      }
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">gateclaw.jsonc</div>
+      <div class="flex gap-2">
+      <span class="text-xs text-zinc-500 font-mono">${configPath}gateclaw.jsonc</span>
+      ${editingConfig === "gateclaw.jsonc" ? `<button onclick="saveConfigFile('gateclaw.jsonc')" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1">${icons.save} Save</button>` : `<button onclick="editingConfig='gateclaw.jsonc'; configContent=config['gateclaw.jsonc']?.content||''; render()" class="text-xs text-zinc-500 hover:text-white flex items-center gap-1">${icons.edit} Edit</button>`}
+      </div>
+      </div>
+      ${
+        editingConfig === "gateclaw.jsonc"
+          ? `
+      <textarea id="configEditor" class="w-full h-64 bg-zinc-950 border border-zinc-700 rounded-lg p-4 text-xs font-mono text-zinc-400 focus:outline-none focus:border-emerald-500">${escapeHtml(configContent)}</textarea>
+      `
+          : `
+      <pre class="text-xs font-mono bg-zinc-950 p-4 rounded-lg overflow-auto max-h-64 scrollbar-thin text-zinc-400">${escapeHtml(gateclawContent)}</pre>
+      `
+      }
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-3">Export Configuration</div>
+      <div class="flex gap-2">
+      <button onclick="exportData('memory')" class="px-3 py-2 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center gap-1">${icons.download} Export Memory</button>
+      <button onclick="exportData('sessions')" class="px-3 py-2 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center gap-1">${icons.download} Export Sessions</button>
+      <button onclick="exportData('all')" class="px-3 py-2 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors flex items-center gap-1">${icons.download} Export All</button>
+      </div>
+      </div>
+      </div>
+      `
+        }
+
+        // SOUL TAB
+        else if (activeTab === "soul") {
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between mb-4">
+      <div class="text-sm font-medium">SOUL.md</div>
+      <div class="text-xs text-zinc-500 font-mono">${config["SOUL.md"]?.path || configPath + "SOUL.md"}</div>
+      </div>
+      <pre class="text-xs font-mono bg-zinc-950 p-4 rounded-lg overflow-auto max-h-64 scrollbar-thin whitespace-pre-wrap text-zinc-400">${escapeHtml(config["SOUL.md"]?.content || "# Loading...")}</pre>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-3">Soul Presets</div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      ${(soulPresets || [])
+        .map(
+          (p) => `
+      <div class="p-3 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-between">
+      <div>
+      <div class="text-sm font-medium">${escapeHtml(p.name)}</div>
+      <div class="text-xs text-zinc-500 mt-1">${escapeHtml(p.description)}</div>
+      </div>
+      <button onclick="setSoulPreset('${p.id}')" class="px-3 py-1 text-xs rounded bg-zinc-800 hover:bg-zinc-700 transition-colors">Use</button>
+      </div>
+      `,
+        )
+        .join("")}
+      </div>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-3">Soul Configuration</div>
+      <div class="text-xs text-zinc-500">
+      <p>The Soul defines GateClaw's personality and behavior.</p>
+      <p class="mt-2">Edit SOUL.md directly with your text editor, or use the CLI:</p>
+      <code class="block mt-1 text-emerald-400">gateclaw soul edit</code>
+      </div>
+      <button onclick="reloadSoul()" class="mt-4 px-4 py-2 text-sm rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors">Reload Soul</button>
+      </div>
+      </div>
+      `
+        }
+
+        // SETTINGS TAB
+        else if (activeTab === "settings") {
+          content = `
+      <div class="space-y-6">
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-4">Appearance</div>
+      <div class="space-y-4">
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm">Theme</div>
+      <div class="text-xs text-zinc-500">Choose your preferred color scheme</div>
+      </div>
+      <select onchange="saveSettings({...settings, theme: this.value})" class="px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm">
+      <option value="dark" ${settings?.theme === "dark" ? "selected" : ""}>Dark</option>
+      <option value="light" ${settings?.theme === "light" ? "selected" : ""}>Light</option>
+      <option value="auto" ${settings?.theme === "auto" ? "selected" : ""}>Auto</option>
+      </select>
+      </div>
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm">Auto-open Browser</div>
+      <div class="text-xs text-zinc-500">Open dashboard when daemon starts</div>
+      </div>
+      <label class="toggle-switch">
+      <input type="checkbox" ${settings?.autoOpenBrowser ? "checked" : ""} onchange="saveSettings({...settings, autoOpenBrowser: this.checked})">
+      <span class="toggle-slider"></span>
+      </label>
+      </div>
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm">Show Notifications</div>
+      <div class="text-xs text-zinc-500">Display system notifications</div>
+      </div>
+      <label class="toggle-switch">
+      <input type="checkbox" ${settings?.showNotifications ? "checked" : ""} onchange="saveSettings({...settings, showNotifications: this.checked})">
+      <span class="toggle-slider"></span>
+      </label>
+      </div>
+      </div>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-4">Model Settings</div>
+      <div class="space-y-4">
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm">Provider</div>
+      <div class="text-xs text-zinc-500">AI provider for model</div>
+      </div>
+      <select onchange="saveSettings({...settings, provider: this.value})" class="px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm w-48">
+      ${providers.map((p) => `<option value="${p.id}" ${settings?.provider === p.id ? "selected" : ""}>${p.name} (${p.modelCount} models)</option>`).join("")}
+      </select>
+      </div>
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm">Default Model</div>
+      <div class="text-xs text-zinc-500">AI model for responses</div>
+      </div>
+      <input type="text" value="${settings?.model || "gpt-oss-20b"}" onchange="saveSettings({...settings, model: this.value})" class="px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm w-48">
+      </div>
+      </div>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-4">Message Display</div>
+      <div class="space-y-4">
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm">Hide Thinking Messages</div>
+      <div class="text-xs text-zinc-500">Hide internal reasoning steps</div>
+      </div>
+      <label class="toggle-switch">
+      <input type="checkbox" ${settings?.hideThinkingMessages ? "checked" : ""} onchange="saveSettings({...settings, hideThinkingMessages: this.checked})">
+      <span class="toggle-slider"></span>
+      </label>
+      </div>
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm">Hide Tool Call Messages</div>
+      <div class="text-xs text-zinc-500">Hide tool execution messages</div>
+      </div>
+      <label class="toggle-switch">
+      <input type="checkbox" ${settings?.hideToolCallMessages ? "checked" : ""} onchange="saveSettings({...settings, hideToolCallMessages: this.checked})">
+      <span class="toggle-slider"></span>
+      </label>
+      </div>
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm">Message Format</div>
+      <div class="text-xs text-zinc-500">How messages are formatted</div>
+      </div>
+      <select onchange="saveSettings({...settings, messageFormatMode: this.value})" class="px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm">
+      <option value="markdown" ${settings?.messageFormatMode === "markdown" ? "selected" : ""}>Markdown</option>
+      <option value="raw" ${settings?.messageFormatMode === "raw" ? "selected" : ""}>Raw</option>
+      </select>
+      </div>
+      </div>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="text-sm font-medium mb-4">Logging</div>
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm">Log Level</div>
+      <div class="text-xs text-zinc-500">Verbosity of daemon logs</div>
+      </div>
+      <select onchange="saveSettings({...settings, logLevel: this.value})" class="px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-sm">
+      <option value="debug" ${settings?.logLevel === "debug" ? "selected" : ""}>Debug</option>
+      <option value="info" ${settings?.logLevel === "info" ? "selected" : ""}>Info</option>
+      <option value="warn" ${settings?.logLevel === "warn" ? "selected" : ""}>Warn</option>
+      <option value="error" ${settings?.logLevel === "error" ? "selected" : ""}>Error</option>
+      </select>
+      </div>
+      </div>
+
+      <div class="p-5 rounded-xl bg-zinc-900 border border-zinc-800">
+      <div class="flex items-center justify-between">
+      <div>
+      <div class="text-sm font-medium">Reset to Defaults</div>
+      <div class="text-xs text-zinc-500">Restore all settings to default values</div>
+      </div>
+      <button onclick="if(confirm('Reset all settings?')) fetch('/settings/reset', {method:'POST'}).then(()=>fetchSettings())" class="px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 transition-colors">Reset</button>
+      </div>
+      </div>
+      </div>
+      `
+        }
+
+        // Header with model switcher (removed - was non-functional)
+        const modelSwitcher = ""
+
+        app.innerHTML = `
+      <div class="min-h-screen flex flex-col">
+      <header class="border-b border-zinc-800 bg-zinc-900 flex-shrink-0">
+      <div class="px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: #005be0;">
+      <span class="text-white font-bold text-sm">GC</span>
+      </div>
+      <div class="text-lg font-semibold">GateClaw</div>
+      </div>
+      <div class="text-xs text-zinc-500 bg-zinc-800 px-2 py-1 rounded">Dashboard</div>
+      ${modelSwitcher}
+      </div>
+      <div class="flex items-center gap-4">
+      <a href="https://gateclaw.vercel.app" target="_blank" class="text-sm text-zinc-400 hover:text-white transition-colors flex items-center gap-1" title="Docs">${icons.help}</a>
+      <button onclick="fetchHealth(); fetchMetrics(); fetchRecentErrors();" class="text-sm text-zinc-400 hover:text-white transition-colors flex items-center gap-1">${icons.refresh} Refresh</button>
+      <a href="/dashboard" class="text-sm text-zinc-400 hover:text-white transition-colors">Web UI</a>
+      </div>
+      </div>
+
+      <!-- Desktop tabs -->
+      <div class="mobile-tabs px-6 flex gap-1 overflow-x-auto">
+      ${tabs.map((t) => `<button onclick="switchTab('${t.id}')" class="px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === t.id ? "border-blue-500 text-blue-500" : "border-transparent text-zinc-500 hover:text-zinc-300"}">${t.label}</button>`).join("")}
+      </div>
+
+      <!-- Mobile menu -->
+      <div class="mobile-menu px-6 py-2">
+      <select onchange="switchTab(this.value)" class="w-full px-3 py-2 rounded-lg bg-zinc-800 border border-zinc-700 text-sm">
+      ${tabs.map((t) => `<option value="${t.id}" ${activeTab === t.id ? "selected" : ""}>${t.label}</option>`).join("")}
+      </select>
+      </div>
+      </header>
+
+      <main class="flex-1 p-6 overflow-auto">
+      ${content}
+      </main>
+
+      <footer class="border-t border-zinc-800 py-4 px-6 text-center text-xs text-zinc-600">
+      GateClaw Dashboard · Resident AI Control Center · <span class="text-zinc-500">${loading.health ? "..." : health?.status === "ok" ? "● Running" : "● Error"}</span>
+      <span class="ml-4 text-zinc-500">Press J/K to cycle tabs, R to refresh, / to search</span>
+      </footer>
+      </div>
+      `
+      }
+
+      // Initial load
+      document.addEventListener("DOMContentLoaded", function () {
+        render()
+        fetchHealth()
+        fetchTelegramStatus()
+        fetchFacts()
+        fetchPlugins()
+        fetchVoiceStatus()
+        fetchSettings()
+        fetchMetrics()
+        fetchRecentErrors()
+        fetchModels()
+        fetchProviders()
+      })
+    </script>
+  </body>
+</html>

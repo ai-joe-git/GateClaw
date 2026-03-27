@@ -123,7 +123,8 @@ function printHelp() {
   console.log(`  gateclaw start              # Start daemon`)
   console.log(`  gateclaw status             # Check if running`)
   console.log(`  gateclaw upgrade            # Check for updates`)
-  console.log(`  gateclaw web                # Open browser UI`)
+  console.log(`  gateclaw web              # Open Web UI (port 4100)`)
+  console.log(`  gateclaw dashboard       # Open Dashboard (port 7371)`)
   console.log(`  gateclaw tui                # Launch terminal UI`)
   console.log(`  gateclaw soul init          # Initialize soul identity`)
   console.log(`  gateclaw telegram setup     # Interactive bot setup`)
@@ -306,6 +307,31 @@ switch (cmd) {
 
   case "web": {
     try {
+      await fetch("http://127.0.0.1:4100/global/health")
+    } catch {
+      console.log("🐾 GateClaw OpenCode server not running, starting it...")
+      // Start the OpenCode server at port 4100
+      spawn(
+        "bun",
+        ["run", "--cwd", path.resolve(PKG_DIR, "..", "..", "packages", "opencode"), "src/index.ts", "serve"],
+        {
+          detached: true,
+          stdio: ["ignore", fs.openSync(CLI_LOG_FILE, "a"), fs.openSync(CLI_LOG_FILE, "a")],
+          env: { ...process.env },
+        },
+      )
+      await new Promise((r) => setTimeout(r, 3000))
+    }
+
+    // Open GateClaw WebUI at port 4100
+    const webUrl = "http://localhost:4100/"
+    console.log(`🌐 Opening GateClaw Web UI in browser: ${webUrl}`)
+    spawn("cmd", ["/c", "start", webUrl], { stdio: "ignore", detached: true, shell: true })
+    break
+  }
+
+  case "dashboard": {
+    try {
       await fetch("http://127.0.0.1:7371/health")
     } catch {
       console.log("🐾 Daemon not running, starting it first...")
@@ -319,25 +345,10 @@ switch (cmd) {
       await new Promise((r) => setTimeout(r, 1500))
     }
 
-    const configDir = process.env.APPDATA
-      ? path.join(process.env.APPDATA, "gateclaw")
-      : path.join(process.env.HOME || "", ".config", "gateclaw")
-
-    const workingDir = process.cwd()
-    const opencodeDir = path.resolve(PKG_DIR, "..", "..", "packages", "opencode")
-
-    console.log("🌐 Opening GateClaw Web UI in browser...")
-    console.log(`   Working directory: ${workingDir}`)
-    spawnSync("bun", ["run", "--cwd", opencodeDir, "src/index.ts", "web"], {
-      stdio: "inherit",
-      env: {
-        ...process.env,
-        OPENCODE_CONFIG_DIR: configDir,
-        PWD: workingDir,
-        GATECLAW_DIRECTORY: workingDir,
-      },
-      cwd: opencodeDir,
-    })
+    // Open GateClaw Dashboard at port 7371
+    const dashboardUrl = "http://localhost:7371/dashboard"
+    console.log(`🌐 Opening GateClaw Dashboard in browser: ${dashboardUrl}`)
+    spawn("cmd", ["/c", "start", dashboardUrl], { stdio: "ignore", detached: true, shell: true })
     break
   }
 

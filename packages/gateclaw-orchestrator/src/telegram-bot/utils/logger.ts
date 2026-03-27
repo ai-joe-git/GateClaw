@@ -1,10 +1,10 @@
-import { config } from "../config.js";
+import { config } from "../config.js"
 
 /**
  * Available log levels in order of severity
  * Lower numbers indicate lower severity (more verbose)
  */
-type LogLevel = "debug" | "info" | "warn" | "error";
+type LogLevel = "debug" | "info" | "warn" | "error"
 
 /**
  * Mapping of log levels to numeric values for comparison
@@ -15,7 +15,7 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   info: 1,
   warn: 2,
   error: 3,
-};
+}
 
 /**
  * Normalizes a string value to a valid LogLevel
@@ -26,10 +26,10 @@ const LOG_LEVELS: Record<LogLevel, number> = {
  */
 function normalizeLogLevel(value: string): LogLevel {
   if (value in LOG_LEVELS) {
-    return value as LogLevel;
+    return value as LogLevel
   }
 
-  return "info";
+  return "info"
 }
 
 /**
@@ -39,7 +39,7 @@ function normalizeLogLevel(value: string): LogLevel {
  * @returns Formatted prefix string
  */
 function formatPrefix(level: LogLevel): string {
-  return `[${new Date().toISOString()}] [${level.toUpperCase()}]`;
+  return `[${new Date().toISOString()}] [${level.toUpperCase()}]`
 }
 
 /**
@@ -51,10 +51,23 @@ function formatPrefix(level: LogLevel): string {
  */
 function formatArg(arg: unknown): unknown {
   if (arg instanceof Error) {
-    return arg.stack ?? `${arg.name}: ${arg.message}`;
+    return arg.stack ?? `${arg.name}: ${arg.message}`
   }
 
-  return arg;
+  return arg
+}
+
+/**
+ * Formats args as a string for dashboard logging
+ */
+function formatArgsAsString(args: unknown[]): string {
+  return args
+    .map((arg) => {
+      if (typeof arg === "string") return arg
+      if (arg instanceof Error) return arg.stack ?? `${arg.name}: ${arg.message}`
+      return JSON.stringify(arg)
+    })
+    .join(" ")
 }
 
 /**
@@ -66,18 +79,18 @@ function formatArg(arg: unknown): unknown {
  * @returns Array with prefix prepended
  */
 function withPrefix(level: LogLevel, args: unknown[]): unknown[] {
-  const formattedArgs = args.map((arg) => formatArg(arg));
-  const prefix = formatPrefix(level);
+  const formattedArgs = args.map((arg) => formatArg(arg))
+  const prefix = formatPrefix(level)
 
   if (formattedArgs.length === 0) {
-    return [prefix];
+    return [prefix]
   }
 
   if (typeof formattedArgs[0] === "string") {
-    return [`${prefix} ${formattedArgs[0]}`, ...formattedArgs.slice(1)];
+    return [`${prefix} ${formattedArgs[0]}`, ...formattedArgs.slice(1)]
   }
 
-  return [prefix, ...formattedArgs];
+  return [prefix, ...formattedArgs]
 }
 
 /**
@@ -88,8 +101,26 @@ function withPrefix(level: LogLevel, args: unknown[]): unknown[] {
  * @returns True if the message should be logged
  */
 function shouldLog(level: LogLevel): boolean {
-  const configLevel = normalizeLogLevel(config.server.logLevel);
-  return LOG_LEVELS[level] >= LOG_LEVELS[configLevel];
+  const configLevel = normalizeLogLevel(config.server.logLevel)
+  return LOG_LEVELS[level] >= LOG_LEVELS[configLevel]
+}
+
+// Import the dashboard log function if available
+let addTelegramLog: ((msg: string) => void) | null = null
+try {
+  // Dynamic import to avoid circular dependency
+  const serverModule = import("../../server.js")
+  serverModule
+    .then((mod) => {
+      if (mod.addTelegramLog) {
+        addTelegramLog = mod.addTelegramLog
+      }
+    })
+    .catch(() => {
+      // Server module not available (running standalone bot)
+    })
+} catch {
+  // Ignore import errors
 }
 
 /**
@@ -106,7 +137,11 @@ export const logger = {
    */
   debug: (...args: unknown[]): void => {
     if (shouldLog("debug")) {
-      console.log(...withPrefix("debug", args));
+      const prefixed = withPrefix("debug", args)
+      console.log(...prefixed)
+      if (addTelegramLog) {
+        addTelegramLog(`[DEBUG] ${formatArgsAsString(args)}`)
+      }
     }
   },
 
@@ -118,7 +153,11 @@ export const logger = {
    */
   info: (...args: unknown[]): void => {
     if (shouldLog("info")) {
-      console.log(...withPrefix("info", args));
+      const prefixed = withPrefix("info", args)
+      console.log(...prefixed)
+      if (addTelegramLog) {
+        addTelegramLog(`[INFO] ${formatArgsAsString(args)}`)
+      }
     }
   },
 
@@ -130,7 +169,11 @@ export const logger = {
    */
   warn: (...args: unknown[]): void => {
     if (shouldLog("warn")) {
-      console.warn(...withPrefix("warn", args));
+      const prefixed = withPrefix("warn", args)
+      console.warn(...prefixed)
+      if (addTelegramLog) {
+        addTelegramLog(`[WARN] ${formatArgsAsString(args)}`)
+      }
     }
   },
 
@@ -142,7 +185,11 @@ export const logger = {
    */
   error: (...args: unknown[]): void => {
     if (shouldLog("error")) {
-      console.error(...withPrefix("error", args));
+      const prefixed = withPrefix("error", args)
+      console.error(...prefixed)
+      if (addTelegramLog) {
+        addTelegramLog(`[ERROR] ${formatArgsAsString(args)}`)
+      }
     }
   },
-};
+}

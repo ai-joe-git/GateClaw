@@ -163,13 +163,13 @@ _GateClaw TUI — Model picker, session manager, tool palette, real-time streami
 
 GateClaw is **ONE resident AI entity** with multiple equal interfaces:
 
-| Interface      | Purpose                  | Primary? | Latency    |
-| -------------- | ------------------------ | -------- | ---------- |
-| **Telegram**   | Chat-native, mobile      | Yes      | < 1 second |
-| **TUI**        | Terminal interactive     | Equal    | Real-time  |
-| **CLI**        | Scripting/automation     | Equal    | Immediate  |
-| **HTTP API**   | Programmatic (port 7371) | Equal    | < 100ms    |
-| **Browser**    | Web automation           | Equal    | Real-time  |
+| Interface    | Purpose                  | Primary? | Latency    |
+| ------------ | ------------------------ | -------- | ---------- |
+| **Telegram** | Chat-native, mobile      | Yes      | < 1 second |
+| **TUI**      | Terminal interactive     | Equal    | Real-time  |
+| **CLI**      | Scripting/automation     | Equal    | Immediate  |
+| **HTTP API** | Programmatic (port 7371) | Equal    | < 100ms    |
+| **Browser**  | Web automation           | Equal    | Real-time  |
 
 ### What Makes It Unique
 
@@ -557,6 +557,145 @@ Use pocket-tts-server to:
 
 ---
 
+## 🖥️ Dashboard (Web Control Center)
+
+GateClaw includes a comprehensive web dashboard for day-to-day operations. Access it at `http://localhost:7371/dashboard` when the daemon is running.
+
+### Quick Access
+
+```bash
+gateclaw start  # Daemon auto-opens browser to dashboard
+# Or navigate to: http://localhost:7371/dashboard
+```
+
+### Features
+
+**13 Tabs for Complete Control:**
+
+| Tab          | Purpose                                                   |
+| ------------ | --------------------------------------------------------- |
+| **Overview** | Quick actions, error summary, usage metrics, status cards |
+| **Health**   | Service health checks, system stats (memory, CPU, disk)   |
+| **Memory**   | Persistent facts with search and prefix filtering         |
+| **Messages** | Conversation history with relative timestamps             |
+| **Logs**     | Daemon logs with live streaming mode                      |
+| **Telegram** | Bot controls, live log viewer with auto-scroll            |
+| **Sessions** | Session list with metadata, delete sessions               |
+| **Activity** | Real-time event stream showing what GateClaw is doing     |
+| **Plugins**  | Toggle plugins on/off, add new plugins                    |
+| **Voice**    | STT/TTS pipeline status, test voice, available voices     |
+| **Config**   | Edit .env and gateclaw.jsonc, export data                 |
+| **Soul**     | SOUL.md viewer, soul presets selection                    |
+| **Settings** | Theme toggle, provider dropdown, all preferences          |
+
+### Quick Actions (Overview Tab)
+
+- **Test Voice** - Verify TTS pipeline works
+- **Clear Session** - Reset conversation history
+- **Reload Soul** - Apply SOUL.md changes without restart
+- **Restart Daemon** - Full daemon restart
+
+### Memory Management
+
+The Memory tab includes:
+
+- **Search** - Find facts by content
+- **Filter by prefix** - `user_*`, `project_*`, `pref_*`, `sys_*`
+- **Add/Delete** - Manage facts directly
+
+### Telegram Integration
+
+The Telegram tab provides:
+
+- **Start/Stop controls** - Manage bot without CLI
+- **Live log viewer** - Real-time bot logs with auto-scroll
+- **Clear logs** - Reset log buffer
+
+### Export & Backup
+
+From the Config tab:
+
+- **Export Memory** - Download all facts as JSON
+- **Export Sessions** - Download conversation history
+- **Export All** - Complete backup including config files
+
+### Keyboard Shortcuts
+
+| Key | Action                    |
+| --- | ------------------------- |
+| `J` | Next tab                  |
+| `K` | Previous tab              |
+| `R` | Refresh current view      |
+| `/` | Focus search (Memory tab) |
+
+### Mobile Support
+
+The dashboard is fully responsive:
+
+- Desktop: Full tab bar
+- Mobile: Dropdown menu for tab navigation
+
+### API Endpoints
+
+The dashboard exposes 40+ HTTP API endpoints:
+
+```bash
+# Health & Status
+GET /health              # Daemon health
+GET /health/checks       # All services status
+GET /system/stats        # Memory, CPU, disk
+GET /metrics             # Usage metrics (messages, errors)
+
+# Memory
+GET /facts               # List all facts
+POST /fact               # Store fact
+DELETE /fact/:key        # Delete fact
+
+# Messages
+GET /messages            # Conversation history
+DELETE /messages         # Clear history
+
+# Sessions
+GET /sessions/detailed   # List with metadata
+DELETE /session/:id      # Delete session
+
+# Telegram
+GET /telegram/status     # Bot status
+GET /telegram/logs       # Bot logs
+POST /telegram/start     # Start bot
+POST /telegram/stop      # Stop bot
+
+# Plugins
+GET /plugins             # List plugins
+POST /plugins/:id/enable
+POST /plugins/:id/disable
+
+# Voice
+GET /voice/status        # STT/TTS status
+POST /voice/test         # Test pipeline
+
+# Config
+GET /config/:file        # Read .env, gateclaw.jsonc, SOUL.md
+POST /config/:file       # Save config
+
+# Export
+GET /export/memory       # Export facts
+GET /export/sessions     # Export history
+GET /export/all          # Full backup
+
+# Soul
+GET /soul/presets        # Available presets
+POST /soul/preset/:id    # Set preset
+POST /soul/reload        # Reload soul
+
+# Models
+GET /models/favorites    # Favorite models
+POST /model/set          # Switch model
+GET /providers/list      # Configured providers
+```
+
+---
+
 ## 🌐 Browser Automation
 
 GateClaw controls a real Chrome/Edge/Brave browser programmatically - the same browser you use manually. This is powered by [opencode-browser](https://github.com/different-ai/opencode-browser).
@@ -578,6 +717,7 @@ bunx @different-ai/opencode-browser@latest install
 ```
 
 The installer will:
+
 1. Copy the browser extension to `~/.opencode-browser/extension/`
 2. Guide you to load it in `chrome://extensions` (or brave://extensions)
 3. Install Native Messaging Host for secure browser-AI communication
@@ -585,17 +725,17 @@ The installer will:
 
 ### Browser Tools
 
-| Tool | Description |
-|------|-------------|
-| `browser_navigate` | Go to URL |
-| `browser_screenshot` | Take a screenshot |
-| `browser_click` | Click an element |
-| `browser_type` | Type into input |
-| `browser_query` | Extract content (text, values, page_text) |
-| `browser_snapshot` | Full page accessibility tree |
-| `browser_open_tab` | Open new tab |
-| `browser_close_tab` | Close tab |
-| `browser_get_tabs` | List all tabs |
+| Tool                 | Description                               |
+| -------------------- | ----------------------------------------- |
+| `browser_navigate`   | Go to URL                                 |
+| `browser_screenshot` | Take a screenshot                         |
+| `browser_click`      | Click an element                          |
+| `browser_type`       | Type into input                           |
+| `browser_query`      | Extract content (text, values, page_text) |
+| `browser_snapshot`   | Full page accessibility tree              |
+| `browser_open_tab`   | Open new tab                              |
+| `browser_close_tab`  | Close tab                                 |
+| `browser_get_tabs`   | List all tabs                             |
 
 ### Example: Checking Twitter
 
@@ -734,14 +874,14 @@ GateClaw is **MIT licensed** — free for any use, forever.
 
 GateClaw is a fork of OpenCode (MIT). We keep that spirit:
 
-| What's Free (MIT) | What's Paid (Optional) |
-|-------------------|------------------------|
-| Self-hosted GateClaw | GateClaw Cloud (managed) |
-| All AI providers | Bundled AI credits |
-| Telegram bot | Enterprise features |
-| TUI, CLI, Web UI | Priority support |
-| Voice ([pocket-tts-server](https://github.com/ai-joe-git/pocket-tts-server)) | Premium voice packs |
-| AgentMon (Pokémon) | Teams & collaboration |
+| What's Free (MIT)                                                            | What's Paid (Optional)   |
+| ---------------------------------------------------------------------------- | ------------------------ |
+| Self-hosted GateClaw                                                         | GateClaw Cloud (managed) |
+| All AI providers                                                             | Bundled AI credits       |
+| Telegram bot                                                                 | Enterprise features      |
+| TUI, CLI, Web UI                                                             | Priority support         |
+| Voice ([pocket-tts-server](https://github.com/ai-joe-git/pocket-tts-server)) | Premium voice packs      |
+| AgentMon (Pokémon)                                                           | Teams & collaboration    |
 
 **What you download today stays free.** We'll never move existing features behind a paywall.
 

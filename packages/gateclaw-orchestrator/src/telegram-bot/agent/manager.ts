@@ -1,9 +1,9 @@
-import { opencodeClient } from "../opencode/client.js";
-import { getCurrentProject } from "../settings/manager.js";
-import { getCurrentSession } from "../session/manager.js";
-import { getCurrentAgent, setCurrentAgent } from "../settings/manager.js";
-import { logger } from "../utils/logger.js";
-import type { AgentInfo } from "./types.js";
+import { opencodeClient } from "../opencode/client.js"
+import { getCurrentProject } from "../settings/manager.js"
+import { getCurrentSession } from "../session/manager.js"
+import { getCurrentAgent, setCurrentAgent } from "../settings/manager.js"
+import { logger } from "../utils/logger.js"
+import type { AgentInfo } from "./types.js"
 
 /**
  * Get list of available agents from OpenCode API
@@ -11,34 +11,32 @@ import type { AgentInfo } from "./types.js";
  */
 export async function getAvailableAgents(): Promise<AgentInfo[]> {
   try {
-    const project = getCurrentProject();
+    const project = getCurrentProject()
     const { data: agents, error } = await opencodeClient.app.agents(
       project ? { directory: project.worktree } : undefined,
-    );
+    )
 
     if (error) {
-      logger.error("[AgentManager] Failed to fetch agents:", error);
-      return [];
+      logger.error("[AgentManager] Failed to fetch agents:", error)
+      return []
     }
 
     if (!agents) {
-      return [];
+      return []
     }
 
     // Filter out hidden agents and subagents (only show primary and all)
-    const filtered = agents.filter(
-      (agent) => !agent.hidden && (agent.mode === "primary" || agent.mode === "all"),
-    );
+    const filtered = agents.filter((agent) => !agent.hidden && (agent.mode === "primary" || agent.mode === "all"))
 
-    logger.debug(`[AgentManager] Fetched ${filtered.length} available agents`);
-    return filtered;
+    logger.debug(`[AgentManager] Fetched ${filtered.length} available agents`)
+    return filtered
   } catch (err) {
-    logger.error("[AgentManager] Error fetching agents:", err);
-    return [];
+    logger.error("[AgentManager] Error fetching agents:", err)
+    return []
   }
 }
 
-const DEFAULT_AGENT = "build";
+const DEFAULT_AGENT = "build"
 
 /**
  * Get current agent from last session message or settings.
@@ -46,13 +44,13 @@ const DEFAULT_AGENT = "build";
  * @returns Current agent name
  */
 export async function fetchCurrentAgent(): Promise<string> {
-  const storedAgent = getCurrentAgent();
-  const session = getCurrentSession();
-  const project = getCurrentProject();
+  const storedAgent = getCurrentAgent()
+  const session = getCurrentSession()
+  const project = getCurrentProject()
 
   if (!session || !project) {
     // No active session, return stored agent from settings
-    return storedAgent ?? DEFAULT_AGENT;
+    return storedAgent ?? DEFAULT_AGENT
   }
 
   try {
@@ -60,34 +58,32 @@ export async function fetchCurrentAgent(): Promise<string> {
       sessionID: session.id,
       directory: project.worktree,
       limit: 1,
-    });
+    })
 
     if (error || !messages || messages.length === 0) {
-      logger.debug("[AgentManager] No messages found, using stored agent");
-      return storedAgent ?? DEFAULT_AGENT;
+      logger.debug("[AgentManager] No messages found, using stored agent")
+      return storedAgent ?? DEFAULT_AGENT
     }
 
-    const lastAgent = messages[0].info.agent;
-    logger.debug(`[AgentManager] Current agent from session: ${lastAgent}`);
+    const lastAgent = messages[0]!.info.agent
+    logger.debug(`[AgentManager] Current agent from session: ${lastAgent}`)
 
     // If user explicitly selected an agent in bot settings, prefer it.
     // Session messages may contain stale agent until next prompt is sent.
     if (storedAgent && lastAgent !== storedAgent) {
-      logger.debug(
-        `[AgentManager] Using stored agent "${storedAgent}" instead of session agent "${lastAgent}"`,
-      );
-      return storedAgent;
+      logger.debug(`[AgentManager] Using stored agent "${storedAgent}" instead of session agent "${lastAgent}"`)
+      return storedAgent
     }
 
     // No stored agent yet: sync from session history
     if (lastAgent && lastAgent !== storedAgent) {
-      setCurrentAgent(lastAgent);
+      setCurrentAgent(lastAgent)
     }
 
-    return lastAgent || storedAgent || DEFAULT_AGENT;
+    return lastAgent || storedAgent || DEFAULT_AGENT
   } catch (err) {
-    logger.error("[AgentManager] Error fetching current agent:", err);
-    return storedAgent ?? DEFAULT_AGENT;
+    logger.error("[AgentManager] Error fetching current agent:", err)
+    return storedAgent ?? DEFAULT_AGENT
   }
 }
 
@@ -96,8 +92,8 @@ export async function fetchCurrentAgent(): Promise<string> {
  * @param agentName Name of the agent to select
  */
 export function selectAgent(agentName: string): void {
-  logger.info(`[AgentManager] Selected agent: ${agentName}`);
-  setCurrentAgent(agentName);
+  logger.info(`[AgentManager] Selected agent: ${agentName}`)
+  setCurrentAgent(agentName)
 }
 
 /**
@@ -105,5 +101,5 @@ export function selectAgent(agentName: string): void {
  * @returns Current agent name or default "build"
  */
 export function getStoredAgent(): string {
-  return getCurrentAgent() ?? "build";
+  return getCurrentAgent() ?? "build"
 }

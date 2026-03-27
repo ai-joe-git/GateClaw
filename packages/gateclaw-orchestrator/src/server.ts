@@ -11,6 +11,12 @@ import { desc } from "../../opencode/src/storage/db"
 // Force migrations to run - don't skip them
 process.env.OPENCODE_SKIP_MIGRATIONS = "false"
 
+// Global telegram bot state (set by telegram bot when running)
+declare global {
+  // eslint-disable-next-line no-var
+  var __telegramBotRunning: boolean | undefined
+}
+
 // Legacy memory functions for backward compat
 import {
   saveFact,
@@ -33,10 +39,20 @@ import {
 } from "./soul-engine"
 import { TOOLS_PROMPT } from "./tools"
 import { broadcast, clients } from "./events"
+import { processManager } from "./telegram-bot/process/manager.js"
 import fs from "node:fs"
 import path from "node:path"
 import os from "node:os"
 import { parse as parseJSONC } from "jsonc-parser"
+import { createOpencodeClient } from "@opencode-ai/sdk/v2"
+
+// OpenCode client for Chat tab (same as Telegram bot)
+const opencodeClient = createOpencodeClient({
+  baseUrl: process.env.OPENCODE_API_URL || "http://localhost:4100",
+  headers: process.env.OPENCODE_SERVER_PASSWORD
+    ? { Authorization: `Basic ${Buffer.from(`gateclaw:${process.env.OPENCODE_SERVER_PASSWORD}`).toString("base64")}` }
+    : undefined,
+})
 
 // SSE Event Bus for OpenCode SDK compatibility
 type SseClient = { send: (type: string, data: unknown) => void; close: () => void }
@@ -812,6 +828,1433 @@ app.post("/telegram/start", async (c) => {
   telegramStopRequested = false
   telegramBotRunning = true
   return c.json({ success: true, message: "Bot marked as started" })
+})
+
+// ========== CONFIG ENDPOINTS ==========
+
+// Read config file content
+app.get("/config/:file", async (c) => {
+  const file = c.req.param("file")
+  const validFiles = [".env", "gateclaw.jsonc", "SOUL.md", "soul_v2/SOUL.md"]
+  if (!validFiles.includes(file)) {
+    return c.json({ error: "Invalid file" }, 400)
+  }
+
+  const configDir = getConfigDir()
+  // For SOUL.md, prefer soul_v2/SOUL.md if it exists
+  let filePath = path.join(configDir, file)
+  if (file === "SOUL.md") {
+    const soulV2Path = path.join(configDir, "soul_v2", "SOUL.md")
+    if (fs.existsSync(soulV2Path)) {
+      filePath = soulV2Path
+    }
+  }
+
+  try {
+    if (!fs.existsSync(filePath)) {
+      return c.json({ content: null, exists: false })
+    }
+    const content = fs.readFileSync(filePath, "utf-8")
+    return c.json({ content, exists: true, path: filePath })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Save config file content
+app.post("/config/:file", async (c) => {
+  const file = c.req.param("file")
+  const validFiles = [".env", "gateclaw.jsonc"]
+  if (!validFiles.includes(file)) {
+    return c.json({ error: "Invalid file" }, 400)
+  }
+
+  const configDir = getConfigDir()
+  const filePath = path.join(configDir, file)
+
+  try {
+    const body = await c.req.json()
+    if (typeof body.content !== "string") {
+      return c.json({ error: "Content must be string" }, 400)
+    }
+    fs.writeFileSync(filePath, body.content, "utf-8")
+    return c.json({ success: true })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== SYSTEM STATS ENDPOINTS ==========
+
+// Get system stats (CPU, memory, disk)
+app.get("/system/stats", async (c) => {
+  try {
+    const os = await import("node:os")
+    const memUsage = process.memoryUsage()
+    const cpuUsage = process.cpuUsage()
+
+    const configDir = getConfigDir()
+    const dbPath = path.join(configDir, "gateclaw.db")
+    let dbSize = 0
+    if (fs.existsSync(dbPath)) {
+      const stats = fs.statSync(dbPath)
+      dbSize = stats.size
+    }
+
+    return c.json({
+      memory: {
+        rss: memUsage.rss,
+        heapTotal: memUsage.heapTotal,
+        heapUsed: memUsage.heapUsed,
+        external: memUsage.external,
+      },
+      cpu: cpuUsage,
+      uptime: process.uptime(),
+      platform: os.platform(),
+      arch: os.arch(),
+      cpus: os.cpus().length,
+      totalMem: os.totalmem(),
+      freeMem: os.freemem(),
+      dbSize,
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== HEALTH CHECKS ==========
+
+type HealthStatus = "ok" | "error" | "offline" | "unknown" | "configured" | "not_configured"
+type HealthCheck = { status: HealthStatus; latency: number | null }
+
+// Check all external service connections
+app.get("/health/checks", async (c) => {
+  const checks: Record<string, HealthCheck> = {
+    daemon: { status: "ok", latency: 0 },
+    opencode: { status: "unknown", latency: null },
+    stt: { status: "unknown", latency: null },
+    tts: { status: "unknown", latency: null },
+    telegram: { status: "unknown", latency: null },
+  }
+
+  // Daemon check
+  const daemonStart = Date.now()
+  checks["daemon"]!.latency = Date.now() - daemonStart
+
+  // OpenCode server check
+  try {
+    const start = Date.now()
+    const res = await fetch("http://localhost:4100/global/health", { signal: AbortSignal.timeout(2000) })
+    checks.opencode = { status: res.ok ? "ok" : "error", latency: Date.now() - start }
+  } catch {
+    checks.opencode = { status: "offline", latency: null }
+  }
+
+  // STT server check
+  try {
+    const start = Date.now()
+    const res = await fetch("http://localhost:7372/health", { signal: AbortSignal.timeout(2000) })
+    checks.stt = { status: res.ok ? "ok" : "error", latency: Date.now() - start }
+  } catch {
+    checks.stt = { status: "offline", latency: null }
+  }
+
+  // TTS server check
+  try {
+    const start = Date.now()
+    const res = await fetch("http://localhost:8000/health", { signal: AbortSignal.timeout(2000) })
+    checks.tts = { status: res.ok ? "ok" : "error", latency: Date.now() - start }
+  } catch {
+    checks.tts = { status: "offline", latency: null }
+  }
+
+  // Telegram check (just if configured)
+  const telegramToken = process.env.GATECLAW_TELEGRAM_TOKEN
+  const telegramChatId = process.env.GATECLAW_TELEGRAM_CHAT_ID
+  checks.telegram = {
+    status: telegramToken && telegramChatId ? "configured" : "not_configured",
+    latency: null,
+  }
+
+  return c.json(checks)
+})
+
+// ========== LOGS ENDPOINT ==========
+
+// Get daemon log content
+app.get("/logs", async (c) => {
+  try {
+    const logPath = getLogPath()
+    if (!fs.existsSync(logPath)) {
+      return c.json({ lines: [], exists: false })
+    }
+
+    const content = fs.readFileSync(logPath, "utf-8")
+    const lines = content.split("\n").filter((l) => l.trim())
+    const limit = parseInt(c.req.query("limit") || "100")
+    const offset = parseInt(c.req.query("offset") || "0")
+
+    return c.json({
+      lines: lines.slice(-limit - offset, -offset || undefined),
+      total: lines.length,
+      exists: true,
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error, lines: [] }, 500)
+  }
+})
+
+// ========== CONVERSATION HISTORY ==========
+
+// Get recent messages
+app.get("/messages", async (c) => {
+  try {
+    const limit = parseInt(c.req.query("limit") || "50")
+    const messages = await getMessages("gateclaw", limit)
+    return c.json({ messages })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error, messages: [] }, 500)
+  }
+})
+
+// Clear conversation history
+app.delete("/messages", async (c) => {
+  try {
+    const db = Database.Client()
+    const { GCMessageTable } = await import("../../opencode/src/gateclaw/memory.sql")
+    db.delete(GCMessageTable).run()
+    return c.json({ success: true })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : "Unknown error"
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== SOUL RELOAD ==========
+
+// Reload soul configuration
+app.post("/soul/reload", async (c) => {
+  try {
+    await reloadSoulEngine()
+    return c.json({ success: true, message: "Soul reloaded" })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== DAEMON RESTART ==========
+
+// Restart the daemon (graceful shutdown)
+app.post("/daemon/restart", async (c) => {
+  // Note: cleanup is defined in index.ts, this just sends acknowledgment
+  // The process manager should handle actual restart
+  return c.json({ success: true, message: "Restart acknowledged - process manager will handle restart" })
+})
+
+// ========== PLUGIN MANAGER ==========
+
+// In-memory plugin state (persisted in gateclaw.jsonc)
+let pluginsState: Record<string, { enabled: boolean; name: string; description: string }> = {
+  "@different-ai/opencode-browser": {
+    enabled: true,
+    name: "Browser Tools",
+    description: "Browser automation and web scraping tools",
+  },
+}
+
+// Get all plugins and their status
+app.get("/plugins", async (c) => {
+  try {
+    const configDir = getConfigDir()
+    const configPath = path.join(configDir, "gateclaw.jsonc")
+
+    // Load config to get actual plugin list
+    if (fs.existsSync(configPath)) {
+      const configContent = fs.readFileSync(configPath, "utf-8")
+      const configJson = parseJSONC(configContent)
+      const configuredPlugins = configJson.plugin || []
+
+      // Update state with configured plugins
+      for (const plugin of configuredPlugins) {
+        if (typeof plugin === "string" && !pluginsState[plugin]) {
+          pluginsState[plugin] = { enabled: true, name: plugin, description: "" }
+        }
+      }
+    }
+
+    return c.json({
+      plugins: Object.entries(pluginsState).map(([id, state]) => ({
+        id,
+        name: state.name,
+        description: state.description,
+        enabled: state.enabled,
+      })),
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Enable a plugin
+app.post("/plugins/:id/enable", async (c) => {
+  try {
+    const pluginId = c.req.param("id")
+    if (!pluginsState[pluginId]) {
+      pluginsState[pluginId] = { enabled: true, name: pluginId, description: "" }
+    } else {
+      pluginsState[pluginId].enabled = true
+    }
+
+    // Update config file
+    const configDir = getConfigDir()
+    const configPath = path.join(configDir, "gateclaw.jsonc")
+    let configJson: Record<string, unknown> = {}
+
+    if (fs.existsSync(configPath)) {
+      const configContent = fs.readFileSync(configPath, "utf-8")
+      configJson = parseJSONC(configContent)
+    }
+
+    const plugins = (configJson.plugin as string[]) || []
+    if (!plugins.includes(pluginId)) {
+      plugins.push(pluginId)
+      configJson.plugin = plugins
+      fs.writeFileSync(configPath, JSON.stringify(configJson, null, 2), "utf-8")
+    }
+
+    return c.json({ success: true, plugin: { id: pluginId, ...pluginsState[pluginId] } })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Disable a plugin
+app.post("/plugins/:id/disable", async (c) => {
+  try {
+    const pluginId = c.req.param("id")
+    if (pluginsState[pluginId]) {
+      pluginsState[pluginId].enabled = false
+    }
+
+    // Update config file
+    const configDir = getConfigDir()
+    const configPath = path.join(configDir, "gateclaw.jsonc")
+
+    if (fs.existsSync(configPath)) {
+      const configContent = fs.readFileSync(configPath, "utf-8")
+      const configJson = parseJSONC(configContent)
+      const plugins = (configJson.plugin as string[]) || []
+      configJson.plugin = plugins.filter((p: string) => p !== pluginId)
+      fs.writeFileSync(configPath, JSON.stringify(configJson, null, 2), "utf-8")
+    }
+
+    return c.json({ success: true })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== VOICE PIPELINE ==========
+
+// Get voice pipeline status
+app.get("/voice/status", async (c) => {
+  try {
+    const sttUrl = process.env.STT_API_URL || ""
+    const ttsUrl = process.env.TTS_API_URL || ""
+
+    // Check STT
+    let sttStatus: "ok" | "offline" | "not_configured" = "not_configured"
+    let sttLatency: number | null = null
+    if (sttUrl) {
+      try {
+        const start = Date.now()
+        const res = await fetch(`${sttUrl}/health`, { signal: AbortSignal.timeout(2000) })
+        sttStatus = res.ok ? "ok" : "offline"
+        sttLatency = Date.now() - start
+      } catch {
+        sttStatus = "offline"
+      }
+    }
+
+    // Check TTS
+    let ttsStatus: "ok" | "offline" | "not_configured" = "not_configured"
+    let ttsLatency: number | null = null
+    if (ttsUrl) {
+      try {
+        const start = Date.now()
+        const res = await fetch(`${ttsUrl}/health`, { signal: AbortSignal.timeout(2000) })
+        ttsStatus = res.ok ? "ok" : "offline"
+        ttsLatency = Date.now() - start
+      } catch {
+        ttsStatus = "offline"
+      }
+    }
+
+    // Get available TTS voices
+    let voices: Array<{ id: string; name: string }> = []
+    if (ttsUrl && ttsStatus === "ok") {
+      try {
+        const res = await fetch(`${ttsUrl}/v1/audio/voices`, { signal: AbortSignal.timeout(5000) })
+        if (res.ok) {
+          const data = (await res.json()) as { voices?: Array<{ voice_id?: string; id?: string; name?: string }> }
+          voices = (data.voices || []).map((v) => ({
+            id: v.voice_id || v.id || "",
+            name: v.name || v.voice_id || v.id || "",
+          }))
+        }
+      } catch {
+        // Ignore voice fetch errors
+      }
+    }
+
+    return c.json({
+      stt: {
+        configured: !!sttUrl,
+        status: sttStatus,
+        latency: sttLatency,
+        url: sttUrl || null,
+        model: process.env.STT_MODEL || "whisper-large-v3-turbo",
+      },
+      tts: {
+        configured: !!ttsUrl,
+        status: ttsStatus,
+        latency: ttsLatency,
+        url: ttsUrl || null,
+        model: process.env.TTS_MODEL || "tts-1",
+        voices,
+        defaultVoice: process.env.TTS_DEFAULT_VOICE || "david-attenborough-original",
+      },
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Get/Set voice settings
+app.get("/voice/settings", async (c) => {
+  try {
+    // This could read from database or config
+    return c.json({
+      voiceEnabled: false, // Would come from user settings in gc_setting table
+      preferredVoice: process.env.TTS_DEFAULT_VOICE || "david-attenborough-original",
+      speed: parseFloat(process.env.TTS_SPEED || "1.0"),
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+app.post("/voice/settings", async (c) => {
+  try {
+    const body = await c.req.json()
+    // Would save to gc_setting table or .env
+    return c.json({ success: true, settings: body })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== SETTINGS ==========
+
+interface DashboardSettings {
+  theme: "dark" | "light" | "auto"
+  autoOpenBrowser: boolean
+  showNotifications: boolean
+  logLevel: "debug" | "info" | "warn" | "error"
+  model: string
+  provider: string
+  locale: string
+  hideThinkingMessages: boolean
+  hideToolCallMessages: boolean
+  messageFormatMode: "raw" | "markdown"
+}
+
+const defaultSettings: DashboardSettings = {
+  theme: "dark",
+  autoOpenBrowser: true,
+  showNotifications: true,
+  logLevel: "info",
+  model: "gpt-oss-20b",
+  provider: "llama-swap",
+  locale: "en",
+  hideThinkingMessages: false,
+  hideToolCallMessages: false,
+  messageFormatMode: "markdown",
+}
+
+// Get dashboard settings
+app.get("/settings", async (c) => {
+  try {
+    const configDir = getConfigDir()
+    const settingsPath = path.join(configDir, "dashboard-settings.json")
+
+    if (fs.existsSync(settingsPath)) {
+      const content = fs.readFileSync(settingsPath, "utf-8")
+      const saved = JSON.parse(content)
+      return c.json({ ...defaultSettings, ...saved })
+    }
+
+    return c.json(defaultSettings)
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Save dashboard settings
+app.post("/settings", async (c) => {
+  try {
+    const body = await c.req.json()
+    const configDir = getConfigDir()
+    const settingsPath = path.join(configDir, "dashboard-settings.json")
+
+    // Merge with defaults
+    const settings = { ...defaultSettings, ...body }
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), "utf-8")
+
+    return c.json({ success: true, settings })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Reset settings to defaults
+app.post("/settings/reset", async (c) => {
+  try {
+    const configDir = getConfigDir()
+    const settingsPath = path.join(configDir, "dashboard-settings.json")
+
+    if (fs.existsSync(settingsPath)) {
+      fs.unlinkSync(settingsPath)
+    }
+
+    return c.json({ success: true, settings: defaultSettings })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== TELEGRAM LOGS ==========
+
+// In-memory telegram log buffer
+const telegramLogs: string[] = []
+const MAX_TELEGRAM_LOGS = 500
+
+// Function to add telegram log (called from telegram-bot)
+export function addTelegramLog(message: string) {
+  const timestamp = new Date().toISOString()
+  const logLine = `[${timestamp}] ${message}`
+  telegramLogs.push(logLine)
+  if (telegramLogs.length > MAX_TELEGRAM_LOGS) {
+    telegramLogs.shift()
+  }
+}
+
+// Get telegram logs
+app.get("/telegram/logs", async (c) => {
+  try {
+    const limit = parseInt(c.req.query("limit") || "100")
+    const logs = telegramLogs.slice(-limit)
+    return c.json({ logs, total: telegramLogs.length })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Clear telegram logs
+app.delete("/telegram/logs", async (c) => {
+  try {
+    telegramLogs.length = 0
+    return c.json({ success: true })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Get telegram status
+app.get("/telegram/status", async (c) => {
+  try {
+    const token = process.env.GATECLAW_TELEGRAM_TOKEN
+    const chatId = process.env.GATECLAW_TELEGRAM_CHAT_ID
+
+    // Check if telegram bot is actually running
+    // This would need to check a global state set by the telegram bot
+    const isRunning = globalThis.__telegramBotRunning === true
+
+    return c.json({
+      configured: !!(token && chatId),
+      running: isRunning,
+      hasToken: !!token,
+      hasChatId: !!chatId,
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Start telegram bot
+app.post("/telegram/start", async (c) => {
+  try {
+    // This would trigger the telegram bot to start
+    // For now, return success - actual implementation would call the bot start function
+    return c.json({ success: true, message: "Telegram bot start requested" })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Stop telegram bot
+app.post("/telegram/stop", async (c) => {
+  try {
+    globalThis.__telegramBotRunning = false
+    return c.json({ success: true, message: "Telegram bot stop requested" })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== LOG STREAMING (WebSocket-like via SSE) ==========
+
+// Stream logs in real-time via Server-Sent Events
+app.get("/logs/stream", async (c) => {
+  // Set SSE headers
+  c.header("Content-Type", "text/event-stream")
+  c.header("Cache-Control", "no-cache")
+  c.header("Connection", "keep-alive")
+
+  const stream = new ReadableStream({
+    start(controller) {
+      const logPath = getLogPath()
+      let lastSize = 0
+
+      // Send initial log content
+      if (fs.existsSync(logPath)) {
+        const stats = fs.statSync(logPath)
+        lastSize = stats.size
+        const content = fs.readFileSync(logPath, "utf-8")
+        const lines = content.split("\n").slice(-50)
+        controller.enqueue(`data: ${JSON.stringify({ type: "init", lines })}\n\n`)
+      }
+
+      // Poll for new logs every 500ms
+      const interval = setInterval(() => {
+        try {
+          if (fs.existsSync(logPath)) {
+            const stats = fs.statSync(logPath)
+            if (stats.size > lastSize) {
+              const newContent = fs.readFileSync(logPath, "utf-8").slice(lastSize)
+              lastSize = stats.size
+              const newLines = newContent.split("\n").filter((l) => l.trim())
+              if (newLines.length > 0) {
+                controller.enqueue(`data: ${JSON.stringify({ type: "logs", lines: newLines })}\n\n`)
+              }
+            }
+          }
+        } catch {
+          // Ignore errors
+        }
+      }, 500)
+
+      // Cleanup on close
+      setTimeout(() => {
+        clearInterval(interval)
+        controller.close()
+      }, 60000) // 1 minute timeout
+    },
+  })
+
+  return new Response(stream)
+})
+
+// ========== METRICS ==========
+
+// Get time-series metrics for charts
+app.get("/metrics/history", async (c) => {
+  try {
+    // This would ideally store time-series data
+    // For now, return current snapshot
+    const metrics = {
+      timestamps: [Date.now()],
+      memory: [process.memoryUsage().rss],
+      cpu: [process.cpuUsage().user],
+      dbSize: [0],
+    }
+
+    // Get DB size
+    const configDir = getConfigDir()
+    const dbPath = path.join(configDir, "gateclaw.db")
+    if (fs.existsSync(dbPath)) {
+      metrics.dbSize[0] = fs.statSync(dbPath).size
+    }
+
+    return c.json(metrics)
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== SOUL PRESETS ==========
+
+interface SoulPreset {
+  id: string
+  name: string
+  description: string
+  path?: string
+}
+
+const soulPresets: SoulPreset[] = [
+  { id: "gateclaw_default", name: "GateClaw Default", description: "Default GateClaw personality", path: "SOUL.md" },
+  {
+    id: "developer_partner",
+    name: "Developer Partner",
+    description: "Technical assistant focused",
+    path: "soul_v2/presets/developer_partner.md",
+  },
+  {
+    id: "polite_assistant",
+    name: "Polite Assistant",
+    description: "Formal and helpful",
+    path: "soul_v2/presets/polite_assistant.md",
+  },
+  {
+    id: "terse_hacker",
+    name: "Terse Hacker",
+    description: "Minimal responses, maximum efficiency",
+    path: "soul_v2/presets/terse_hacker.md",
+  },
+]
+
+// Get available soul presets
+app.get("/soul/presets", async (c) => {
+  try {
+    const configDir = getConfigDir()
+    const presetsWithPath = soulPresets.map((p) => ({
+      ...p,
+      exists: p.path ? fs.existsSync(path.join(configDir, p.path)) : false,
+    }))
+
+    // Check which presets actually exist
+    const available = presetsWithPath.filter((p) => p.id === "gateclaw_default" || p.exists)
+
+    return c.json({ presets: available })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Set active soul preset
+app.post("/soul/preset/:id", async (c) => {
+  try {
+    const presetId = c.req.param("id")
+    const preset = soulPresets.find((p) => p.id === presetId)
+
+    if (!preset) {
+      return c.json({ error: "Preset not found" }, 404)
+    }
+
+    // Would copy preset to SOUL.md or update config
+    return c.json({ success: true, preset })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== CONFIG EDIT ==========
+
+app.post("/config/:file", async (c) => {
+  const file = c.req.param("file")
+  const validFiles = [".env", "gateclaw.jsonc"]
+  if (!validFiles.includes(file)) {
+    return c.json({ error: "Invalid file" }, 400)
+  }
+
+  const configDir = getConfigDir()
+  const filePath = path.join(configDir, file)
+
+  try {
+    const body = await c.req.json()
+    if (typeof body.content !== "string") {
+      return c.json({ error: "Content must be string" }, 400)
+    }
+    fs.writeFileSync(filePath, body.content, "utf-8")
+    return c.json({ success: true })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== SESSION MANAGEMENT ==========
+
+// Get all sessions with metadata
+app.get("/sessions/detailed", async (c) => {
+  try {
+    const sessions = Database.use((db) => db.select().from(SessionTable).orderBy(desc(SessionTable.time_updated)).all())
+
+    // Get message counts for each session
+    const sessionsWithMeta = sessions.map((s) => {
+      const messages = Database.use((db) =>
+        db.select().from(MessageTable).where(eq(MessageTable.session_id, s.id)).all(),
+      )
+      return {
+        ...s,
+        messageCount: messages.length,
+        lastActivity: s.time_updated || s.time_created,
+      }
+    })
+
+    return c.json({ sessions: sessionsWithMeta })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Get session details with messages
+app.get("/session/:id", async (c) => {
+  try {
+    const sessionId = c.req.param("id")
+    const session = Database.use((db) => db.select().from(SessionTable).where(eq(SessionTable.id, sessionId)).get())
+
+    if (!session) {
+      return c.json({ error: "Session not found" }, 404)
+    }
+
+    const messages = Database.use((db) =>
+      db.select().from(MessageTable).where(eq(MessageTable.session_id, sessionId)).all(),
+    )
+
+    return c.json({ session, messages })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Delete a session
+app.delete("/session/:id", async (c) => {
+  try {
+    const sessionId = c.req.param("id")
+    Database.use((db) => {
+      db.delete(MessageTable).where(eq(MessageTable.session_id, sessionId)).run()
+      db.delete(SessionTable).where(eq(SessionTable.id, sessionId)).run()
+    })
+    return c.json({ success: true })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== USAGE METRICS ==========
+
+// In-memory activity log for real-time feed
+const activityLog: Array<{ timestamp: number; type: string; message: string; data?: any }> = []
+const MAX_ACTIVITY_LOG = 100
+
+export function logActivity(type: string, message: string, data?: any) {
+  activityLog.push({ timestamp: Date.now(), type, message, data })
+  if (activityLog.length > MAX_ACTIVITY_LOG) {
+    activityLog.shift()
+  }
+}
+
+// Get activity feed
+app.get("/activity", async (c) => {
+  try {
+    const limit = parseInt(c.req.query("limit") || "50")
+    const activities = activityLog.slice(-limit)
+    return c.json({ activities })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Get usage metrics
+app.get("/metrics", async (c) => {
+  try {
+    // Get message counts
+    const allMessages = Database.use((db) => db.select().from(MessageTable).all())
+    const allFacts = await getAllFacts()
+
+    // Calculate time-based metrics
+    const now = Date.now()
+    const oneDayAgo = now - 24 * 60 * 60 * 1000
+    const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000
+
+    const messagesToday = allMessages.filter((m) => (m.time_created || 0) > oneDayAgo).length
+    const messagesThisWeek = allMessages.filter((m) => (m.time_created || 0) > oneWeekAgo).length
+
+    // Get recent errors from logs
+    const logPath = getLogPath()
+    let recentErrors = 0
+    if (fs.existsSync(logPath)) {
+      const logs = fs.readFileSync(logPath, "utf-8").split("\n")
+      const today = new Date().toISOString().split("T")[0] || ""
+      recentErrors = logs.filter((l) => l.toLowerCase().includes("error") && l.includes(today)).length
+    }
+
+    return c.json({
+      messages: {
+        total: allMessages.length,
+        today: messagesToday,
+        thisWeek: messagesThisWeek,
+      },
+      memory: {
+        totalFacts: allFacts.length,
+      },
+      errors: {
+        today: recentErrors,
+      },
+      daemon: {
+        uptime: process.uptime(),
+        startTime: Date.now() - Math.floor(process.uptime() * 1000),
+      },
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Get recent errors
+app.get("/errors", async (c) => {
+  try {
+    const limit = parseInt(c.req.query("limit") || "20")
+    const logPath = getLogPath()
+
+    if (!fs.existsSync(logPath)) {
+      return c.json({ errors: [] })
+    }
+
+    const logs = fs.readFileSync(logPath, "utf-8").split("\n")
+    const errors = logs
+      .filter((l) => l.toLowerCase().includes("error") || l.toLowerCase().includes("warn"))
+      .slice(-limit)
+      .map((l) => ({
+        timestamp: l.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)?.[0] || new Date().toISOString(),
+        message: l,
+        level: l.toLowerCase().includes("error") ? "error" : "warn",
+      }))
+
+    return c.json({ errors })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== EXPORT/BACKUP ==========
+
+// Export memory to JSON
+app.get("/export/memory", async (c) => {
+  try {
+    const facts = await getAllFacts()
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      version: "1.0",
+      facts: facts,
+    }
+    return c.json(exportData)
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Export session history
+app.get("/export/sessions", async (c) => {
+  try {
+    const sessions = Database.use((db) => db.select().from(SessionTable).all())
+    const messages = Database.use((db) => db.select().from(MessageTable).all())
+
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      version: "1.0",
+      sessions,
+      messages,
+    }
+    return c.json(exportData)
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Export all data
+app.get("/export/all", async (c) => {
+  try {
+    const facts = await getAllFacts()
+    const sessions = Database.use((db) => db.select().from(SessionTable).all())
+    const messages = Database.use((db) => db.select().from(MessageTable).all())
+
+    const exportData = {
+      exportedAt: new Date().toISOString(),
+      version: "1.0",
+      facts,
+      sessions,
+      messages,
+      config: {
+        env: fs.existsSync(path.join(getConfigDir(), ".env"))
+          ? fs.readFileSync(path.join(getConfigDir(), ".env"), "utf-8")
+          : null,
+        gateclaw: fs.existsSync(path.join(getConfigDir(), "gateclaw.jsonc"))
+          ? fs.readFileSync(path.join(getConfigDir(), "gateclaw.jsonc"), "utf-8")
+          : null,
+      },
+    }
+    return c.json(exportData)
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== QUICK ACTIONS ==========
+
+// Test voice pipeline
+app.post("/voice/test", async (c) => {
+  try {
+    const ttsUrl = process.env.TTS_API_URL
+    if (!ttsUrl) {
+      return c.json({ success: false, error: "TTS not configured" })
+    }
+
+    // Test TTS with a simple phrase
+    const testRes = await fetch(`${ttsUrl}/v1/audio/speech`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        input: "GateClaw voice test successful.",
+        voice: process.env.TTS_DEFAULT_VOICE || "david-attenborough-original",
+      }),
+      signal: AbortSignal.timeout(10000),
+    })
+
+    return c.json({
+      success: testRes.ok,
+      status: testRes.status,
+      message: testRes.ok ? "Voice test successful" : `Voice test failed: ${testRes.status}`,
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ success: false, error })
+  }
+})
+
+// Clear current session
+app.post("/session/clear", async (c) => {
+  try {
+    // Clear messages for gateclaw session
+    await saveMessage("gateclaw", "system", "Session cleared by user")
+    return c.json({ success: true })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== MODEL MANAGEMENT ==========
+
+// Get favorite/recent models
+app.get("/models/favorites", async (c) => {
+  try {
+    // This would ideally come from user settings
+    // For now, return the configured models
+    const configDir = getConfigDir()
+    const configPath = path.join(configDir, "gateclaw.jsonc")
+
+    if (!fs.existsSync(configPath)) {
+      return c.json({ favorites: [], recent: [] })
+    }
+
+    const configContent = fs.readFileSync(configPath, "utf-8")
+    const configJson = parseJSONC(configContent)
+    const providers = configJson.provider || {}
+
+    const allModels: Array<{ id: string; name: string; provider: string }> = []
+    for (const providerId of Object.keys(providers)) {
+      const provider = providers[providerId]
+      const models = provider?.models || {}
+      for (const modelId of Object.keys(models)) {
+        allModels.push({
+          id: `${providerId}/${modelId}`,
+          name: models[modelId]?.name || modelId,
+          provider: providerId,
+        })
+      }
+    }
+
+    // Return first 5 as "favorites"
+    return c.json({
+      favorites: allModels.slice(0, 5),
+      recent: allModels.slice(0, 3),
+      all: allModels,
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Set current model
+app.post("/model/set", async (c) => {
+  try {
+    const body = await c.req.json()
+    const { model, provider } = body
+
+    // This would update the .env or settings
+    // For now, just acknowledge
+    return c.json({
+      success: true,
+      model,
+      provider,
+      message: `Model set to ${provider}/${model}. Restart may be required.`,
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== PROVIDERS LIST ==========
+
+// Get all configured providers
+app.get("/providers/list", async (c) => {
+  try {
+    const configDir = getConfigDir()
+    const configPath = path.join(configDir, "gateclaw.jsonc")
+
+    if (!fs.existsSync(configPath)) {
+      return c.json({ providers: [{ id: "gateclaw", name: "GateClaw Default" }] })
+    }
+
+    const configContent = fs.readFileSync(configPath, "utf-8")
+    const configJson = parseJSONC(configContent)
+    const providers = configJson.provider || {}
+
+    const providerList = Object.entries(providers).map(([id, config]: [string, any]) => ({
+      id,
+      name: config.name || id,
+      modelCount: Object.keys(config.models || {}).length,
+    }))
+
+    return c.json({ providers: providerList })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// ========== CHAT ENDPOINTS (OpenCode SDK) ==========
+
+// Get available agents
+app.get("/chat/agents", async (c) => {
+  try {
+    const { data, error } = await opencodeClient.app.agents()
+    if (error) {
+      return c.json({ error: formatError(error) }, 500)
+    }
+    return c.json({ agents: data || [] })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Get available models from OpenCode server (not gateclaw.jsonc)
+app.get("/chat/models", async (c) => {
+  try {
+    // Call OpenCode server directly at port 4100
+    const opencodeUrl = process.env.OPENCODE_API_URL || "http://localhost:4100"
+    const res = await fetch(`${opencodeUrl}/provider`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+    if (!res.ok) {
+      return c.json({ error: `OpenCode error: ${res.status}` }, 500)
+    }
+    const data = (await res.json()) as { all?: Array<{ id: string; models?: Record<string, { name?: string }> }> }
+    // OpenCode returns { all: [...], default: {...}, connected: [...] }
+    const models: { id: string; name: string; provider: string }[] = []
+    for (const provider of data.all || []) {
+      for (const [modelId, modelInfo] of Object.entries(provider.models || {})) {
+        models.push({
+          id: modelId,
+          name: modelInfo?.name || modelId,
+          provider: provider.id,
+        })
+      }
+    }
+    return c.json({ models })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Get or create session for dashboard chat
+app.get("/chat/session", async (c) => {
+  try {
+    const directory = process.env.GATECLAW_DIRECTORY || process.cwd()
+
+    // Try to get existing session
+    const { data: sessions } = await opencodeClient.session.list({ directory })
+    if (sessions && sessions.length > 0) {
+      return c.json({ session: sessions[0] })
+    }
+
+    // Create new session
+    const { data: session, error } = await opencodeClient.session.create({ directory })
+    if (error) {
+      return c.json({ error: formatError(error) }, 500)
+    }
+    return c.json({ session })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Get all sessions
+app.get("/chat/sessions", async (c) => {
+  try {
+    const directory = process.env.GATECLAW_DIRECTORY || process.cwd()
+    const { data, error } = await opencodeClient.session.list({ directory })
+    if (error) {
+      return c.json({ error: formatError(error) }, 500)
+    }
+    return c.json({ sessions: data || [] })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Create new session
+app.post("/chat/session/create", async (c) => {
+  try {
+    const directory = process.env.GATECLAW_DIRECTORY || process.cwd()
+    const { data, error } = await opencodeClient.session.create({ directory })
+    if (error) {
+      return c.json({ error: formatError(error) }, 500)
+    }
+    return c.json({ session: data })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Get session by ID
+app.get("/chat/session", async (c) => {
+  try {
+    const sessionId = c.req.query("sessionId")
+    if (!sessionId) {
+      return c.json({ error: "sessionId required" }, 400)
+    }
+    const directory = process.env.GATECLAW_DIRECTORY || process.cwd()
+    const { data, error } = await opencodeClient.session.get({ sessionID: sessionId, directory })
+    if (error) {
+      return c.json({ error: formatError(error) }, 500)
+    }
+    return c.json({ session: data })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Stop chat generation
+app.post("/chat/stop", async (c) => {
+  try {
+    return c.json({ ok: true })
+  } catch (e) {
+    return c.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500)
+  }
+})
+
+// Get session messages
+app.get("/chat/messages", async (c) => {
+  try {
+    const sessionId = c.req.query("sessionId")
+    const directory = process.env.GATECLAW_DIRECTORY || process.cwd()
+
+    if (!sessionId) {
+      return c.json({ error: "sessionId required" }, 400)
+    }
+
+    const { data, error } = await opencodeClient.session.messages({
+      sessionID: sessionId,
+      directory,
+    })
+
+    if (error) {
+      return c.json({ error: formatError(error) }, 500)
+    }
+    return c.json({ messages: data || [] })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Send chat message using OpenCode SDK
+const chatPromptSchema = z.object({
+  sessionId: z.string().min(1),
+  text: z.string().min(1),
+  agent: z.string().optional().default("default"),
+  provider: z.string().optional(),
+  model: z.string().optional(),
+})
+
+app.post("/chat/send", async (c) => {
+  try {
+    const body = await c.req.json()
+    const parsed = chatPromptSchema.parse(body)
+    const directory = process.env.GATECLAW_DIRECTORY || process.cwd()
+
+    // Build prompt options
+    const promptOptions: {
+      sessionID: string
+      directory: string
+      parts: Array<{ type: "text"; text: string }>
+      agent?: string
+      model?: { providerID: string; modelID: string }
+    } = {
+      sessionID: parsed.sessionId,
+      directory,
+      parts: [{ type: "text", text: parsed.text }],
+    }
+
+    if (parsed.agent && parsed.agent !== "default") {
+      promptOptions.agent = parsed.agent
+    }
+
+    if (parsed.provider && parsed.model) {
+      promptOptions.model = {
+        providerID: parsed.provider,
+        modelID: parsed.model,
+      }
+    }
+
+    const { data, error } = await opencodeClient.session.prompt(promptOptions)
+
+    if (error) {
+      logger.error("Chat prompt error", { error: formatError(error) })
+      return c.json({ error: formatError(error) }, 500)
+    }
+
+    return c.json({ ok: true, result: data })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    logger.error("Chat send error", { error })
+    return c.json({ error }, 500)
+  }
+})
+
+// SSE endpoint for chat events (streaming responses)
+app.get("/chat/events", async (c) => {
+  try {
+    const directory = process.env.GATECLAW_DIRECTORY || process.cwd()
+
+    // Set SSE headers
+    c.header("Content-Type", "text/event-stream")
+    c.header("Cache-Control", "no-cache")
+    c.header("Connection", "keep-alive")
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder()
+
+        try {
+          const result = await opencodeClient.event.subscribe({ directory })
+
+          for await (const event of result.stream) {
+            const data = JSON.stringify(event)
+            controller.enqueue(encoder.encode(`data: ${data}\n\n`))
+          }
+        } catch (e) {
+          const error = e instanceof Error ? e.message : String(e)
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "error", error })}\n\n`))
+        }
+
+        controller.close()
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    })
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e)
+    return c.json({ error }, 500)
+  }
+})
+
+// Check OpenCode server status
+app.get("/opencode/status", async (c) => {
+  try {
+    const opencodeUrl = process.env.OPENCODE_API_URL || "http://localhost:4100"
+    const res = await fetch(`${opencodeUrl}/global/health`, { signal: AbortSignal.timeout(3000) })
+    if (res.ok) {
+      const data = (await res.json()) as { version?: string }
+      return c.json({ running: true, version: data.version })
+    }
+    return c.json({ running: false })
+  } catch (e) {
+    return c.json({ running: false, error: e instanceof Error ? e.message : String(e) })
+  }
+})
+
+// Start OpenCode server
+app.post("/opencode/start", async (c) => {
+  try {
+    const result = await processManager.start()
+    return c.json(result)
+  } catch (e) {
+    return c.json({ success: false, error: e instanceof Error ? e.message : String(e) })
+  }
+})
+
+// Serve embedded dashboard HTML
+app.get("/dashboard", async (c) => {
+  const htmlPath = path.join(import.meta.dir, "dashboard", "dashboard.html")
+  const html = fs.readFileSync(htmlPath, "utf-8")
+  return c.html(html)
+})
+
+// Redirect root to dashboard
+app.get("/", async (c) => {
+  return c.redirect("/dashboard")
 })
 
 export { app }

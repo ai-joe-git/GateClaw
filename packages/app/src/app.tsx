@@ -32,6 +32,7 @@ import { Dynamic } from "solid-js/web"
 
 const Home = lazy(() => import("@/pages/home"))
 const Session = lazy(() => import("@/pages/session"))
+const GateClawDashboard = lazy(() => import("@/pages/gateclaw-dashboard"))
 const Loading = () => <div class="size-full" />
 
 const HomeRoute = () => (
@@ -157,6 +158,7 @@ export function AppInterface(props: {
               root={(routerProps) => <RouterRoot appChildren={props.children}>{routerProps.children}</RouterRoot>}
             >
               <Route path="/" component={HomeRoute} />
+              <Route path="/gateclaw" component={() => <GateClawDashboard />} />
               <Route path="/:dir" component={DirectoryLayout}>
                 <Route path="/" component={SessionIndexRoute} />
                 <Route path="/session/:id?" component={SessionRoute} />

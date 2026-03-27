@@ -241,6 +241,26 @@ setTimeout(() => {
 
 console.log("GateClaw daemon listening on 127.0.0.1:7371")
 
+// Auto-open dashboard in browser
+const openBrowser = () => {
+  const url = "http://localhost:7371/dashboard"
+  try {
+    if (process.platform === "win32") {
+      execSync(`start ${url}`, { stdio: "ignore" })
+    } else if (process.platform === "darwin") {
+      execSync(`open ${url}`, { stdio: "ignore" })
+    } else {
+      execSync(`xdg-open ${url}`, { stdio: "ignore" })
+    }
+    console.log("[gateclaw] Dashboard opened in browser")
+  } catch (e) {
+    console.log("[gateclaw] Could not auto-open browser - visit http://localhost:7371/dashboard")
+  }
+}
+
+// Open browser after server starts
+setTimeout(openBrowser, 1000)
+
 const server = Bun.serve({
   port,
   hostname: host,

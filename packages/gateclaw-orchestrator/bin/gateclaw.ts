@@ -331,6 +331,24 @@ switch (cmd) {
   }
 
   case "dashboard": {
+    // First ensure OpenCode server is running (like gateclaw web does)
+    try {
+      await fetch("http://127.0.0.1:4100/global/health")
+    } catch {
+      console.log("🐾 GateClaw OpenCode server not running, starting it...")
+      spawn(
+        "bun",
+        ["run", "--cwd", path.resolve(PKG_DIR, "..", "..", "packages", "opencode"), "src/index.ts", "serve"],
+        {
+          detached: true,
+          stdio: ["ignore", fs.openSync(CLI_LOG_FILE, "a"), fs.openSync(CLI_LOG_FILE, "a")],
+          env: { ...process.env },
+        },
+      )
+      await new Promise((r) => setTimeout(r, 3000))
+    }
+
+    // Then ensure daemon is running
     try {
       await fetch("http://127.0.0.1:7371/health")
     } catch {

@@ -241,8 +241,27 @@ setTimeout(() => {
 
 console.log("GateClaw daemon listening on 127.0.0.1:7371")
 
-// Auto-open dashboard in browser
-const openBrowser = () => {
+// Wait for OpenCode server to be ready before opening dashboard
+const waitForOpenCode = async () => {
+  for (let i = 0; i < 30; i++) {
+    try {
+      const res = await fetch("http://localhost:4100/global/health", { signal: AbortSignal.timeout(500) })
+      if (res.ok) {
+        console.log("[gateclaw] OpenCode server ready, opening dashboard...")
+        return true
+      }
+    } catch {
+      // Still starting
+    }
+    await sleep(500)
+  }
+  console.log("[gateclaw] OpenCode server not ready after 15s, opening dashboard anyway...")
+  return false
+}
+
+// Auto-open dashboard in browser after OpenCode server is ready
+const openBrowser = async () => {
+  await waitForOpenCode()
   const url = "http://localhost:7371/dashboard"
   try {
     if (process.platform === "win32") {
@@ -259,7 +278,7 @@ const openBrowser = () => {
 }
 
 // Open browser after server starts
-setTimeout(openBrowser, 1000)
+openBrowser()
 
 const server = Bun.serve({
   port,
